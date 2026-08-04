@@ -16,6 +16,8 @@ import { Route as FilamentosRouteImport } from './routes/filamentos'
 import { Route as Impressao3dRouteImport } from './routes/impressao-3d'
 import { Route as ImpressorasRouteImport } from './routes/impressoras'
 import { Route as LojaRouteImport } from './routes/loja'
+import { Route as MakersRouteImport } from './routes/makers'
+import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +55,16 @@ const LojaRoute = LojaRouteImport.update({
   path: '/loja',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MakersRoute = MakersRouteImport.update({
+  id: '/makers',
+  path: '/makers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuporteRoute = SuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
   id: '/produto/$slug',
   path: '/produto/$slug',
@@ -67,6 +79,8 @@ export interface FileRoutesByFullPath {
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
+  '/makers': typeof MakersRoute
+  '/suporte': typeof SuporteRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +91,8 @@ export interface FileRoutesByTo {
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
+  '/makers': typeof MakersRoute
+  '/suporte': typeof SuporteRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRoutesById {
@@ -88,6 +104,8 @@ export interface FileRoutesById {
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
+  '/makers': typeof MakersRoute
+  '/suporte': typeof SuporteRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +118,8 @@ export interface FileRouteTypes {
     | '/impressao-3d'
     | '/impressoras'
     | '/loja'
+    | '/makers'
+    | '/suporte'
     | '/produto/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +130,8 @@ export interface FileRouteTypes {
     | '/impressao-3d'
     | '/impressoras'
     | '/loja'
+    | '/makers'
+    | '/suporte'
     | '/produto/$slug'
   id:
     | '__root__'
@@ -120,6 +142,8 @@ export interface FileRouteTypes {
     | '/impressao-3d'
     | '/impressoras'
     | '/loja'
+    | '/makers'
+    | '/suporte'
     | '/produto/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +155,8 @@ export interface RootRouteChildren {
   Impressao3dRoute: typeof Impressao3dRoute
   ImpressorasRoute: typeof ImpressorasRoute
   LojaRoute: typeof LojaRoute
+  MakersRoute: typeof MakersRoute
+  SuporteRoute: typeof SuporteRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
 }
 
@@ -185,6 +211,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LojaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/makers': {
+      id: '/makers'
+      path: '/makers'
+      fullPath: '/makers'
+      preLoaderRoute: typeof MakersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/suporte': {
+      id: '/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/produto/$slug': {
       id: '/produto/$slug'
       path: '/produto/$slug'
@@ -203,6 +243,8 @@ const rootRouteChildren: RootRouteChildren = {
   Impressao3dRoute: Impressao3dRoute,
   ImpressorasRoute: ImpressorasRoute,
   LojaRoute: LojaRoute,
+  MakersRoute: MakersRoute,
+  SuporteRoute: SuporteRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
 }
 export const routeTree = rootRouteImport
