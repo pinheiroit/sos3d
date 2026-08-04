@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FilamentosRouteImport } from './routes/filamentos'
+import { Route as ImpressorasRouteImport } from './routes/impressoras'
+import { Route as LojaRouteImport } from './routes/loja'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FilamentosRoute = FilamentosRouteImport.update({
+  id: '/filamentos',
+  path: '/filamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpressorasRoute = ImpressorasRouteImport.update({
+  id: '/impressoras',
+  path: '/impressoras',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LojaRoute = LojaRouteImport.update({
+  id: '/loja',
+  path: '/loja',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/filamentos': typeof FilamentosRoute
+  '/impressoras': typeof ImpressorasRoute
+  '/loja': typeof LojaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/filamentos': typeof FilamentosRoute
+  '/impressoras': typeof ImpressorasRoute
+  '/loja': typeof LojaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/filamentos': typeof FilamentosRoute
+  '/impressoras': typeof ImpressorasRoute
+  '/loja': typeof LojaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/filamentos' | '/impressoras' | '/loja'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/filamentos' | '/impressoras' | '/loja'
+  id: '__root__' | '/' | '/filamentos' | '/impressoras' | '/loja'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FilamentosRoute: typeof FilamentosRoute
+  ImpressorasRoute: typeof ImpressorasRoute
+  LojaRoute: typeof LojaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/filamentos': {
+      id: '/filamentos'
+      path: '/filamentos'
+      fullPath: '/filamentos'
+      preLoaderRoute: typeof FilamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impressoras': {
+      id: '/impressoras'
+      path: '/impressoras'
+      fullPath: '/impressoras'
+      preLoaderRoute: typeof ImpressorasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loja': {
+      id: '/loja'
+      path: '/loja'
+      fullPath: '/loja'
+      preLoaderRoute: typeof LojaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FilamentosRoute: FilamentosRoute,
+  ImpressorasRoute: ImpressorasRoute,
+  LojaRoute: LojaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
