@@ -11,17 +11,16 @@ import { useCart } from "@/lib/cart";
 
 export const Route = createFileRoute("/produto/$slug")({
   loader: ({ params }) => {
-    const product = getProduct(params.slug);
-    if (!product) throw notFound();
-    return { product };
+    if (!getProduct(params.slug)) throw notFound();
+    return { slug: params.slug };
   },
-  head: ({ loaderData }) => {
-    if (!loaderData) {
+  head: ({ params }) => {
+    const product = getProduct(params.slug);
+    if (!product) {
       return {
         meta: [{ title: "Produto indisponível | SOS.3D" }, { name: "robots", content: "noindex" }],
       };
     }
-    const { product } = loaderData;
     return {
       meta: [
         { title: `${product.name} — ${product.brand} | SOS.3D` },
@@ -35,9 +34,11 @@ export const Route = createFileRoute("/produto/$slug")({
 });
 
 function ProductPage() {
-  const { product } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const product = getProduct(slug)!;
   const { add } = useCart();
   const [qty, setQty] = useState(1);
+
 
   const related = products.filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 3);
 
