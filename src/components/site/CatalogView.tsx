@@ -140,7 +140,7 @@ export function CatalogView({ fixedCategory, title, description }: Props) {
                 min={100}
                 max={maxPrice}
                 step={100}
-                onValueChange={([v]) => setPriceCap(v)}
+                onValueChange={(v) => setPriceCap(v[0] ?? maxPrice)}
               />
               <p className="mt-2 text-sm font-medium text-tech">{formatBRL(priceCap)}</p>
             </div>
