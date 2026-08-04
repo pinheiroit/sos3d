@@ -10,33 +10,180 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CarrinhoRouteImport } from './routes/carrinho'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as EmpresaRouteImport } from './routes/empresa'
+import { Route as FilamentosRouteImport } from './routes/filamentos'
+import { Route as Impressao3dRouteImport } from './routes/impressao-3d'
+import { Route as ImpressorasRouteImport } from './routes/impressoras'
+import { Route as LojaRouteImport } from './routes/loja'
+import { Route as MakersRouteImport } from './routes/makers'
+import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CarrinhoRoute = CarrinhoRouteImport.update({
+  id: '/carrinho',
+  path: '/carrinho',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresaRoute = EmpresaRouteImport.update({
+  id: '/empresa',
+  path: '/empresa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FilamentosRoute = FilamentosRouteImport.update({
+  id: '/filamentos',
+  path: '/filamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Impressao3dRoute = Impressao3dRouteImport.update({
+  id: '/impressao-3d',
+  path: '/impressao-3d',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpressorasRoute = ImpressorasRouteImport.update({
+  id: '/impressoras',
+  path: '/impressoras',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LojaRoute = LojaRouteImport.update({
+  id: '/loja',
+  path: '/loja',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MakersRoute = MakersRouteImport.update({
+  id: '/makers',
+  path: '/makers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuporteRoute = SuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
+  id: '/produto/$slug',
+  path: '/produto/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
+  '/empresa': typeof EmpresaRoute
+  '/filamentos': typeof FilamentosRoute
+  '/impressao-3d': typeof Impressao3dRoute
+  '/impressoras': typeof ImpressorasRoute
+  '/loja': typeof LojaRoute
+  '/makers': typeof MakersRoute
+  '/suporte': typeof SuporteRoute
+  '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
+  '/empresa': typeof EmpresaRoute
+  '/filamentos': typeof FilamentosRoute
+  '/impressao-3d': typeof Impressao3dRoute
+  '/impressoras': typeof ImpressorasRoute
+  '/loja': typeof LojaRoute
+  '/makers': typeof MakersRoute
+  '/suporte': typeof SuporteRoute
+  '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
+  '/empresa': typeof EmpresaRoute
+  '/filamentos': typeof FilamentosRoute
+  '/impressao-3d': typeof Impressao3dRoute
+  '/impressoras': typeof ImpressorasRoute
+  '/loja': typeof LojaRoute
+  '/makers': typeof MakersRoute
+  '/suporte': typeof SuporteRoute
+  '/produto/$slug': typeof ProdutoSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/carrinho'
+    | '/checkout'
+    | '/contato'
+    | '/empresa'
+    | '/filamentos'
+    | '/impressao-3d'
+    | '/impressoras'
+    | '/loja'
+    | '/makers'
+    | '/suporte'
+    | '/produto/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/carrinho'
+    | '/checkout'
+    | '/contato'
+    | '/empresa'
+    | '/filamentos'
+    | '/impressao-3d'
+    | '/impressoras'
+    | '/loja'
+    | '/makers'
+    | '/suporte'
+    | '/produto/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/carrinho'
+    | '/checkout'
+    | '/contato'
+    | '/empresa'
+    | '/filamentos'
+    | '/impressao-3d'
+    | '/impressoras'
+    | '/loja'
+    | '/makers'
+    | '/suporte'
+    | '/produto/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CarrinhoRoute: typeof CarrinhoRoute
+  CheckoutRoute: typeof CheckoutRoute
+  ContatoRoute: typeof ContatoRoute
+  EmpresaRoute: typeof EmpresaRoute
+  FilamentosRoute: typeof FilamentosRoute
+  Impressao3dRoute: typeof Impressao3dRoute
+  ImpressorasRoute: typeof ImpressorasRoute
+  LojaRoute: typeof LojaRoute
+  MakersRoute: typeof MakersRoute
+  SuporteRoute: typeof SuporteRoute
+  ProdutoSlugRoute: typeof ProdutoSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +195,100 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/carrinho': {
+      id: '/carrinho'
+      path: '/carrinho'
+      fullPath: '/carrinho'
+      preLoaderRoute: typeof CarrinhoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresa': {
+      id: '/empresa'
+      path: '/empresa'
+      fullPath: '/empresa'
+      preLoaderRoute: typeof EmpresaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/filamentos': {
+      id: '/filamentos'
+      path: '/filamentos'
+      fullPath: '/filamentos'
+      preLoaderRoute: typeof FilamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impressao-3d': {
+      id: '/impressao-3d'
+      path: '/impressao-3d'
+      fullPath: '/impressao-3d'
+      preLoaderRoute: typeof Impressao3dRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impressoras': {
+      id: '/impressoras'
+      path: '/impressoras'
+      fullPath: '/impressoras'
+      preLoaderRoute: typeof ImpressorasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loja': {
+      id: '/loja'
+      path: '/loja'
+      fullPath: '/loja'
+      preLoaderRoute: typeof LojaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/makers': {
+      id: '/makers'
+      path: '/makers'
+      fullPath: '/makers'
+      preLoaderRoute: typeof MakersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/suporte': {
+      id: '/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produto/$slug': {
+      id: '/produto/$slug'
+      path: '/produto/$slug'
+      fullPath: '/produto/$slug'
+      preLoaderRoute: typeof ProdutoSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CarrinhoRoute: CarrinhoRoute,
+  CheckoutRoute: CheckoutRoute,
+  ContatoRoute: ContatoRoute,
+  EmpresaRoute: EmpresaRoute,
+  FilamentosRoute: FilamentosRoute,
+  Impressao3dRoute: Impressao3dRoute,
+  ImpressorasRoute: ImpressorasRoute,
+  LojaRoute: LojaRoute,
+  MakersRoute: MakersRoute,
+  SuporteRoute: SuporteRoute,
+  ProdutoSlugRoute: ProdutoSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
