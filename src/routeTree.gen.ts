@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CarrinhoRouteImport } from './routes/carrinho'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as FilamentosRouteImport } from './routes/filamentos'
+import { Route as Impressao3dRouteImport } from './routes/impressao-3d'
 import { Route as ImpressorasRouteImport } from './routes/impressoras'
 import { Route as LojaRouteImport } from './routes/loja'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
@@ -26,9 +28,19 @@ const CarrinhoRoute = CarrinhoRouteImport.update({
   path: '/carrinho',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FilamentosRoute = FilamentosRouteImport.update({
   id: '/filamentos',
   path: '/filamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Impressao3dRoute = Impressao3dRouteImport.update({
+  id: '/impressao-3d',
+  path: '/impressao-3d',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImpressorasRoute = ImpressorasRouteImport.update({
@@ -50,7 +62,9 @@ const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
   '/filamentos': typeof FilamentosRoute
+  '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -58,7 +72,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
   '/filamentos': typeof FilamentosRoute
+  '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -67,7 +83,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
+  '/checkout': typeof CheckoutRoute
   '/filamentos': typeof FilamentosRoute
+  '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -77,7 +95,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/carrinho'
+    | '/checkout'
     | '/filamentos'
+    | '/impressao-3d'
     | '/impressoras'
     | '/loja'
     | '/produto/$slug'
@@ -85,7 +105,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/carrinho'
+    | '/checkout'
     | '/filamentos'
+    | '/impressao-3d'
     | '/impressoras'
     | '/loja'
     | '/produto/$slug'
@@ -93,7 +115,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/carrinho'
+    | '/checkout'
     | '/filamentos'
+    | '/impressao-3d'
     | '/impressoras'
     | '/loja'
     | '/produto/$slug'
@@ -102,7 +126,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CarrinhoRoute: typeof CarrinhoRoute
+  CheckoutRoute: typeof CheckoutRoute
   FilamentosRoute: typeof FilamentosRoute
+  Impressao3dRoute: typeof Impressao3dRoute
   ImpressorasRoute: typeof ImpressorasRoute
   LojaRoute: typeof LojaRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
@@ -124,11 +150,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CarrinhoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/filamentos': {
       id: '/filamentos'
       path: '/filamentos'
       fullPath: '/filamentos'
       preLoaderRoute: typeof FilamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impressao-3d': {
+      id: '/impressao-3d'
+      path: '/impressao-3d'
+      fullPath: '/impressao-3d'
+      preLoaderRoute: typeof Impressao3dRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/impressoras': {
@@ -158,7 +198,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CarrinhoRoute: CarrinhoRoute,
+  CheckoutRoute: CheckoutRoute,
   FilamentosRoute: FilamentosRoute,
+  Impressao3dRoute: Impressao3dRoute,
   ImpressorasRoute: ImpressorasRoute,
   LojaRoute: LojaRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
