@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CarrinhoRouteImport } from './routes/carrinho'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as EmpresaRouteImport } from './routes/empresa'
 import { Route as FilamentosRouteImport } from './routes/filamentos'
 import { Route as Impressao3dRouteImport } from './routes/impressao-3d'
 import { Route as ImpressorasRouteImport } from './routes/impressoras'
@@ -33,6 +35,16 @@ const CarrinhoRoute = CarrinhoRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresaRoute = EmpresaRouteImport.update({
+  id: '/empresa',
+  path: '/empresa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FilamentosRoute = FilamentosRouteImport.update({
@@ -75,6 +87,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
   '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
+  '/empresa': typeof EmpresaRoute
   '/filamentos': typeof FilamentosRoute
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
@@ -87,6 +101,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
   '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
+  '/empresa': typeof EmpresaRoute
   '/filamentos': typeof FilamentosRoute
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
@@ -100,6 +116,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/carrinho': typeof CarrinhoRoute
   '/checkout': typeof CheckoutRoute
+  '/contato': typeof ContatoRoute
+  '/empresa': typeof EmpresaRoute
   '/filamentos': typeof FilamentosRoute
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
@@ -114,6 +132,8 @@ export interface FileRouteTypes {
     | '/'
     | '/carrinho'
     | '/checkout'
+    | '/contato'
+    | '/empresa'
     | '/filamentos'
     | '/impressao-3d'
     | '/impressoras'
@@ -126,6 +146,8 @@ export interface FileRouteTypes {
     | '/'
     | '/carrinho'
     | '/checkout'
+    | '/contato'
+    | '/empresa'
     | '/filamentos'
     | '/impressao-3d'
     | '/impressoras'
@@ -138,6 +160,8 @@ export interface FileRouteTypes {
     | '/'
     | '/carrinho'
     | '/checkout'
+    | '/contato'
+    | '/empresa'
     | '/filamentos'
     | '/impressao-3d'
     | '/impressoras'
@@ -151,6 +175,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CarrinhoRoute: typeof CarrinhoRoute
   CheckoutRoute: typeof CheckoutRoute
+  ContatoRoute: typeof ContatoRoute
+  EmpresaRoute: typeof EmpresaRoute
   FilamentosRoute: typeof FilamentosRoute
   Impressao3dRoute: typeof Impressao3dRoute
   ImpressorasRoute: typeof ImpressorasRoute
@@ -181,6 +207,20 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresa': {
+      id: '/empresa'
+      path: '/empresa'
+      fullPath: '/empresa'
+      preLoaderRoute: typeof EmpresaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/filamentos': {
@@ -239,6 +279,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CarrinhoRoute: CarrinhoRoute,
   CheckoutRoute: CheckoutRoute,
+  ContatoRoute: ContatoRoute,
+  EmpresaRoute: EmpresaRoute,
   FilamentosRoute: FilamentosRoute,
   Impressao3dRoute: Impressao3dRoute,
   ImpressorasRoute: ImpressorasRoute,
