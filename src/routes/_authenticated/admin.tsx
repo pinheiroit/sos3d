@@ -103,7 +103,8 @@ function AdminPage() {
   };
 
   const save = useMutation({
-    mutationFn: (input: Parameters<typeof saveProduct>[0]) => saveProduct(input),
+    mutationFn: (input: { id: string | null; values: unknown }) =>
+      saveProduct({ data: input } as never),
     onSuccess: () => {
       toast.success("Produto salvo");
       setForm(null);
@@ -113,13 +114,14 @@ function AdminPage() {
   });
 
   const quick = useMutation({
-    mutationFn: (input: Parameters<typeof quickUpdateProduct>[0]) => quickUpdateProduct(input),
+    mutationFn: (input: { id: string; price?: number; stock?: number; active?: boolean }) =>
+      quickUpdateProduct({ data: input } as never),
     onSuccess: refresh,
     onError: (e: Error) => toast.error("Erro ao atualizar", { description: e.message }),
   });
 
   const removeProduct = useMutation({
-    mutationFn: (input: Parameters<typeof deleteProduct>[0]) => deleteProduct(input),
+    mutationFn: (input: { id: string }) => deleteProduct({ data: input } as never),
     onSuccess: () => {
       toast.success("Produto removido");
       refresh();
@@ -128,7 +130,8 @@ function AdminPage() {
   });
 
   const orderStatus = useMutation({
-    mutationFn: (input: Parameters<typeof updateOrderStatus>[0]) => updateOrderStatus(input),
+    mutationFn: (input: { id: string; status: string }) =>
+      updateOrderStatus({ data: input } as never),
     onSuccess: () => {
       toast.success("Status atualizado");
       refresh();
@@ -137,7 +140,8 @@ function AdminPage() {
   });
 
   const membership = useMutation({
-    mutationFn: (input: Parameters<typeof setMembership>[0]) => setMembership(input),
+    mutationFn: (input: { userId: string; active: boolean }) =>
+      setMembership({ data: input } as never),
     onSuccess: () => {
       toast.success("Acesso atualizado");
       refresh();

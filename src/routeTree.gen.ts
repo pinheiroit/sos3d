@@ -22,6 +22,7 @@ import { Route as ImpressorasRouteImport } from './routes/impressoras'
 import { Route as LojaRouteImport } from './routes/loja'
 import { Route as MakersRouteImport } from './routes/makers'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 
@@ -89,6 +90,11 @@ const SuporteRoute = SuporteRouteImport.update({
   path: '/suporte',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
   '/suporte': typeof SuporteRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
   '/suporte': typeof SuporteRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
   '/suporte': typeof SuporteRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
 }
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/loja'
     | '/makers'
     | '/suporte'
+    | '/admin'
     | '/portal'
     | '/produto/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/loja'
     | '/makers'
     | '/suporte'
+    | '/admin'
     | '/portal'
     | '/produto/$slug'
   id:
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/loja'
     | '/makers'
     | '/suporte'
+    | '/_authenticated/admin'
     | '/_authenticated/portal'
     | '/produto/$slug'
   fileRoutesById: FileRoutesById
@@ -312,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuporteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portal': {
       id: '/_authenticated/portal'
       path: '/portal'
@@ -330,10 +349,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
 }
 
