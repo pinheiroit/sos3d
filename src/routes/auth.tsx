@@ -46,22 +46,31 @@ function AuthPage() {
     });
   }, [navigate]);
 
-  async function signIn(e: React.FormEvent) {
+  async function signIn(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const parsed = credsSchema.safeParse({ email, password });
-    if (!parsed.success) return toast.error(parsed.error.issues[0]!.message);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]!.message);
+      return;
+    }
 
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     setLoading(false);
-    if (error) return toast.error("Não foi possível entrar", { description: error.message });
+    if (error) {
+      toast.error("Não foi possível entrar", { description: error.message });
+      return;
+    }
     navigate({ to: "/portal", replace: true });
   }
 
-  async function signUp(e: React.FormEvent) {
+  async function signUp(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const parsed = credsSchema.safeParse({ email, password });
-    if (!parsed.success) return toast.error(parsed.error.issues[0]!.message);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]!.message);
+      return;
+    }
 
     setLoading(true);
     const { error } = await supabase.auth.signUp({
@@ -72,15 +81,21 @@ function AuthPage() {
       },
     });
     setLoading(false);
-    if (error) return toast.error("Não foi possível criar a conta", { description: error.message });
+    if (error) {
+      toast.error("Não foi possível criar a conta", { description: error.message });
+      return;
+    }
     setSent(true);
   }
 
-  async function google() {
+  async function google(): Promise<void> {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("Falha no login com Google");
+    if (result.error) {
+      toast.error("Falha no login com Google");
+      return;
+    }
     if (result.redirected) return;
     navigate({ to: "/portal", replace: true });
   }
