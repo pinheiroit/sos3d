@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingCart, Headset, X } from "lucide-react";
+import { Menu, ShoppingCart, Headset, X, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/site/Logo";
 import { useCart } from "@/lib/cart";
+import { useSession } from "@/lib/session";
 
 const nav = [
   { to: "/loja", label: "Loja" },
@@ -19,6 +20,7 @@ const nav = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const { count } = useCart();
+  const { session } = useSession();
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -33,6 +35,12 @@ export function Header() {
             </Link>
             <Link to="/contato" className="text-white/80 transition-colors hover:text-white">
               Falar com especialista
+            </Link>
+            <Link
+              to={session ? "/portal" : "/auth"}
+              className="text-white/80 transition-colors hover:text-white"
+            >
+              {session ? "Portal de membros" : "Entrar"}
             </Link>
           </div>
         </div>
@@ -66,6 +74,11 @@ export function Header() {
                 )}
               </Link>
             </Button>
+            <Button asChild variant="ghost" size="icon" aria-label="Minha conta">
+              <Link to={session ? "/portal" : "/auth"}>
+                <UserRound />
+              </Link>
+            </Button>
             <Button asChild variant="cta" className="hidden sm:inline-flex">
               <Link to="/contato">
                 <Headset /> Solicitar orçamento
@@ -96,6 +109,13 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              to={session ? "/portal" : "/auth"}
+              onClick={() => setOpen(false)}
+              className="block rounded-md px-2 py-3 text-sm font-medium text-foreground/85 hover:bg-secondary"
+            >
+              {session ? "Portal de membros" : "Entrar / criar conta"}
+            </Link>
             <Button asChild variant="cta" className="mt-3 w-full">
               <Link to="/contato" onClick={() => setOpen(false)}>
                 Solicitar orçamento
