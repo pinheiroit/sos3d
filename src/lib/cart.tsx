@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { products, type Product } from "@/lib/catalog";
+import { type Product } from "@/lib/catalog";
+import { useProducts } from "@/lib/products";
 
 export type CartLine = { slug: string; qty: number };
 
@@ -19,6 +20,7 @@ const STORAGE_KEY = "sos3d.cart.v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const { products } = useProducts();
 
   useEffect(() => {
     try {
@@ -75,7 +77,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       remove,
       clear,
     };
-  }, [lines, add, setQty, remove, clear]);
+  }, [lines, products, add, setQty, remove, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
