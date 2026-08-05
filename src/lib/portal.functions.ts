@@ -1,6 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type PortalCourse = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  level: string;
+  cover_key: string;
+  sort_order: number;
+  lessons: {
+    id: string;
+    title: string;
+    description: string;
+    duration_min: number;
+    sort_order: number;
+    video_url: string | null;
+    resource_url: string | null;
+  }[];
+};
+
 export const myPortal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -11,7 +30,7 @@ export const myPortal = createServerFn({ method: "GET" })
     ]);
 
     const isMember = Boolean(membership.data?.active);
-    let courses: unknown[] = [];
+    let courses: PortalCourse[] = [];
     if (isMember) {
       const { data, error } = await context.supabase
         .from("courses")
@@ -19,7 +38,7 @@ export const myPortal = createServerFn({ method: "GET" })
         .eq("published", true)
         .order("sort_order", { ascending: true });
       if (error) throw new Error(error.message);
-      courses = data ?? [];
+      courses = (data ?? []) as PortalCourse[];
     }
 
     return {
