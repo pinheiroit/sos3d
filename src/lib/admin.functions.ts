@@ -14,7 +14,13 @@ const productSchema = z.object({
   price: z.number().min(0).max(10_000_000),
   old_price: z.number().min(0).max(10_000_000).nullable().optional(),
   image_key: z.string().trim().max(60).default("printer-1"),
-  image_url: z.string().trim().url().max(600).nullable().optional(),
+  image_url: z
+    .string()
+    .trim()
+    .max(600)
+    .refine((v) => v.startsWith("/") || /^https?:\/\//.test(v), "URL inválida")
+    .nullable()
+    .optional(),
   badge: z.string().trim().max(40).nullable().optional(),
   stock: z.number().int().min(0).max(1_000_000),
   active: z.boolean().default(true),
