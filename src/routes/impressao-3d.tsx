@@ -58,6 +58,7 @@ const capacidades = [
 ];
 
 function PrintingPage() {
+  const serviceParts = useBanner("impressao-3d");
   return (
     <>
       <section className="surface-brand grid-tech">

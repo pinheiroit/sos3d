@@ -40,6 +40,7 @@ const servicos = [
 ];
 
 function CompanyPage() {
+  const hero = useBanner("empresa");
   return (
     <>
       <section className="container-page grid items-center gap-12 py-16 lg:grid-cols-2">

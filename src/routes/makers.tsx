@@ -44,6 +44,7 @@ const guias = [
 ];
 
 function MakersPage() {
+  const makersImg = useBanner("makers");
   const { products } = useProducts();
   const kits = products.filter((p) => p.category === "acessorios" || p.slug === "bambu-lab-a1-mini");
 
