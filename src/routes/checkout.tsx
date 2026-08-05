@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "sonner";
 import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { createOrder } from "@/lib/orders.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -24,8 +26,22 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<{ reference: string } | null>(null);
   const [pagamento, setPagamento] = useState("pix");
+  const [sending, setSending] = useState(false);
+  const [f, setF] = useState({
+    nome: "",
+    email: "",
+    doc: "",
+    tel: "",
+    cep: "",
+    rua: "",
+    num: "",
+    cidade: "",
+    uf: "",
+  });
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setF((prev) => ({ ...prev, [k]: e.target.value }));
 
   const frete = subtotal > 0 && subtotal < 500 ? 79 : 0;
   const desconto = pagamento === "pix" ? subtotal * 0.05 : 0;
@@ -36,6 +52,7 @@ function CheckoutPage() {
       <div className="container-page py-24 text-center">
         <CheckCircle2 className="mx-auto size-12 text-success" />
         <h1 className="mt-6 text-3xl font-bold">Pedido registrado com sucesso</h1>
+        <p className="mt-3 text-sm font-semibold">Pedido {done.reference}</p>
         <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
           Enviamos o resumo por e-mail. Um especialista da SOS.3D entra em contato para confirmar
           prazos, condições de entrega e orientação de instalação.
@@ -72,10 +89,35 @@ function CheckoutPage() {
 
       <form
         className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          clear();
-          setDone(true);
+          setSending(true);
+          try {
+            const result = await createOrder({
+              data: {
+                items: items.map((i) => ({ slug: i.product.slug, qty: i.qty })),
+                customer: { name: f.nome, email: f.email, phone: f.tel, document: f.doc },
+                address: {
+                  zip: f.cep,
+                  street: f.rua,
+                  number: f.num,
+                  complement: "",
+                  city: f.cidade,
+                  state: f.uf,
+                },
+                paymentMethod: pagamento as "pix" | "boleto" | "cartao",
+                notes: "",
+              },
+            });
+            clear();
+            setDone({ reference: result.reference });
+          } catch (error) {
+            toast.error("Não foi possível concluir o pedido", {
+              description: error instanceof Error ? error.message : "Tente novamente.",
+            });
+          } finally {
+            setSending(false);
+          }
         }}
       >
         <div className="space-y-6">
@@ -84,19 +126,19 @@ function CheckoutPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="nome">Nome completo</Label>
-                <Input id="nome" required className="mt-2" autoComplete="name" />
+                <Input id="nome" required className="mt-2" autoComplete="name"  value={f.nome} onChange={set("nome")} />
               </div>
               <div>
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" required className="mt-2" autoComplete="email" />
+                <Input id="email" type="email" required className="mt-2" autoComplete="email"  value={f.email} onChange={set("email")} />
               </div>
               <div>
                 <Label htmlFor="doc">CPF / CNPJ</Label>
-                <Input id="doc" required className="mt-2" />
+                <Input id="doc" required className="mt-2"  value={f.doc} onChange={set("doc")} />
               </div>
               <div>
                 <Label htmlFor="tel">Telefone</Label>
-                <Input id="tel" required className="mt-2" autoComplete="tel" />
+                <Input id="tel" required className="mt-2" autoComplete="tel"  value={f.tel} onChange={set("tel")} />
               </div>
             </div>
           </fieldset>
@@ -106,23 +148,23 @@ function CheckoutPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="sm:col-span-1">
                 <Label htmlFor="cep">CEP</Label>
-                <Input id="cep" required className="mt-2" autoComplete="postal-code" />
+                <Input id="cep" required className="mt-2" autoComplete="postal-code"  value={f.cep} onChange={set("cep")} />
               </div>
               <div className="sm:col-span-2">
                 <Label htmlFor="rua">Endereço</Label>
-                <Input id="rua" required className="mt-2" autoComplete="street-address" />
+                <Input id="rua" required className="mt-2" autoComplete="street-address"  value={f.rua} onChange={set("rua")} />
               </div>
               <div>
                 <Label htmlFor="num">Número</Label>
-                <Input id="num" required className="mt-2" />
+                <Input id="num" required className="mt-2"  value={f.num} onChange={set("num")} />
               </div>
               <div>
                 <Label htmlFor="cidade">Cidade</Label>
-                <Input id="cidade" required className="mt-2" />
+                <Input id="cidade" required className="mt-2"  value={f.cidade} onChange={set("cidade")} />
               </div>
               <div>
                 <Label htmlFor="uf">Estado</Label>
-                <Input id="uf" required className="mt-2" />
+                <Input id="uf" required className="mt-2"  value={f.uf} onChange={set("uf")} />
               </div>
             </div>
             <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
@@ -188,7 +230,7 @@ function CheckoutPage() {
               <dd className="text-xl font-extrabold text-brand">{formatBRL(total)}</dd>
             </div>
           </dl>
-          <Button type="submit" variant="cta" size="lg" className="mt-6 w-full">
+          <Button type="submit" variant="cta" size="lg" className="mt-6 w-full" disabled={sending}>
             <CreditCard /> Concluir pedido
           </Button>
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
