@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/site/ProductCard";
 import { useProducts } from "@/lib/products";
-import makersImg from "@/assets/makers.jpg";
+import { useBanner } from "@/lib/site-images";
 
 export const Route = createFileRoute("/makers")({
   head: () => ({
@@ -44,6 +44,7 @@ const guias = [
 ];
 
 function MakersPage() {
+  const makersImg = useBanner("makers");
   const { products } = useProducts();
   const kits = products.filter((p) => p.category === "acessorios" || p.slug === "bambu-lab-a1-mini");
 

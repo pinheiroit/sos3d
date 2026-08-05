@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CtaBand } from "@/components/site/CtaBand";
-import hero from "@/assets/hero-workshop.jpg";
+import { useBanner } from "@/lib/site-images";
 
 export const Route = createFileRoute("/empresa")({
   head: () => ({
@@ -40,6 +40,7 @@ const servicos = [
 ];
 
 function CompanyPage() {
+  const hero = useBanner("empresa");
   return (
     <>
       <section className="container-page grid items-center gap-12 py-16 lg:grid-cols-2">

@@ -18,7 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { formatBRL, imageOptions } from "@/lib/catalog";
+import { formatBRL, imageFor } from "@/lib/catalog";
+import { ImageUploader } from "@/components/site/ImageUploader";
+import { bannerDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
+import { setSiteImage } from "@/lib/uploads.functions";
 import {
   adminOverview,
   deleteProduct,
@@ -61,6 +64,7 @@ type FormState = {
   price: string;
   old_price: string;
   image_key: string;
+  image_url: string | null;
   badge: string;
   stock: string;
   active: boolean;
@@ -79,6 +83,7 @@ const emptyForm: FormState = {
   price: "0",
   old_price: "",
   image_key: "printer-1",
+  image_url: null,
   badge: "",
   stock: "0",
   active: true,
@@ -149,6 +154,18 @@ function AdminPage() {
     onError: (e: Error) => toast.error("Erro ao atualizar acesso", { description: e.message }),
   });
 
+  const siteImages = useQuery(siteImagesQueryOptions);
+
+  const banner = useMutation({
+    mutationFn: (input: { key: string; url: string | null }) =>
+      setSiteImage({ data: input } as never),
+    onSuccess: () => {
+      toast.success("Banner atualizado");
+      void queryClient.invalidateQueries({ queryKey: ["site-images"] });
+    },
+    onError: (e: Error) => toast.error("Erro ao atualizar banner", { description: e.message }),
+  });
+
   const data = overview.data;
   const totals = useMemo(() => {
     const orders = data?.orders ?? [];
@@ -192,6 +209,7 @@ function AdminPage() {
       price: String(p.price),
       old_price: p.old_price != null ? String(p.old_price) : "",
       image_key: p.image_key,
+      image_url: p.image_url ?? null,
       badge: p.badge ?? "",
       stock: String(p.stock),
       active: p.active,
@@ -218,7 +236,7 @@ function AdminPage() {
         price: Number(form.price) || 0,
         old_price: form.old_price ? Number(form.old_price) : null,
         image_key: form.image_key,
-        image_url: null,
+        image_url: form.image_url,
         badge: form.badge.trim() || null,
         stock: Number(form.stock) || 0,
         active: form.active,
@@ -275,6 +293,7 @@ function AdminPage() {
           <TabsTrigger value="produtos">Produtos</TabsTrigger>
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
+          <TabsTrigger value="banners">Banners</TabsTrigger>
         </TabsList>
 
         <TabsContent value="produtos" className="mt-6 space-y-3">
@@ -419,6 +438,27 @@ function AdminPage() {
             );
           })}
         </TabsContent>
+
+        <TabsContent value="banners" className="mt-6 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Troque as fotos das páginas do site. A alteração aparece imediatamente para os
+            visitantes.
+          </p>
+          {bannerDefinitions.map((b) => (
+            <div key={b.key} className="rounded-xl border border-border bg-card p-4">
+              <p className="font-semibold">{b.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{b.hint}</p>
+              <div className="mt-3">
+                <ImageUploader
+                  label="Trocar foto"
+                  value={siteImages.data?.find((i) => i.key === b.key)?.url ?? null}
+                  fallback={b.fallback}
+                  onChange={(url) => banner.mutate({ key: b.key, url })}
+                />
+              </div>
+            </div>
+          ))}
+        </TabsContent>
       </Tabs>
 
       <Dialog open={form !== null} onOpenChange={(open) => !open && setForm(null)}>
@@ -512,23 +552,18 @@ function AdminPage() {
                   onChange={(e) => setForm({ ...form, badge: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Imagem</Label>
-                <Select
-                  value={form.image_key}
-                  onValueChange={(v) => setForm({ ...form, image_key: v })}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {imageOptions.map((o) => (
-                      <SelectItem key={o.key} value={o.key}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="sm:col-span-2">
+                <Label>Imagem do produto</Label>
+                <div className="mt-2">
+                  <ImageUploader
+                    value={form.image_url}
+                    fallback={imageFor(form.image_key, form.image_url)}
+                    onChange={(url) => setForm({ ...form, image_url: url })}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  JPG, PNG, WEBP ou AVIF até 6MB. Sem imagem enviada, usamos a foto padrão da loja.
+                </p>
               </div>
               <div className="flex items-center gap-3 pt-7">
                 <Switch

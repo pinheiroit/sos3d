@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { CtaBand } from "@/components/site/CtaBand";
-import serviceParts from "@/assets/service-parts.jpg";
+import { useBanner } from "@/lib/site-images";
 
 export const Route = createFileRoute("/impressao-3d")({
   head: () => ({
@@ -58,6 +58,7 @@ const capacidades = [
 ];
 
 function PrintingPage() {
+  const serviceParts = useBanner("impressao-3d");
   return (
     <>
       <section className="surface-brand grid-tech">

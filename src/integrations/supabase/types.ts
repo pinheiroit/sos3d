@@ -343,6 +343,27 @@ export type Database = {
         }
         Relationships: []
       }
+      site_images: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
