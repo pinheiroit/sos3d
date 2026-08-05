@@ -6,16 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductCard } from "@/components/site/ProductCard";
-import { formatBRL, getProduct, products } from "@/lib/catalog";
+import { formatBRL, type Product } from "@/lib/catalog";
+import { listProducts } from "@/lib/catalog.functions";
 import { useCart } from "@/lib/cart";
 
 export const Route = createFileRoute("/produto/$slug")({
-  loader: ({ params }) => {
-    if (!getProduct(params.slug)) throw notFound();
-    return { slug: params.slug };
+  loader: async ({ params }) => {
+    const all = await listProducts();
+    const product = all.find((p) => p.slug === params.slug);
+    if (!product) throw notFound();
+    return { product, all };
   },
-  head: ({ params }) => {
-    const product = getProduct(params.slug);
+  head: ({ loaderData }) => {
+    const product = loaderData?.product;
     if (!product) {
       return {
         meta: [{ title: "Produto indisponível | SOS.3D" }, { name: "robots", content: "noindex" }],
@@ -34,13 +37,12 @@ export const Route = createFileRoute("/produto/$slug")({
 });
 
 function ProductPage() {
-  const { slug } = Route.useParams();
-  const product = getProduct(slug)!;
+  const { product, all } = Route.useLoaderData() as { product: Product; all: Product[] };
   const { add } = useCart();
   const [qty, setQty] = useState(1);
 
 
-  const related = products.filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 3);
+  const related = all.filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 3);
 
   return (
     <>

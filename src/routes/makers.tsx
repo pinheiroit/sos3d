@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/site/ProductCard";
-import { products } from "@/lib/catalog";
+import { useProducts } from "@/lib/products";
 import makersImg from "@/assets/makers.jpg";
 
 export const Route = createFileRoute("/makers")({
@@ -44,6 +44,7 @@ const guias = [
 ];
 
 function MakersPage() {
+  const { products } = useProducts();
   const kits = products.filter((p) => p.category === "acessorios" || p.slug === "bambu-lab-a1-mini");
 
   return (

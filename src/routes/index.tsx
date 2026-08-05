@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/site/ProductCard";
 import { CtaBand } from "@/components/site/CtaBand";
-import { products } from "@/lib/catalog";
+import { useProducts } from "@/lib/products";
 import hero from "@/assets/hero-workshop.jpg";
 import serviceParts from "@/assets/service-parts.jpg";
 
@@ -99,6 +99,7 @@ const passos = [
 ];
 
 function Index() {
+  const { products } = useProducts();
   const destaques = products.filter((p) => p.badge).slice(0, 4);
 
   return (

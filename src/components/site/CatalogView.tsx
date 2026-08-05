@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProductCard } from "@/components/site/ProductCard";
-import { brands, categoryLabels, formatBRL, products, type Category } from "@/lib/catalog";
+import { brandsOf, categoryLabels, formatBRL, type Category } from "@/lib/catalog";
+import { useProducts } from "@/lib/products";
 
 type Props = {
   fixedCategory?: Category;
@@ -22,11 +23,12 @@ type Props = {
 };
 
 export function CatalogView({ fixedCategory, title, description }: Props) {
+  const { products, isLoading } = useProducts();
   const base = useMemo(
     () => (fixedCategory ? products.filter((p) => p.category === fixedCategory) : products),
-    [fixedCategory],
+    [fixedCategory, products],
   );
-  const maxPrice = useMemo(() => Math.max(...base.map((p) => p.price)), [base]);
+  const maxPrice = useMemo(() => (base.length ? Math.max(...base.map((p) => p.price)) : 100000), [base]);
 
   const [query, setQuery] = useState("");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -53,7 +55,7 @@ export function CatalogView({ fixedCategory, title, description }: Props) {
     return list;
   }, [base, query, selectedBrands, categories, priceCap, sort]);
 
-  const availableBrands = brands.filter((b) => base.some((p) => p.brand === b));
+  const availableBrands = brandsOf(base);
 
   function toggle<T>(value: T, list: T[], set: (v: T[]) => void) {
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -177,6 +179,11 @@ export function CatalogView({ fixedCategory, title, description }: Props) {
             </div>
           ) : (
             <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {isLoading && base.length === 0
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-[430px] animate-pulse rounded-xl border border-border bg-secondary" />
+                  ))
+                : null}
               {results.map((p) => (
                 <ProductCard key={p.slug + p.name} product={p} />
               ))}
