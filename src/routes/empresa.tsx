@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CtaBand } from "@/components/site/CtaBand";
-import hero from "@/assets/hero-workshop.jpg";
+import { useBanner } from "@/lib/site-images";
 
 export const Route = createFileRoute("/empresa")({
   head: () => ({

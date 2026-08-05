@@ -14,8 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/site/ProductCard";
 import { CtaBand } from "@/components/site/CtaBand";
 import { useProducts } from "@/lib/products";
-import hero from "@/assets/hero-workshop.jpg";
-import serviceParts from "@/assets/service-parts.jpg";
+import { useBanner } from "@/lib/site-images";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -100,6 +99,8 @@ const passos = [
 
 function Index() {
   const { products } = useProducts();
+  const hero = useBanner("home-hero");
+  const serviceParts = useBanner("home-aplicacoes");
   const destaques = products.filter((p) => p.badge).slice(0, 4);
 
   return (
