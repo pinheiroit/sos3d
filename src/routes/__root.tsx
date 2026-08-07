@@ -15,6 +15,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { PartnerBrands } from "@/components/site/PartnerBrands";
 import { CartProvider } from "@/lib/cart";
+import { siteContentQueryOptions } from "@/lib/site-content";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
