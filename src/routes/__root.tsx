@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { PartnerBrands } from "@/components/site/PartnerBrands";
 import { CartProvider } from "@/lib/cart";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -132,6 +133,7 @@ function RootComponent() {
             {/* Required: nested routes render here. */}
             <Outlet />
           </main>
+          <PartnerBrands />
           <Footer />
         </div>
         <Toaster position="top-right" />

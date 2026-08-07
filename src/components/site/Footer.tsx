@@ -40,7 +40,7 @@ export function Footer() {
               {col.links.map((l, i) => (
                 <li key={`${l.label}-${i}`}>
                   <Link
-                    to={l.to}
+                    to={l.to as never}
                     className="text-sm text-white/70 transition-colors hover:text-accent"
                   >
                     {l.label}
