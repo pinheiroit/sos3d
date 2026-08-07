@@ -4,7 +4,7 @@ import { useSiteContent } from "@/lib/site-content";
 export function PartnerBrands() {
   const { brands } = useSiteContent();
   console.log("BRANDS", JSON.stringify(brands));
-  if (brands.length === 0) return null;
+  if (brands.length === 0) return <div data-debug="partner-empty" />;
 
   return (
     <section className="border-t border-border bg-secondary/50">
