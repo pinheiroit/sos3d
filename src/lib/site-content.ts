@@ -54,6 +54,7 @@ export function useSiteContent() {
   return {
     footer: (data?.footer ?? defaultFooter) as FooterContent,
     brands: (data?.brands ?? []) as PartnerBrand[],
+    debug: (data as { debug?: string } | undefined)?.debug,
   };
 }
 
