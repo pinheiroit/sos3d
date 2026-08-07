@@ -39,34 +39,29 @@ export function Footer() {
         <div className="lg:col-span-2">
           <Logo variant="light" />
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/75">
-            Da ideia à peça pronta. Equipamentos de manufatura aditiva, soluções a laser, materiais
-            e suporte técnico para empresas, escolas, profissionais e makers.
+            Da ideia à peça pronta. Equipamentos de manufatura aditiva, soluções a laser, materiais e suporte técnico
+            para empresas, escolas, profissionais e makers.
           </p>
           <ul className="mt-6 space-y-2 text-sm text-white/75">
             <li className="flex items-center gap-2">
-              <Phone className="size-4 text-accent" /> (00) 0000-0000
+              <Phone className="size-4 text-accent" /> (68) 9 9948-4082
             </li>
             <li className="flex items-center gap-2">
               <Mail className="size-4 text-accent" /> contato@sos3d.com.br
             </li>
             <li className="flex items-center gap-2">
-              <MapPin className="size-4 text-accent" /> Atendimento em todo o Brasil
+              <MapPin className="size-4 text-accent" /> Impressoras a pronta entrega em Rio Branco/AC
             </li>
           </ul>
         </div>
 
         {columns.map((col) => (
           <div key={col.title}>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-white">
-              {col.title}
-            </h3>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-white">{col.title}</h3>
             <ul className="mt-4 space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.label}>
-                  <Link
-                    to={l.to}
-                    className="text-sm text-white/70 transition-colors hover:text-accent"
-                  >
+                  <Link to={l.to} className="text-sm text-white/70 transition-colors hover:text-accent">
                     {l.label}
                   </Link>
                 </li>
