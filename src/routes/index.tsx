@@ -144,20 +144,6 @@ function Index() {
           </div>
         </div>
 
-        <div className="border-t border-white/15">
-          <div className="container-page flex flex-wrap items-center justify-between gap-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-              Portfólio selecionado
-            </p>
-            <div className="flex flex-wrap items-center gap-x-10 gap-y-3">
-              {["Bambu Lab", "Snapmaker", "Masterprint", "Voolt 3D"].map((b) => (
-                <span key={b} className="text-lg font-semibold tracking-tight text-white/75">
-                  {b}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
       </section>
 
       <section className="container-page py-20">
