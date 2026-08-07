@@ -1,8 +1,6 @@
 # Print Makers Hub
 
-Construa um site com a MELHOR UX QUE VOCÊ CONSIDERAR UTILIZANDO O FLUXO DA DOCUMENTAÇÃO ACIMA E TRAGA POR FAVOR UM E-COMMERCE COMPLETO E TAMBÉM ABAS PARA ÁREA DE IMPRESSÃO 3D, VENDA DE IMPRESSORAS, VENDA DE FILAMENTOS, ÁREA DE MAKERS
 
-This project was built with [Lovable](https://lovable.dev).
 
 **Live app**: https://sos3d.lovable.app
 
