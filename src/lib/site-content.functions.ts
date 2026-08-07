@@ -63,6 +63,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
   if (settings.error) throw new Error(settings.error.message);
   if (brands.error) throw new Error(brands.error.message);
 
+  console.log("SITE_CONTENT_DEBUG", JSON.stringify({ err: brands.error, n: brands.data?.length }));
   return {
     footer: (settings.data?.value ?? null) as FooterContent | null,
     brands: brands.data ?? [],
