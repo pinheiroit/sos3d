@@ -25,6 +25,8 @@ const footerSchema = z.object({
     .default([]),
 });
 
+export type FooterContent = z.infer<typeof footerSchema>;
+
 const brandSchema = z.object({
   name: z.string().trim().min(1).max(120),
   logo_url: z
@@ -62,7 +64,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
   if (brands.error) throw new Error(brands.error.message);
 
   return {
-    footer: (settings.data?.value ?? null) as Record<string, unknown> | null,
+    footer: (settings.data?.value ?? null) as FooterContent | null,
     brands: brands.data ?? [],
   };
 });
