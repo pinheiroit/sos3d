@@ -66,7 +66,6 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
   return {
     footer: (settings.data?.value ?? null) as FooterContent | null,
     brands: brands.data ?? [],
-    debug: `${brands.data?.length ?? -1}`,
   };
 });
 

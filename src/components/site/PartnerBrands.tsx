@@ -2,9 +2,8 @@ import { useSiteContent } from "@/lib/site-content";
 
 /** Faixa de marcas parceiras exibida logo acima do rodapé. */
 export function PartnerBrands() {
-  const { brands, debug } = useSiteContent() as never as { brands: never[]; debug?: string };
-  console.log("BRANDS", JSON.stringify(brands));
-  if (brands.length === 0) return <div data-debug="partner-empty">DEBUG-EMPTY {String(debug)}</div>;
+  const { brands } = useSiteContent();
+  if (brands.length === 0) return null;
 
   return (
     <section className="border-t border-border bg-secondary/50">
