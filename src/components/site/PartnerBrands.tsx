@@ -3,6 +3,7 @@ import { useSiteContent } from "@/lib/site-content";
 /** Faixa de marcas parceiras exibida logo acima do rodapé. */
 export function PartnerBrands() {
   const { brands } = useSiteContent();
+  console.log("BRANDS", JSON.stringify(brands));
   if (brands.length === 0) return null;
 
   return (
