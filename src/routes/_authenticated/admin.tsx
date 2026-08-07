@@ -22,6 +22,8 @@ import { formatBRL, imageFor } from "@/lib/catalog";
 import { ImageUploader } from "@/components/site/ImageUploader";
 import { bannerDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
 import { setSiteImage } from "@/lib/uploads.functions";
+import { FooterAdmin } from "@/components/admin/FooterAdmin";
+import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
 import {
   adminOverview,
   deleteProduct,
@@ -294,6 +296,8 @@ function AdminPage() {
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
+          <TabsTrigger value="marcas">Marcas</TabsTrigger>
+          <TabsTrigger value="rodape">Rodapé</TabsTrigger>
         </TabsList>
 
         <TabsContent value="produtos" className="mt-6 space-y-3">
@@ -458,6 +462,14 @@ function AdminPage() {
               </div>
             </div>
           ))}
+        </TabsContent>
+
+        <TabsContent value="marcas" className="mt-6">
+          <BrandsAdmin />
+        </TabsContent>
+
+        <TabsContent value="rodape" className="mt-6">
+          <FooterAdmin />
         </TabsContent>
       </Tabs>
 
