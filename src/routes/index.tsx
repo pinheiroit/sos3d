@@ -1,235 +1,230 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Boxes,
-  GraduationCap,
-  Layers,
-  LifeBuoy,
-  Printer,
-  Scan,
-  ShieldCheck,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, Boxes, Layers, Printer, Scan, Tag, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/site/ProductCard";
+import { BenefitsStrip } from "@/components/site/BenefitsStrip";
 import { CtaBand } from "@/components/site/CtaBand";
 import { useProducts } from "@/lib/products";
 import { useBanner } from "@/lib/site-images";
+import { categoryLabels } from "@/lib/catalog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SOS.3D — Da ideia à peça pronta | Impressão 3D, filamentos e suporte" },
+      { title: "SOS.3D — Loja de impressoras 3D, filamentos e acessórios" },
       {
         name: "description",
         content:
-          "Loja e centro técnico de manufatura aditiva: impressoras 3D, filamentos, acessórios, impressão sob demanda e área maker com suporte especializado.",
+          "Compre impressoras 3D, filamentos técnicos e acessórios com 12x sem juros, 5% off no Pix, garantia e suporte técnico especializado.",
       },
-      { property: "og:title", content: "SOS.3D — Da ideia à peça pronta" },
+      { property: "og:title", content: "SOS.3D — Loja de impressão 3D" },
       {
         property: "og:description",
         content:
-          "Impressoras 3D, filamentos, impressão sob demanda e suporte técnico para empresas, escolas, profissionais e makers.",
+          "Impressoras 3D, filamentos e acessórios com envio para todo o Brasil, parcelamento e suporte técnico real.",
       },
     ],
   }),
   component: Index,
 });
 
-const categorias = [
-  {
-    icon: Printer,
-    title: "Impressoras 3D",
-    text: "Equipamentos para prototipagem, produção, educação e projetos profissionais.",
-    cta: "Ver impressoras",
-    to: "/impressoras" as const,
-  },
-  {
-    icon: Layers,
-    title: "Filamentos e insumos",
-    text: "Materiais selecionados para qualidade, repetibilidade e acabamento.",
-    cta: "Ver materiais",
-    to: "/filamentos" as const,
-  },
-  {
-    icon: Scan,
-    title: "Impressão sob demanda",
-    text: "Envie o arquivo ou a ideia: produzimos a peça com o material adequado.",
-    cta: "Enviar projeto",
-    to: "/impressao-3d" as const,
-  },
-  {
-    icon: Boxes,
-    title: "Área Maker",
-    text: "Kits, modelos, conteúdo técnico e comunidade para criar com autonomia.",
-    cta: "Entrar na área maker",
-    to: "/makers" as const,
-  },
+const atalhos = [
+  { icon: Printer, label: "Impressoras 3D", to: "/impressoras" as const },
+  { icon: Layers, label: "Filamentos", to: "/filamentos" as const },
+  { icon: Wrench, label: "Peças e acessórios", to: "/loja" as const },
+  { icon: Scan, label: "Impressão sob demanda", to: "/impressao-3d" as const },
+  { icon: Boxes, label: "Área Maker", to: "/makers" as const },
+  { icon: Tag, label: "Ofertas", to: "/loja" as const },
 ];
 
-const diferenciais = [
-  {
-    icon: ShieldCheck,
-    title: "Venda consultiva",
-    text: "A indicação parte da sua aplicação, do material, do volume de produção e do nível de experiência.",
-  },
-  {
-    icon: Wrench,
-    title: "Implantação orientada",
-    text: "Configuração inicial, boas práticas e validação dos primeiros trabalhos.",
-  },
-  {
-    icon: GraduationCap,
-    title: "Treinamento prático",
-    text: "Capacitação para operação, preparação de arquivos, materiais e cuidados preventivos.",
-  },
-  {
-    icon: LifeBuoy,
-    title: "Pós-venda próximo",
-    text: "Canal de suporte para dúvidas, diagnóstico e continuidade da produção.",
-  },
-];
-
-const passos = [
-  { n: "01", t: "Conte sua necessidade", d: "Aplicação, material, tamanho, volume e prazo." },
-  { n: "02", t: "Receba a recomendação", d: "Equipamento, acessórios, insumos e serviços adequados." },
-  { n: "03", t: "Implante com segurança", d: "Instalação, configuração, treinamento e primeiros testes." },
-  { n: "04", t: "Produza com acompanhamento", d: "Suporte, manutenção e reposição de materiais." },
-];
+function Row({
+  eyebrow,
+  title,
+  to,
+  items,
+}: {
+  eyebrow: string;
+  title: string;
+  to: "/loja" | "/impressoras" | "/filamentos";
+  items: ReturnType<typeof useProducts>["products"];
+}) {
+  if (items.length === 0) return null;
+  return (
+    <section className="container-page py-12">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+        <div>
+          <span className="eyebrow">{eyebrow}</span>
+          <h2 className="mt-1 text-2xl font-bold md:text-3xl">{title}</h2>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to={to}>
+            Ver todos <ArrowRight />
+          </Link>
+        </Button>
+      </div>
+      <div className="mt-6 grid gap-5 grid-cols-2 lg:grid-cols-4">
+        {items.map((p) => (
+          <ProductCard key={p.slug} product={p} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function Index() {
-  const { products } = useProducts();
+  const { products, isLoading } = useProducts();
   const hero = useBanner("home-hero");
   const serviceParts = useBanner("home-aplicacoes");
-  const destaques = products.filter((p) => p.badge).slice(0, 4);
+
+  const ofertas = products.filter((p) => p.oldPrice).slice(0, 4);
+  const destaques = (products.filter((p) => p.badge).length ? products.filter((p) => p.badge) : products).slice(0, 4);
+  const impressoras = products.filter((p) => p.category === "impressoras").slice(0, 4);
+  const filamentos = products.filter((p) => p.category === "filamentos").slice(0, 4);
 
   return (
     <>
-      <section className="surface-brand grid-tech relative overflow-hidden">
-        <div className="container-page grid items-center gap-12 py-16 lg:grid-cols-[1.05fr_1fr] lg:py-24">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-white/85">
-              Da ideia à peça pronta
-            </span>
-            <h1 className="mt-6 text-4xl font-extrabold leading-[1.05] text-white md:text-6xl">
-              Tecnologia 3D para produzir mais, inovar e crescer.
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80">
-              Equipamentos de manufatura aditiva, soluções a laser, materiais e suporte técnico para
-              empresas, escolas, profissionais e makers.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Button asChild variant="cta" size="lg">
-                <Link to="/contato">
-                  Falar com um especialista <ArrowRight />
-                </Link>
-              </Button>
-              <Button asChild variant="onbrand" size="lg">
-                <Link to="/loja">Conhecer as soluções</Link>
-              </Button>
+      {/* Hero comercial */}
+      <section className="container-page pt-6">
+        <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+          <div className="surface-brand grid-tech relative overflow-hidden rounded-2xl">
+            <div className="grid items-center gap-6 p-8 md:grid-cols-2 md:p-12">
+              <div>
+                <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-foreground">
+                  Ofertas SOS.3D
+                </span>
+                <h1 className="mt-5 text-3xl font-extrabold leading-tight text-white md:text-5xl">
+                  Impressoras 3D e filamentos com pronta entrega
+                </h1>
+                <p className="mt-4 max-w-md text-white/80">
+                  Até 12x sem juros, 5% de desconto no Pix e suporte técnico de quem usa impressão 3D
+                  todos os dias.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Button asChild variant="cta" size="lg">
+                    <Link to="/loja">
+                      Comprar agora <ArrowRight />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="onbrand" size="lg">
+                    <Link to="/impressoras">Ver impressoras</Link>
+                  </Button>
+                </div>
+              </div>
+              <img
+                src={hero}
+                alt="Impressoras 3D em operação na loja SOS.3D"
+                width={1600}
+                height={1008}
+                className="hidden w-full rounded-xl border border-white/15 object-cover md:block"
+              />
             </div>
-            <p className="mt-5 max-w-md text-sm text-white/60">
-              Conte o que você pretende produzir e receba uma recomendação adequada à sua aplicação.
-            </p>
           </div>
 
-          <div className="relative">
-            <img
-              src={hero}
-              alt="Oficina de manufatura aditiva com impressoras 3D em operação"
-              width={1600}
-              height={1008}
-              className="w-full rounded-2xl border border-white/15 object-cover shadow-2xl"
-            />
+          <div className="grid gap-4">
+            <Link
+              to="/filamentos"
+              className="card-lift flex flex-col justify-between rounded-2xl border border-border bg-card p-6"
+            >
+              <div>
+                <span className="eyebrow">Filamentos</span>
+                <h2 className="mt-1 text-xl font-bold">PLA, PETG, ABS e nylon CF</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Lotes consistentes e parâmetros recomendados em cada ficha.
+                </p>
+              </div>
+              <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-tech">
+                Comprar filamentos <ArrowRight className="size-4" />
+              </span>
+            </Link>
+            <Link
+              to="/impressao-3d"
+              className="card-lift flex flex-col justify-between rounded-2xl border border-border bg-secondary p-6"
+            >
+              <div>
+                <span className="eyebrow">Serviço</span>
+                <h2 className="mt-1 text-xl font-bold">Não tem impressora? A gente imprime</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Envie o arquivo e receba a peça pronta, no material certo.
+                </p>
+              </div>
+              <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-tech">
+                Enviar projeto <ArrowRight className="size-4" />
+              </span>
+            </Link>
           </div>
         </div>
-
       </section>
 
-      <section className="container-page py-20">
-        <div className="max-w-2xl">
-          <span className="eyebrow">Soluções</span>
-          <h2 className="mt-2 text-3xl font-bold md:text-4xl">
-            Soluções para cada etapa da sua produção
-          </h2>
-        </div>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {categorias.map((c) => (
+      {/* Atalhos de categoria */}
+      <section className="container-page py-10">
+        <div className="grid grid-cols-3 gap-4 md:grid-cols-6">
+          {atalhos.map((a) => (
             <Link
-              key={c.title}
-              to={c.to}
-              className="card-lift group rounded-xl border border-border bg-card p-6"
+              key={a.label}
+              to={a.to}
+              className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center transition-colors hover:border-tech"
             >
-              <span className="grid size-11 place-items-center rounded-lg bg-secondary text-tech">
-                <c.icon className="size-5" />
+              <span className="grid size-12 place-items-center rounded-full bg-secondary text-tech transition-colors group-hover:bg-tech group-hover:text-tech-foreground">
+                <a.icon className="size-5" />
               </span>
-              <h3 className="mt-5 text-lg font-semibold">{c.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.text}</p>
-              <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-tech">
-                {c.cta}
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-              </span>
+              <span className="text-xs font-semibold leading-tight">{a.label}</span>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="bg-secondary/60 py-20">
-        <div className="container-page">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="max-w-xl">
-              <span className="eyebrow">Loja SOS.3D</span>
-              <h2 className="mt-2 text-3xl font-bold md:text-4xl">Destaques do catálogo</h2>
-            </div>
-            <Button asChild variant="outline">
-              <Link to="/loja">
-                Ver loja completa <ArrowRight />
-              </Link>
-            </Button>
-          </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {destaques.map((p) => (
-              <ProductCard key={p.slug} product={p} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <BenefitsStrip />
 
-      <section className="container-page py-20">
-        <div className="max-w-2xl">
-          <span className="eyebrow">Por que escolher a SOS.3D</span>
-          <h2 className="mt-2 text-3xl font-bold md:text-4xl">
-            Tecnologia acompanhada do início ao resultado
-          </h2>
-        </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {diferenciais.map((d) => (
-            <div key={d.title} className="rounded-xl border border-border bg-card p-6">
-              <d.icon className="size-6 text-accent" />
-              <h3 className="mt-4 text-base font-semibold">{d.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d.text}</p>
-            </div>
+      {isLoading && products.length === 0 ? (
+        <div className="container-page grid gap-5 py-12 grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-[380px] animate-pulse rounded-xl bg-secondary" />
           ))}
         </div>
-      </section>
+      ) : null}
 
-      <section className="container-page pb-20">
-        <div className="grid items-center gap-12 rounded-2xl border border-border bg-card p-8 lg:grid-cols-2 lg:p-12">
+      <Row eyebrow="Mais procurados" title="Destaques da loja" to="/loja" items={destaques} />
+
+      {ofertas.length > 0 && (
+        <div className="bg-secondary/50">
+          <Row eyebrow="Promoções" title="Ofertas da semana" to="/loja" items={ofertas} />
+        </div>
+      )}
+
+      <Row
+        eyebrow={categoryLabels.impressoras}
+        title="Impressoras 3D para produzir mais"
+        to="/impressoras"
+        items={impressoras}
+      />
+
+      <div className="bg-secondary/50">
+        <Row
+          eyebrow={categoryLabels.filamentos}
+          title="Filamentos e insumos"
+          to="/filamentos"
+          items={filamentos}
+        />
+      </div>
+
+      {/* Serviços resumidos */}
+      <section className="container-page py-14">
+        <div className="grid items-center gap-10 rounded-2xl border border-border bg-card p-8 lg:grid-cols-2 lg:p-12">
           <div>
-            <span className="eyebrow">Aplicações</span>
-            <h2 className="mt-2 text-3xl font-bold">Onde a manufatura aditiva gera valor</h2>
+            <span className="eyebrow">Além da loja</span>
+            <h2 className="mt-2 text-2xl font-bold md:text-3xl">
+              Impressão sob demanda, treinamento e suporte
+            </h2>
             <p className="mt-4 text-muted-foreground">
-              Da validação de uma ideia à produção de peças personalizadas, a tecnologia 3D reduz
-              etapas, acelera testes e abre novas possibilidades para diferentes setores.
+              Compramos junto com você: indicamos o equipamento certo, entregamos a peça pronta
+              quando precisar e acompanhamos a operação depois da venda.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
               {[
-                "Prototipagem e desenvolvimento de produto",
-                "Gabaritos, suportes e organização de processos",
-                "Maquetes, modelos e apresentação de projetos",
-                "Educação tecnológica e laboratórios makers",
-                "Personalização, brindes e pequenas séries",
-                "Manutenção e reposição de componentes",
+                "Peças sob demanda em poucos dias",
+                "Implantação e treinamento prático",
+                "Reposição de materiais e peças",
+                "Área maker com conteúdo técnico",
               ].map((i) => (
                 <li key={i} className="flex gap-2.5 text-sm text-foreground/85">
                   <span className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
@@ -237,6 +232,14 @@ function Index() {
                 </li>
               ))}
             </ul>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button asChild variant="cta">
+                <Link to="/impressao-3d">Solicitar impressão</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/makers">Área Maker</Link>
+              </Button>
+            </div>
           </div>
           <img
             src={serviceParts}
@@ -247,22 +250,6 @@ function Index() {
             className="w-full rounded-xl object-cover"
           />
         </div>
-      </section>
-
-      <section className="container-page pb-20">
-        <div className="max-w-2xl">
-          <span className="eyebrow">Como funciona</span>
-          <h2 className="mt-2 text-3xl font-bold md:text-4xl">Quatro passos até a peça pronta</h2>
-        </div>
-        <ol className="mt-10 grid gap-6 md:grid-cols-4">
-          {passos.map((p) => (
-            <li key={p.n} className="rounded-xl border border-border bg-card p-6">
-              <span className="text-3xl font-extrabold text-mist">{p.n}</span>
-              <h3 className="mt-3 text-base font-semibold">{p.t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{p.d}</p>
-            </li>
-          ))}
-        </ol>
       </section>
 
       <CtaBand />
