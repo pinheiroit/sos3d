@@ -16,6 +16,8 @@ import { Footer } from "@/components/site/Footer";
 import { PartnerBrands } from "@/components/site/PartnerBrands";
 import { CartProvider } from "@/lib/cart";
 import { siteContentQueryOptions } from "@/lib/site-content";
+import { siteImagesQueryOptions } from "@/lib/site-images";
+import { productsQueryOptions } from "@/lib/products";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -103,7 +105,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(siteContentQueryOptions);
+    await Promise.all([
+      context.queryClient.ensureQueryData(siteContentQueryOptions),
+      context.queryClient.ensureQueryData(siteImagesQueryOptions),
+      context.queryClient.ensureQueryData(productsQueryOptions),
+    ]);
   },
   shellComponent: RootShell,
   component: RootComponent,
