@@ -20,9 +20,10 @@ type Props = {
   fixedCategory?: Category;
   title: string;
   description: string;
+  initialQuery?: string;
 };
 
-export function CatalogView({ fixedCategory, title, description }: Props) {
+export function CatalogView({ fixedCategory, title, description, initialQuery = "" }: Props) {
   const { products, isLoading } = useProducts();
   const base = useMemo(
     () => (fixedCategory ? products.filter((p) => p.category === fixedCategory) : products),

@@ -4,9 +4,10 @@ import { CatalogView } from "@/components/site/CatalogView";
 type LojaSearch = { q?: string };
 
 export const Route = createFileRoute("/loja")({
-  validateSearch: (search: Record<string, unknown>): LojaSearch => ({
-    q: typeof search['q'] === "string" && search['q'] ? (search['q'] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): LojaSearch => {
+    const q = search['q'];
+    return typeof q === "string" && q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Loja SOS.3D — Impressoras 3D, filamentos e acessórios" },

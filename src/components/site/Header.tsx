@@ -38,7 +38,8 @@ export function Header() {
   function submitSearch(e: FormEvent) {
     e.preventDefault();
     setOpen(false);
-    navigate({ to: "/loja", search: { q: term.trim() || undefined } });
+    const q = term.trim();
+    navigate({ to: "/loja", search: q ? { q } : {} });
   }
 
   return (
