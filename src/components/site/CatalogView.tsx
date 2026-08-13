@@ -87,7 +87,11 @@ export function CatalogView({
     <div className="container-page py-12">
       <header className="max-w-2xl">
         <span className="eyebrow">Loja SOS.3D</span>
-        <h1 className="mt-2 text-4xl font-bold md:text-5xl">{title}</h1>
+        {embedded ? (
+          <h2 className="mt-2 text-3xl font-bold md:text-4xl">{title}</h2>
+        ) : (
+          <h1 className="mt-2 text-4xl font-bold md:text-5xl">{title}</h1>
+        )}
         <p className="mt-4 text-lg text-muted-foreground">{description}</p>
       </header>
 
