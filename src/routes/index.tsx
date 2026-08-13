@@ -1,12 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, Layers, Printer, Scan, Tag, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ProductCard } from "@/components/site/ProductCard";
 import { BenefitsStrip } from "@/components/site/BenefitsStrip";
+import { CatalogView } from "@/components/site/CatalogView";
 import { CtaBand } from "@/components/site/CtaBand";
-import { useProducts } from "@/lib/products";
 import { useBanner } from "@/lib/site-images";
-import { categoryLabels } from "@/lib/catalog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,49 +35,10 @@ const atalhos = [
   { icon: Tag, label: "Ofertas", to: "/loja" as const },
 ];
 
-function Row({
-  eyebrow,
-  title,
-  to,
-  items,
-}: {
-  eyebrow: string;
-  title: string;
-  to: "/loja" | "/impressoras" | "/filamentos";
-  items: ReturnType<typeof useProducts>["products"];
-}) {
-  if (items.length === 0) return null;
-  return (
-    <section className="container-page py-12">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
-        <div>
-          <span className="eyebrow">{eyebrow}</span>
-          <h2 className="mt-1 text-2xl font-bold md:text-3xl">{title}</h2>
-        </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to={to}>
-            Ver todos <ArrowRight />
-          </Link>
-        </Button>
-      </div>
-      <div className="mt-6 grid gap-5 grid-cols-2 lg:grid-cols-4">
-        {items.map((p) => (
-          <ProductCard key={p.slug} product={p} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function Index() {
-  const { products, isLoading } = useProducts();
   const hero = useBanner("home-hero");
   const serviceParts = useBanner("home-aplicacoes");
 
-  const ofertas = products.filter((p) => p.oldPrice).slice(0, 4);
-  const destaques = (products.filter((p) => p.badge).length ? products.filter((p) => p.badge) : products).slice(0, 4);
-  const impressoras = products.filter((p) => p.category === "impressoras").slice(0, 4);
-  const filamentos = products.filter((p) => p.category === "filamentos").slice(0, 4);
 
   return (
     <>
@@ -175,37 +134,12 @@ function Index() {
 
       <BenefitsStrip />
 
-      {isLoading && products.length === 0 ? (
-        <div className="container-page grid gap-5 py-12 grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-[380px] animate-pulse rounded-xl bg-secondary" />
-          ))}
-        </div>
-      ) : null}
-
-      <Row eyebrow="Mais procurados" title="Destaques da loja" to="/loja" items={destaques} />
-
-      {ofertas.length > 0 && (
-        <div className="bg-secondary/50">
-          <Row eyebrow="Promoções" title="Ofertas da semana" to="/loja" items={ofertas} />
-        </div>
-      )}
-
-      <Row
-        eyebrow={categoryLabels.impressoras}
-        title="Impressoras 3D para produzir mais"
-        to="/impressoras"
-        items={impressoras}
+      <CatalogView
+        embedded
+        title="Catálogo completo"
+        description="Todos os produtos em um só lugar. Use os filtros para encontrar impressoras, filamentos e acessórios do seu jeito."
       />
 
-      <div className="bg-secondary/50">
-        <Row
-          eyebrow={categoryLabels.filamentos}
-          title="Filamentos e insumos"
-          to="/filamentos"
-          items={filamentos}
-        />
-      </div>
 
       {/* Serviços resumidos */}
       <section className="container-page py-14">

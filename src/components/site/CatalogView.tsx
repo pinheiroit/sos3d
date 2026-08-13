@@ -21,9 +21,17 @@ type Props = {
   title: string;
   description: string;
   initialQuery?: string;
+  /** Renders the heading as an h2 (for use inside a page that already has an h1) */
+  embedded?: boolean;
 };
 
-export function CatalogView({ fixedCategory, title, description, initialQuery = "" }: Props) {
+export function CatalogView({
+  fixedCategory,
+  title,
+  description,
+  initialQuery = "",
+  embedded = false,
+}: Props) {
   const { products, isLoading } = useProducts();
   const base = useMemo(
     () => (fixedCategory ? products.filter((p) => p.category === fixedCategory) : products),
@@ -79,7 +87,11 @@ export function CatalogView({ fixedCategory, title, description, initialQuery = 
     <div className="container-page py-12">
       <header className="max-w-2xl">
         <span className="eyebrow">Loja SOS.3D</span>
-        <h1 className="mt-2 text-4xl font-bold md:text-5xl">{title}</h1>
+        {embedded ? (
+          <h2 className="mt-2 text-3xl font-bold md:text-4xl">{title}</h2>
+        ) : (
+          <h1 className="mt-2 text-4xl font-bold md:text-5xl">{title}</h1>
+        )}
         <p className="mt-4 text-lg text-muted-foreground">{description}</p>
       </header>
 
