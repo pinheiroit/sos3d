@@ -20,9 +20,10 @@ type Props = {
   fixedCategory?: Category;
   title: string;
   description: string;
+  initialQuery?: string;
 };
 
-export function CatalogView({ fixedCategory, title, description }: Props) {
+export function CatalogView({ fixedCategory, title, description, initialQuery = "" }: Props) {
   const { products, isLoading } = useProducts();
   const base = useMemo(
     () => (fixedCategory ? products.filter((p) => p.category === fixedCategory) : products),
@@ -30,7 +31,12 @@ export function CatalogView({ fixedCategory, title, description }: Props) {
   );
   const maxPrice = useMemo(() => (base.length ? Math.max(...base.map((p) => p.price)) : 100000), [base]);
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
+  const [lastInitial, setLastInitial] = useState(initialQuery);
+  if (initialQuery !== lastInitial) {
+    setLastInitial(initialQuery);
+    setQuery(initialQuery);
+  }
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [priceCap, setPriceCap] = useState(maxPrice);

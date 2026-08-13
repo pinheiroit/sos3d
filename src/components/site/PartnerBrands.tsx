@@ -3,10 +3,10 @@ import { useSiteContent } from "@/lib/site-content";
 /** Faixa de marcas parceiras exibida logo acima do rodapé. */
 export function PartnerBrands() {
   const { brands } = useSiteContent();
-  if (brands.length === 0) return null;
 
   return (
-    <section className="border-t border-border bg-secondary/50">
+    <section className="border-t border-border bg-secondary/50 empty:hidden">
+      {brands.length > 0 && (
       <div className="container-page py-10">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           Marcas parceiras
@@ -39,6 +39,7 @@ export function PartnerBrands() {
           })}
         </ul>
       </div>
+      )}
     </section>
   );
 }
