@@ -38,7 +38,6 @@ export function PartnerBrands() {
           })}
         </ul>
       </div>
-      )}
     </section>
   );
 }
