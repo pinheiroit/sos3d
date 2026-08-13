@@ -21,9 +21,17 @@ type Props = {
   title: string;
   description: string;
   initialQuery?: string;
+  /** Renders the heading as an h2 (for use inside a page that already has an h1) */
+  embedded?: boolean;
 };
 
-export function CatalogView({ fixedCategory, title, description, initialQuery = "" }: Props) {
+export function CatalogView({
+  fixedCategory,
+  title,
+  description,
+  initialQuery = "",
+  embedded = false,
+}: Props) {
   const { products, isLoading } = useProducts();
   const base = useMemo(
     () => (fixedCategory ? products.filter((p) => p.category === fixedCategory) : products),
