@@ -5,8 +5,7 @@ export function PartnerBrands() {
   const { brands } = useSiteContent();
 
   return (
-    <section className="border-t border-border bg-secondary/50 empty:hidden">
-      {brands.length > 0 && (
+    <section className="border-t border-border bg-secondary/50">
       <div className="container-page py-10">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           Marcas parceiras
