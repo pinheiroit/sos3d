@@ -136,37 +136,12 @@ function Index() {
 
       <BenefitsStrip />
 
-      {isLoading && products.length === 0 ? (
-        <div className="container-page grid gap-5 py-12 grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-[380px] animate-pulse rounded-xl bg-secondary" />
-          ))}
-        </div>
-      ) : null}
-
-      <Row eyebrow="Mais procurados" title="Destaques da loja" to="/loja" items={destaques} />
-
-      {ofertas.length > 0 && (
-        <div className="bg-secondary/50">
-          <Row eyebrow="Promoções" title="Ofertas da semana" to="/loja" items={ofertas} />
-        </div>
-      )}
-
-      <Row
-        eyebrow={categoryLabels.impressoras}
-        title="Impressoras 3D para produzir mais"
-        to="/impressoras"
-        items={impressoras}
+      <CatalogView
+        embedded
+        title="Catálogo completo"
+        description="Todos os produtos em um só lugar. Use os filtros para encontrar impressoras, filamentos e acessórios do seu jeito."
       />
 
-      <div className="bg-secondary/50">
-        <Row
-          eyebrow={categoryLabels.filamentos}
-          title="Filamentos e insumos"
-          to="/filamentos"
-          items={filamentos}
-        />
-      </div>
 
       {/* Serviços resumidos */}
       <section className="container-page py-14">
