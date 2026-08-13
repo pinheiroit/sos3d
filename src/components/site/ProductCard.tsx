@@ -8,6 +8,11 @@ import { useCart } from "@/lib/cart";
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
+  const pix = product.price * 0.95;
+  const installment = product.price / 12;
+  const off = product.oldPrice
+    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    : 0;
 
   return (
     <article className="card-lift group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -24,16 +29,24 @@ export function ProductCard({ product }: { product: Product }) {
           height={900}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
-        {product.badge && (
-          <Badge className="absolute left-3 top-3 bg-accent text-accent-foreground">
-            {product.badge}
-          </Badge>
+        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {off > 0 && (
+            <Badge className="bg-accent text-accent-foreground">-{off}%</Badge>
+          )}
+          {product.badge && (
+            <Badge className="bg-brand text-brand-foreground">{product.badge}</Badge>
+          )}
+        </div>
+        {product.stock === 0 && (
+          <span className="absolute inset-x-0 bottom-0 bg-brand/85 py-1.5 text-center text-xs font-semibold text-brand-foreground">
+            Sob consulta
+          </span>
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-4">
         <span className="eyebrow">{product.brand}</span>
-        <h3 className="mt-1.5 text-base font-semibold leading-snug">
+        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug">
           <Link
             to="/produto/$slug"
             params={{ slug: product.slug }}
@@ -42,28 +55,19 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </Link>
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{product.subtitle}</p>
 
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {product.useCases.slice(0, 2).map((u) => (
-            <span
-              key={u}
-              className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
-            >
-              {u}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-auto pt-5">
+        <div className="mt-auto pt-4">
           {product.oldPrice && (
             <p className="text-xs text-muted-foreground line-through">
               {formatBRL(product.oldPrice)}
             </p>
           )}
           <p className="text-xl font-bold text-brand">{formatBRL(product.price)}</p>
+          <p className="text-xs font-medium text-success">
+            {formatBRL(pix)} à vista no Pix (5% off)
+          </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            até 12x • {product.stock > 0 ? `${product.stock} em estoque` : "sob consulta"}
+            ou 12x de {formatBRL(installment)} sem juros
           </p>
 
           <div className="mt-4 flex gap-2">
@@ -77,9 +81,9 @@ export function ProductCard({ product }: { product: Product }) {
             >
               <ShoppingCart /> Comprar
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="icon" aria-label="Ver detalhes">
               <Link to="/produto/$slug" params={{ slug: product.slug }}>
-                Detalhes
+                +
               </Link>
             </Button>
           </div>

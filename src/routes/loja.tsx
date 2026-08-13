@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CatalogView } from "@/components/site/CatalogView";
 
+type LojaSearch = { q?: string };
+
 export const Route = createFileRoute("/loja")({
+  validateSearch: (search: Record<string, unknown>): LojaSearch => ({
+    q: typeof search['q'] === "string" && search['q'] ? (search['q'] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Loja SOS.3D — Impressoras 3D, filamentos e acessórios" },
@@ -17,10 +22,16 @@ export const Route = createFileRoute("/loja")({
       },
     ],
   }),
-  component: () => (
+  component: Loja,
+});
+
+function Loja() {
+  const { q } = Route.useSearch();
+  return (
     <CatalogView
+      initialQuery={q ?? ""}
       title="Catálogo completo"
       description="Equipamentos, materiais e acessórios reunidos em uma única experiência. Filtre por categoria, marca e investimento para chegar à solução certa."
     />
-  ),
-});
+  );
+}
