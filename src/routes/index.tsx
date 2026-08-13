@@ -42,80 +42,8 @@ function Index() {
 
   return (
     <>
-      {/* Hero comercial */}
-      <section className="container-page pt-6">
-        <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-          <div className="surface-brand grid-tech relative overflow-hidden rounded-2xl">
-            <div className="grid items-center gap-6 p-8 md:grid-cols-2 md:p-12">
-              <div>
-                <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-foreground">
-                  Ofertas SOS.3D
-                </span>
-                <h1 className="mt-5 text-3xl font-extrabold leading-tight text-white md:text-5xl">
-                  Impressoras 3D e filamentos com pronta entrega
-                </h1>
-                <p className="mt-4 max-w-md text-white/80">
-                  Até 12x sem juros, 5% de desconto no Pix e suporte técnico de quem usa impressão 3D
-                  todos os dias.
-                </p>
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <Button asChild variant="cta" size="lg">
-                    <Link to="/loja">
-                      Comprar agora <ArrowRight />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="onbrand" size="lg">
-                    <Link to="/impressoras">Ver impressoras</Link>
-                  </Button>
-                </div>
-              </div>
-              <img
-                src={hero}
-                alt="Impressoras 3D em operação na loja SOS.3D"
-                width={1600}
-                height={1008}
-                className="hidden w-full rounded-xl border border-white/15 object-cover md:block"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            <Link
-              to="/filamentos"
-              className="card-lift flex flex-col justify-between rounded-2xl border border-border bg-card p-6"
-            >
-              <div>
-                <span className="eyebrow">Filamentos</span>
-                <h2 className="mt-1 text-xl font-bold">PLA, PETG, ABS e nylon CF</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Lotes consistentes e parâmetros recomendados em cada ficha.
-                </p>
-              </div>
-              <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-tech">
-                Comprar filamentos <ArrowRight className="size-4" />
-              </span>
-            </Link>
-            <Link
-              to="/impressao-3d"
-              className="card-lift flex flex-col justify-between rounded-2xl border border-border bg-secondary p-6"
-            >
-              <div>
-                <span className="eyebrow">Serviço</span>
-                <h2 className="mt-1 text-xl font-bold">Não tem impressora? A gente imprime</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Envie o arquivo e receba a peça pronta, no material certo.
-                </p>
-              </div>
-              <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-tech">
-                Enviar projeto <ArrowRight className="size-4" />
-              </span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Atalhos de categoria */}
-      <section className="container-page py-10">
+      <section className="container-page pt-6">
         <div className="grid grid-cols-3 gap-4 md:grid-cols-6">
           {atalhos.map((a) => (
             <Link
@@ -140,6 +68,43 @@ function Index() {
         description="Todos os produtos em um só lugar. Use os filtros para encontrar impressoras, filamentos e acessórios do seu jeito."
       />
 
+      {/* Bloco institucional com foto — mais abaixo */}
+      <section className="container-page py-14">
+        <div className="surface-brand grid-tech relative overflow-hidden rounded-2xl">
+          <div className="grid items-center gap-6 p-8 md:grid-cols-2 md:p-12">
+            <div>
+              <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-foreground">
+                SOS.3D
+              </span>
+              <h2 className="mt-5 text-3xl font-extrabold leading-tight text-white md:text-4xl">
+                Impressoras 3D e filamentos com pronta entrega
+              </h2>
+              <p className="mt-4 max-w-md text-white/80">
+                Até 12x sem juros, 5% de desconto no Pix e suporte técnico de quem usa impressão 3D
+                todos os dias. Indicamos o equipamento certo e acompanhamos a operação depois da venda.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Button asChild variant="cta" size="lg">
+                  <Link to="/loja">
+                    Comprar agora <ArrowRight />
+                  </Link>
+                </Button>
+                <Button asChild variant="onbrand" size="lg">
+                  <Link to="/impressoras">Ver impressoras</Link>
+                </Button>
+              </div>
+            </div>
+            <img
+              src={hero}
+              alt="Impressoras 3D em operação na loja SOS.3D"
+              loading="lazy"
+              width={1600}
+              height={1008}
+              className="hidden w-full rounded-xl border border-white/15 object-cover md:block"
+            />
+          </div>
+        </div>
+      </section>
 
       {/* Serviços resumidos */}
       <section className="container-page py-14">
