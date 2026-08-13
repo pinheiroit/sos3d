@@ -1,12 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, Layers, Printer, Scan, Tag, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ProductCard } from "@/components/site/ProductCard";
 import { BenefitsStrip } from "@/components/site/BenefitsStrip";
+import { CatalogView } from "@/components/site/CatalogView";
 import { CtaBand } from "@/components/site/CtaBand";
-import { useProducts } from "@/lib/products";
 import { useBanner } from "@/lib/site-images";
-import { categoryLabels } from "@/lib/catalog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
