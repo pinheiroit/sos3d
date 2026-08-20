@@ -368,6 +368,10 @@ function AdminPage() {
           ))}
         </TabsContent>
 
+        <TabsContent value="importar" className="mt-6">
+          <ProductsImport />
+        </TabsContent>
+
         <TabsContent value="pedidos" className="mt-6 space-y-3">
           {(data?.orders ?? []).length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhum pedido registrado ainda.</p>
