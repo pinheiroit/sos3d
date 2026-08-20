@@ -188,3 +188,65 @@ export const setMembership = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const importRowSchema = productSchema.partial({
+  brand: true,
+  subtitle: true,
+  description: true,
+  image_key: true,
+  stock: true,
+  active: true,
+  use_cases: true,
+  specs: true,
+});
+
+/** Importa/atualiza produtos em massa (chave: slug). */
+export const importProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ rows: z.array(importRowSchema).min(1).max(500) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+
+    const existing = await db.from("products").select("id, slug");
+    if (existing.error) throw new Error(existing.error.message);
+    const bySlug = new Map((existing.data ?? []).map((p) => [p.slug, p.id]));
+
+    let created = 0;
+    let updated = 0;
+    const errors: string[] = [];
+
+    for (const row of data.rows) {
+      const now = new Date().toISOString();
+      const id = bySlug.get(row.slug);
+      const base = {
+        slug: row.slug,
+        name: row.name,
+        brand: row.brand ?? "SOS.3D",
+        category: row.category,
+        subtitle: row.subtitle ?? "",
+        description: row.description ?? "",
+        price: row.price,
+        old_price: row.old_price ?? null,
+        image_key: row.image_key ?? "printer-1",
+        image_url: row.image_url ?? null,
+        badge: row.badge ?? null,
+        stock: row.stock ?? 0,
+        active: row.active ?? true,
+        use_cases: row.use_cases ?? [],
+        specs: row.specs ?? [],
+        updated_at: now,
+      };
+      const res = id
+        ? await db.from("products").update(base).eq("id", id)
+        : await db.from("products").insert(base);
+      if (res.error) errors.push(`${row.slug}: ${res.error.message}`);
+      else if (id) updated += 1;
+      else created += 1;
+    }
+
+    return { created, updated, errors };
+  });
