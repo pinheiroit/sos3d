@@ -294,6 +294,7 @@ function AdminPage() {
       <Tabs defaultValue="produtos" className="mt-10">
         <TabsList>
           <TabsTrigger value="produtos">Produtos</TabsTrigger>
+          <TabsTrigger value="importar">Importar</TabsTrigger>
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
