@@ -24,6 +24,7 @@ import { bannerDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
 import { setSiteImage } from "@/lib/uploads.functions";
 import { FooterAdmin } from "@/components/admin/FooterAdmin";
 import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
+import { ProductsImport } from "@/components/admin/ProductsImport";
 import {
   adminOverview,
   deleteProduct,
@@ -293,6 +294,7 @@ function AdminPage() {
       <Tabs defaultValue="produtos" className="mt-10">
         <TabsList>
           <TabsTrigger value="produtos">Produtos</TabsTrigger>
+          <TabsTrigger value="importar">Importar</TabsTrigger>
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
@@ -364,6 +366,10 @@ function AdminPage() {
               </div>
             </div>
           ))}
+        </TabsContent>
+
+        <TabsContent value="importar" className="mt-6">
+          <ProductsImport />
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6 space-y-3">
