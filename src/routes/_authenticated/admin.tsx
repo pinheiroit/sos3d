@@ -24,6 +24,7 @@ import { bannerDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
 import { setSiteImage } from "@/lib/uploads.functions";
 import { FooterAdmin } from "@/components/admin/FooterAdmin";
 import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
+import { ProductsImport } from "@/components/admin/ProductsImport";
 import {
   adminOverview,
   deleteProduct,
