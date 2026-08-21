@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProductCard } from "@/components/site/ProductCard";
-import { brandsOf, categoryLabels, formatBRL, type Category } from "@/lib/catalog";
+import { brandsOf, formatBRL, type Category } from "@/lib/catalog";
 import { useProducts } from "@/lib/products";
+import { useCategories } from "@/lib/categories";
 
 type Props = {
   fixedCategory?: Category;
