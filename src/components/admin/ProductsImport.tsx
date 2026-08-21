@@ -88,7 +88,28 @@ const TEMPLATE_ROWS = [
 type ParsedRow = {
   line: number;
   values: Record<string, string>;
+};
+
+type CheckedRow = ParsedRow & {
   error?: string;
+  duplicateOf?: number[];
+};
+
+const COLUMN_LABELS: Record<string, string> = {
+  slug: "Slug",
+  name: "Nome",
+  brand: "Marca",
+  category: "Categoria",
+  subtitle: "Subtítulo",
+  description: "Descrição",
+  price: "Preço",
+  old_price: "Preço antigo",
+  image_url: "Imagem (URL)",
+  badge: "Selo",
+  stock: "Estoque",
+  active: "Ativo",
+  use_cases: "Usos",
+  specs: "Specs",
 };
 
 const MAX_ROWS = 5000;
