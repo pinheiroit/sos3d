@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 const specSchema = z.object({ label: z.string().max(120), value: z.string().max(400) });
 
@@ -228,8 +229,7 @@ export const importProducts = createServerFn({ method: "POST" })
 
     // Um mesmo slug repetido no lote quebra o ON CONFLICT do Postgres:
     // mantemos apenas a última ocorrência de cada slug.
-    type ProductInsert = Parameters<ReturnType<typeof db.from<"products">>["insert"]>[0];
-    const deduped = new Map<string, Extract<ProductInsert, unknown[]>[number]>();
+    const deduped = new Map<string, Database["public"]["Tables"]["products"]["Insert"]>();
     const duplicates: string[] = [];
 
     for (const row of data.rows) {
