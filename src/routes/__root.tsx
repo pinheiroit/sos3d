@@ -110,6 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       context.queryClient.ensureQueryData(siteContentQueryOptions),
       context.queryClient.ensureQueryData(siteImagesQueryOptions),
       context.queryClient.ensureQueryData(productsQueryOptions),
+      context.queryClient.ensureQueryData(categoriesQueryOptions),
     ]);
   },
   shellComponent: RootShell,
