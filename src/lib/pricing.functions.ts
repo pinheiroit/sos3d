@@ -30,7 +30,8 @@ export const getPricingRules = createServerFn({ method: "GET" }).handler(async (
     .eq("key", "pricing")
     .maybeSingle();
   if (error) throw new Error(error.message);
-  return { value: (data?.value ?? null) as Record<string, unknown> | null };
+  const parsed = rulesSchema.safeParse(data?.value ?? {});
+  return parsed.success ? parsed.data : rulesSchema.parse({});
 });
 
 export const savePricingRules = createServerFn({ method: "POST" })
