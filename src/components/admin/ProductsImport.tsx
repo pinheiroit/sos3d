@@ -550,6 +550,11 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               {invalid.length > 0 && <Badge variant="destructive">{invalid.length} com erro</Badge>}
             </div>
             <div className="flex gap-2">
+              {invalid.length > 0 && (
+                <Button variant="outline" size="sm" onClick={downloadErrorReport}>
+                  <Download /> Baixar erros ({invalid.length})
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={() => setRows([])}>
                 Cancelar
               </Button>
@@ -563,6 +568,41 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               </Button>
             </div>
           </div>
+
+          {invalid.length > 0 && (
+            <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+              <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <AlertTriangle className="size-4" /> {invalid.length} linhas com erro (de{" "}
+                {rows.length})
+              </p>
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                {Object.entries(
+                  invalid.reduce<Record<string, number>>((acc, r) => {
+                    const key = r.error ?? "Erro desconhecido";
+                    acc[key] = (acc[key] ?? 0) + 1;
+                    return acc;
+                  }, {}),
+                ).map(([msg, count]) => (
+                  <li key={msg}>
+                    <strong>{count}x</strong> {msg} — ex.: linha{" "}
+                    {invalid.find((r) => r.error === msg)?.line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {serverErrors.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-secondary/40 p-4">
+              <p className="text-sm text-muted-foreground">
+                O servidor recusou {serverErrors.length} registros durante a importação.
+              </p>
+              <Button variant="outline" size="sm" onClick={downloadServerErrorReport}>
+                <Download /> Baixar relatório do servidor
+              </Button>
+            </div>
+          )}
+
 
           <div className="mt-4 max-h-[420px] overflow-auto rounded-lg border border-border">
             <table className="w-full text-left text-sm">
