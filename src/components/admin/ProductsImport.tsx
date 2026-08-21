@@ -90,8 +90,11 @@ type ParsedRow = {
   error?: string;
 };
 
+const MAX_ROWS = 5000;
+const PREVIEW_LIMIT = 200;
+
 function sheetToMatrix(file: ArrayBuffer): string[][] {
-  const wb = XLSX.read(file, { type: "array" });
+  const wb = XLSX.read(file, { type: "array", dense: true, cellStyles: false, cellHTML: false, sheetRows: MAX_ROWS + 1 });
   const sheetName = wb.SheetNames[0];
   if (!sheetName) return [];
   const sheet = wb.Sheets[sheetName]!;
