@@ -148,6 +148,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
 
   const run = useMutation({
     mutationFn: async () => {
+      setProgress({ done: 0, total: valid.length });
       const payload = valid.map((r) => {
         const v = r.values;
         const useCases = (v["use_cases"] ?? "")
