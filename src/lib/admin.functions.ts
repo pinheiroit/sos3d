@@ -8,7 +8,12 @@ const productSchema = z.object({
   slug: z.string().trim().min(2).max(120).regex(/^[a-z0-9-]+$/),
   name: z.string().trim().min(2).max(180),
   brand: z.string().trim().min(1).max(80),
-  category: z.enum(["impressoras", "filamentos", "acessorios"]),
+  category: z
+    .string()
+    .trim()
+    .min(2)
+    .max(60)
+    .regex(/^[a-z0-9-]+$/, "Categoria inválida"),
   subtitle: z.string().trim().max(300).default(""),
   description: z.string().trim().max(4000).default(""),
   price: z.number().min(0).max(10_000_000),

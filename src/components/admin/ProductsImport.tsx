@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { importProducts } from "@/lib/admin.functions";
+import { useCategories } from "@/lib/categories";
 
 const COLUMNS = [
   "slug",
@@ -189,6 +190,8 @@ function specsToText(specs: unknown) {
 }
 
 export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
+  const { categories: categoryList } = useCategories();
+  const categorySlugs = categoryList.map((c) => c.slug);
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -277,7 +280,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           slug: v["slug"]!,
           name: v["name"]!.trim(),
           brand: (v["brand"] ?? "").trim() || "SOS.3D",
-          category: v["category"] as "impressoras" | "filamentos" | "acessorios",
+          category: v["category"]!,
           subtitle: (v["subtitle"] ?? "").trim().slice(0, 300),
           description: (v["description"] ?? "").trim().slice(0, 4000),
           price: toNumber(v["price"] ?? "") ?? 0,
@@ -428,8 +431,8 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       if (!values["name"]) error = "Nome obrigatório";
       else if (!values["slug"] || !/^[a-z0-9-]+$/.test(values["slug"]))
         error = "Slug inválido (use apenas letras minúsculas, números e hífen)";
-      else if (!["impressoras", "filamentos", "acessorios"].includes(values["category"] ?? ""))
-        error = "Categoria deve ser impressoras, filamentos ou acessorios";
+      else if (!categorySlugs.includes(values["category"] ?? ""))
+        error = `Categoria deve ser uma destas: ${categorySlugs.join(", ")}`;
       else if (toNumber(values["price"] ?? "") === null) error = "Preço inválido";
 
       return error ? { line: i + 2, values, error } : { line: i + 2, values };

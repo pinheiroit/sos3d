@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProductCard } from "@/components/site/ProductCard";
-import { brandsOf, categoryLabels, formatBRL, type Category } from "@/lib/catalog";
+import { brandsOf, formatBRL, type Category } from "@/lib/catalog";
 import { useProducts } from "@/lib/products";
+import { useCategories } from "@/lib/categories";
 
 type Props = {
   fixedCategory?: Category;
@@ -33,6 +34,7 @@ export function CatalogView({
   embedded = false,
 }: Props) {
   const { products, isLoading } = useProducts();
+  const { categories: allCategories } = useCategories();
   const base = useMemo(
     () => (fixedCategory ? products.filter((p) => p.category === fixedCategory) : products),
     [fixedCategory, products],
@@ -124,13 +126,16 @@ export function CatalogView({
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide">Categoria</p>
                 <div className="mt-3 space-y-2.5">
-                  {(Object.keys(categoryLabels) as Category[]).map((cat) => (
-                    <label key={cat} className="flex cursor-pointer items-center gap-2.5 text-sm">
+                  {allCategories.map((cat) => (
+                    <label
+                      key={cat.slug}
+                      className="flex cursor-pointer items-center gap-2.5 text-sm"
+                    >
                       <Checkbox
-                        checked={categories.includes(cat)}
-                        onCheckedChange={() => toggle(cat, categories, setCategories)}
+                        checked={categories.includes(cat.slug)}
+                        onCheckedChange={() => toggle(cat.slug, categories, setCategories)}
                       />
-                      {categoryLabels[cat]}
+                      {cat.name}
                     </label>
                   ))}
                 </div>
