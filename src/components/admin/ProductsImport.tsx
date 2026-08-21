@@ -626,6 +626,11 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               <p className="text-sm font-medium">{fileName}</p>
               <Badge variant="secondary">{valid.length} prontos</Badge>
               {invalid.length > 0 && <Badge variant="destructive">{invalid.length} com erro</Badge>}
+              {duplicates.length > 0 && (
+                <Badge variant="outline" className="border-amber-500 text-amber-600">
+                  {duplicateSlugs.length} slugs duplicados
+                </Badge>
+              )}
             </div>
             <div className="flex gap-2">
               {invalid.length > 0 && (
