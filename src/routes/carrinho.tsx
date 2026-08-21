@@ -3,6 +3,7 @@ import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { shippingFor, usePricing } from "@/lib/pricing";
 
 export const Route = createFileRoute("/carrinho")({
   head: () => ({
@@ -19,7 +20,8 @@ export const Route = createFileRoute("/carrinho")({
 
 function CartPage() {
   const { items, subtotal, setQty, remove } = useCart();
-  const frete = subtotal > 0 && subtotal < 500 ? 79 : 0;
+  const rules = usePricing();
+  const frete = shippingFor(subtotal, rules);
 
   return (
     <div className="container-page py-12">

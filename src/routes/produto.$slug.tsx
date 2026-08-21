@@ -98,8 +98,8 @@ function ProductPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {best
                 ? `ou até ${best.months}x de ${formatBRL(best.installment)}`
-                : `ou 12x de ${formatBRL(product.price / 12)} sem juros`}{" "}
-              • à vista com 5% de desconto
+                : `ou ${rules.defaultInstallments}x de ${formatBRL(product.price / rules.defaultInstallments)} sem juros`}{" "}
+              • à vista com {rules.pixDiscountPercent}% de desconto
             </p>
 
             {plans.length > 0 && (
@@ -118,7 +118,7 @@ function ProductPage() {
                       <td className="px-3 py-2 font-medium">À vista (Pix)</td>
                       <td className="px-3 py-2 text-right text-muted-foreground">—</td>
                       <td className="px-3 py-2 text-right font-semibold text-success">
-                        {formatBRL(product.price * 0.95)}
+                        {formatBRL(product.price * (1 - rules.pixDiscountPercent / 100))}
                       </td>
                     </tr>
                     {plans.map((p) => (
