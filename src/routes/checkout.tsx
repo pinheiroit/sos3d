@@ -315,8 +315,8 @@ function CheckoutPage() {
               <dd>{frete === 0 ? "Grátis" : formatBRL(frete)}</dd>
             </div>
             {desconto > 0 && (
-              <div className="flex justify-between text-success">
-                <dt>Desconto</dt>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Desconto</dt>
                 <dd>-{formatBRL(desconto)}</dd>
               </div>
             )}
