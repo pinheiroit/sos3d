@@ -191,17 +191,69 @@ function specsToText(specs: unknown) {
 export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const cancelRef = useRef(false);
+  const startRef = useRef(0);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [parseProgress, setParseProgress] = useState(0);
+  const [parseEta, setParseEta] = useState<number>(0);
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
 
   const valid = rows.filter((r) => !r.error);
   const invalid = rows.filter((r) => r.error);
 
+  function cancelParsing() {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    cancelRef.current = true;
+    setParsing(false);
+    setParseProgress(0);
+    toast.info("Leitura cancelada");
+  }
+
+  function cancelImport() {
+    cancelRef.current = true;
+    toast.info("Cancelando importação...", {
+      description: "Os lotes já enviados foram salvos.",
+    });
+  }
+
+  function downloadErrorReport() {
+    const failed = invalid.map((r) => [
+      r.line,
+      r.error ?? "",
+      ...COLUMNS.map((c) => r.values[c] ?? ""),
+    ]);
+    if (failed.length === 0) {
+      toast.error("Nenhuma linha com erro para exportar");
+      return;
+    }
+    downloadWorkbook(
+      [["linha", "erro", ...COLUMNS], ...failed],
+      `falhas-importacao-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      "Falhas",
+    );
+    toast.success(`${failed.length} linhas com erro exportadas`);
+  }
+
+  function downloadServerErrorReport() {
+    if (serverErrors.length === 0) return;
+    downloadWorkbook(
+      [["erro"], ...serverErrors.map((e) => [e])],
+      `falhas-servidor-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      "Falhas",
+    );
+  }
+
   const run = useMutation({
     mutationFn: async () => {
+      cancelRef.current = false;
+      startRef.current = Date.now();
       setProgress({ done: 0, total: valid.length });
+
       const payload = valid.map((r) => {
         const v = r.values;
         const useCases = (v["use_cases"] ?? "")
