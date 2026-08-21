@@ -18,6 +18,7 @@ import { CartProvider } from "@/lib/cart";
 import { siteContentQueryOptions } from "@/lib/site-content";
 import { siteImagesQueryOptions } from "@/lib/site-images";
 import { productsQueryOptions } from "@/lib/products";
+import { categoriesQueryOptions } from "@/lib/categories";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
