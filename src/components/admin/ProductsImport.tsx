@@ -437,6 +437,12 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               </tbody>
             </table>
           </div>
+          {rows.length > PREVIEW_LIMIT && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Exibindo as primeiras {PREVIEW_LIMIT} linhas de {rows.length}. A importação considera
+              todas as linhas válidas.
+            </p>
+          )}
         </div>
       )}
     </div>
