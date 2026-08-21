@@ -154,6 +154,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [parsing, setParsing] = useState(false);
 
   const valid = rows.filter((r) => !r.error);
   const invalid = rows.filter((r) => r.error);
