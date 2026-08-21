@@ -228,7 +228,8 @@ export const importProducts = createServerFn({ method: "POST" })
 
     // Um mesmo slug repetido no lote quebra o ON CONFLICT do Postgres:
     // mantemos apenas a última ocorrência de cada slug.
-    const deduped = new Map<string, Record<string, unknown>>();
+    type ProductInsert = Parameters<ReturnType<typeof db.from<"products">>["insert"]>[0];
+    const deduped = new Map<string, Extract<ProductInsert, unknown[]>[number]>();
     const duplicates: string[] = [];
 
     for (const row of data.rows) {
