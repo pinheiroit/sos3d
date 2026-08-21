@@ -22,14 +22,15 @@ const productSchema = z.object({
   image_url: z
     .string()
     .trim()
-    .max(600)
-    .refine((v) => v.startsWith("/") || /^https?:\/\//.test(v), "URL inválida")
+    .max(2000)
+    .refine((v) => v === "" || v.startsWith("/") || /^https?:\/\//.test(v), "URL inválida")
+    .transform((v) => (v === "" ? null : v))
     .nullable()
     .optional(),
   badge: z.string().trim().max(40).nullable().optional(),
   stock: z.number().int().min(0).max(1_000_000),
   active: z.boolean().default(true),
-  use_cases: z.array(z.string().trim().max(60)).max(12).default([]),
+  use_cases: z.array(z.string().trim().max(120)).max(12).default([]),
   specs: z.array(specSchema).max(30).default([]),
 });
 
