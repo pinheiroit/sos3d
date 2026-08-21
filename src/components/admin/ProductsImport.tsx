@@ -91,8 +91,8 @@ type ParsedRow = {
 };
 
 type CheckedRow = ParsedRow & {
-  error?: string;
-  duplicateOf?: number[];
+  error?: string | undefined;
+  duplicateOf?: number[] | undefined;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
