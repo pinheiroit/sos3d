@@ -196,6 +196,42 @@ function AdminPage() {
     };
   }, [data]);
 
+  const allProducts = data?.products ?? [];
+
+  const brandOptions = useMemo(
+    () => Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean))).sort(),
+    [allProducts],
+  );
+
+  const filteredProducts = useMemo(() => {
+    const text = filters.text.trim().toLowerCase();
+    const priceMin = filters.priceMin === "" ? null : Number(filters.priceMin);
+    const priceMax = filters.priceMax === "" ? null : Number(filters.priceMax);
+    const stockMin = filters.stockMin === "" ? null : Number(filters.stockMin);
+    const stockMax = filters.stockMax === "" ? null : Number(filters.stockMax);
+
+    return allProducts.filter((p) => {
+      if (filters.brand !== "all" && p.brand !== filters.brand) return false;
+      if (filters.category !== "all" && p.category !== filters.category) return false;
+      if (filters.status === "active" && !p.active) return false;
+      if (filters.status === "inactive" && p.active) return false;
+      if (text) {
+        const haystack = [p.name, p.slug, p.subtitle, p.description, p.brand, p.badge]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(text)) return false;
+      }
+      const price = Number(p.price);
+      if (priceMin !== null && !Number.isNaN(priceMin) && price < priceMin) return false;
+      if (priceMax !== null && !Number.isNaN(priceMax) && price > priceMax) return false;
+      if (stockMin !== null && !Number.isNaN(stockMin) && p.stock < stockMin) return false;
+      if (stockMax !== null && !Number.isNaN(stockMax) && p.stock > stockMax) return false;
+      return true;
+    });
+  }, [allProducts, filters]);
+
+
   if (overview.isError) {
     return (
       <div className="container-page py-24 text-center">
