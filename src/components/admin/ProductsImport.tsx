@@ -226,8 +226,63 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const [parseEta, setParseEta] = useState<number>(0);
   const [serverErrors, setServerErrors] = useState<string[]>([]);
 
-  const valid = rows.filter((r) => !r.error);
-  const invalid = rows.filter((r) => r.error);
+  const checked = useMemo<CheckedRow[]>(() => {
+    const bySlug = new Map<string, number[]>();
+    for (const r of rows) {
+      const slug = (r.values["slug"] ?? "").trim();
+      if (!slug) continue;
+      bySlug.set(slug, [...(bySlug.get(slug) ?? []), r.line]);
+    }
+    return rows.map((r) => {
+      const v = r.values;
+      const slug = (v["slug"] ?? "").trim();
+      let error: string | undefined;
+      if (!(v["name"] ?? "").trim()) error = "Nome obrigatório";
+      else if (!slug || !/^[a-z0-9-]+$/.test(slug))
+        error = "Slug inválido (use apenas letras minúsculas, números e hífen)";
+      else if (!categorySlugs.includes((v["category"] ?? "").trim()))
+        error = `Categoria deve ser uma destas: ${categorySlugs.join(", ")}`;
+      else if (toNumber(v["price"] ?? "") === null) error = "Preço inválido";
+      const dup = bySlug.get(slug);
+      const duplicateOf = dup && dup.length > 1 ? dup.filter((l) => l !== r.line) : undefined;
+      return { ...r, error, duplicateOf };
+    });
+  }, [rows, categorySlugs.join(",")]);
+
+  const valid = checked.filter((r) => !r.error);
+  const invalid = checked.filter((r) => r.error);
+  const duplicates = checked.filter((r) => r.duplicateOf?.length);
+  const duplicateSlugs = Array.from(
+    new Set(duplicates.map((r) => (r.values["slug"] ?? "").trim())),
+  );
+
+  function updateCell(line: number, column: string, value: string) {
+    setRows((prev) =>
+      prev.map((r) => (r.line === line ? { ...r, values: { ...r.values, [column]: value } } : r)),
+    );
+  }
+
+  function removeRow(line: number) {
+    setRows((prev) => prev.filter((r) => r.line !== line));
+  }
+
+  function dedupeKeepLast() {
+    const lastBySlug = new Map<string, number>();
+    for (const r of rows) {
+      const slug = (r.values["slug"] ?? "").trim();
+      if (slug) lastBySlug.set(slug, r.line);
+    }
+    const removed = rows.length;
+    setRows((prev) =>
+      prev.filter((r) => {
+        const slug = (r.values["slug"] ?? "").trim();
+        return !slug || lastBySlug.get(slug) === r.line;
+      }),
+    );
+    toast.success("Duplicados removidos", {
+      description: `${removed - lastBySlug.size} linhas repetidas foram descartadas (mantida a última de cada slug).`,
+    });
+  }
 
   function cancelParsing() {
     workerRef.current?.terminate();
