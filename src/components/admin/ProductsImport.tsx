@@ -441,6 +441,10 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   }
 
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+  const importEta =
+    progress && progress.done > 0
+      ? ((Date.now() - startRef.current) / 1000 / progress.done) * (progress.total - progress.done)
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -451,9 +455,18 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               <Loader2 className="size-4 animate-spin" /> Lendo planilha
             </DialogTitle>
             <DialogDescription>
-              Processando o arquivo selecionado. Isso pode levar alguns segundos.
+              Processando o arquivo em segundo plano. Você pode cancelar a qualquer momento.
             </DialogDescription>
           </DialogHeader>
+          <Progress value={parseProgress} />
+          <p className="text-sm text-muted-foreground">
+            {parseProgress}% concluído • {formatEta(parseEta)}
+          </p>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={cancelParsing}>
+              <X /> Cancelar leitura
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -469,10 +482,17 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           </DialogHeader>
           <Progress value={pct} />
           <p className="text-sm text-muted-foreground">
-            {progress?.done ?? 0} de {progress?.total ?? 0} produtos processados ({pct}%)
+            {progress?.done ?? 0} de {progress?.total ?? 0} produtos processados ({pct}%) •{" "}
+            {formatEta(importEta)}
           </p>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={cancelImport}>
+              <X /> Cancelar importação
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
+
 
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
