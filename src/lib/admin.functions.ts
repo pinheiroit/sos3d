@@ -226,10 +226,14 @@ export const importProducts = createServerFn({ method: "POST" })
     let created = 0;
     let updated = 0;
 
-    const payload = data.rows.map((row) => {
-      if (bySlug.has(row.slug)) updated += 1;
-      else created += 1;
-      return {
+    // Um mesmo slug repetido no lote quebra o ON CONFLICT do Postgres:
+    // mantemos apenas a última ocorrência de cada slug.
+    const deduped = new Map<string, Record<string, unknown>>();
+    const duplicates: string[] = [];
+
+    for (const row of data.rows) {
+      if (deduped.has(row.slug)) duplicates.push(row.slug);
+      deduped.set(row.slug, {
         slug: row.slug,
         name: row.name,
         brand: row.brand ?? "SOS.3D",
@@ -246,9 +250,22 @@ export const importProducts = createServerFn({ method: "POST" })
         use_cases: row.use_cases ?? [],
         specs: row.specs ?? [],
         updated_at: now,
-      };
-    });
+      });
+    }
 
+    for (const slug of deduped.keys()) {
+      if (bySlug.has(slug)) updated += 1;
+      else created += 1;
+    }
+
+    if (duplicates.length) {
+      const sample = Array.from(new Set(duplicates)).slice(0, 10).join(", ");
+      errors.push(
+        `${duplicates.length} linha(s) com slug repetido na planilha; usamos a última de cada. Ex.: ${sample}`,
+      );
+    }
+
+    const payload = Array.from(deduped.values());
     const res = await db.from("products").upsert(payload, { onConflict: "slug" });
     if (res.error) {
       errors.push(res.error.message);
@@ -257,4 +274,5 @@ export const importProducts = createServerFn({ method: "POST" })
     }
 
     return { created, updated, errors };
+
   });
