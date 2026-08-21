@@ -215,14 +215,15 @@ export const importProducts = createServerFn({ method: "POST" })
     if (existing.error) throw new Error(existing.error.message);
     const bySlug = new Map((existing.data ?? []).map((p) => [p.slug, p.id]));
 
+    const now = new Date().toISOString();
+    const errors: string[] = [];
     let created = 0;
     let updated = 0;
-    const errors: string[] = [];
 
-    for (const row of data.rows) {
-      const now = new Date().toISOString();
-      const id = bySlug.get(row.slug);
-      const base = {
+    const payload = data.rows.map((row) => {
+      if (bySlug.has(row.slug)) updated += 1;
+      else created += 1;
+      return {
         slug: row.slug,
         name: row.name,
         brand: row.brand ?? "SOS.3D",
@@ -240,12 +241,13 @@ export const importProducts = createServerFn({ method: "POST" })
         specs: row.specs ?? [],
         updated_at: now,
       };
-      const res = id
-        ? await db.from("products").update(base).eq("id", id)
-        : await db.from("products").insert(base);
-      if (res.error) errors.push(`${row.slug}: ${res.error.message}`);
-      else if (id) updated += 1;
-      else created += 1;
+    });
+
+    const res = await db.from("products").upsert(payload, { onConflict: "slug" });
+    if (res.error) {
+      errors.push(res.error.message);
+      created = 0;
+      updated = 0;
     }
 
     return { created, updated, errors };
