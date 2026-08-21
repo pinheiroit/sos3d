@@ -264,10 +264,25 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   }
 
   async function handleFile(file: File) {
-    const matrix = sheetToMatrix(await file.arrayBuffer());
+    setParsing(true);
+    await new Promise((r) => setTimeout(r, 30));
+    let matrix: string[][];
+    try {
+      matrix = sheetToMatrix(await file.arrayBuffer());
+    } catch (e) {
+      setParsing(false);
+      toast.error("Não foi possível ler a planilha", { description: (e as Error).message });
+      return;
+    }
     if (matrix.length < 2) {
+      setParsing(false);
       toast.error("Planilha vazia", { description: "Use o modelo com cabeçalho e ao menos 1 linha." });
       return;
+    }
+    if (matrix.length > MAX_ROWS) {
+      toast.warning(`Planilha grande`, {
+        description: `Apenas as primeiras ${MAX_ROWS} linhas serão consideradas.`,
+      });
     }
     const header = matrix[0]!.map((h) => h.trim().toLowerCase());
     const parsed: ParsedRow[] = matrix.slice(1).map((cells, i) => {
