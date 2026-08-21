@@ -75,6 +75,7 @@ type FormState = {
   active: boolean;
   use_cases: string;
   specs: string;
+  installments: string;
 };
 
 const emptyForm: FormState = {
@@ -94,7 +95,32 @@ const emptyForm: FormState = {
   active: true,
   use_cases: "",
   specs: "",
+  installments: "",
 };
+
+function toNumberBR(raw: string) {
+  const cleaned = raw.replace(/[^\d,.-]/g, "").trim();
+  if (!cleaned) return 0;
+  const normalized =
+    cleaned.includes(",") && cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".")
+      ? cleaned.replace(/\./g, "").replace(",", ".")
+      : cleaned.replace(/,/g, "");
+  return Number(normalized) || 0;
+}
+
+function parseInstallments(raw: string) {
+  return raw
+    .split("\n")
+    .map((line) => line.split("|"))
+    .filter((parts) => parts.length >= 2)
+    .map((parts) => {
+      const months = Math.round(toNumberBR(parts[0] ?? ""));
+      const installment = toNumberBR(parts[1] ?? "");
+      const total = parts[2] ? toNumberBR(parts[2]) : months * installment;
+      return { months, installment, total };
+    })
+    .filter((p) => p.months >= 2 && p.months <= 48 && p.installment > 0);
+}
 
 function AdminPage() {
   const navigate = useNavigate();
@@ -272,6 +298,11 @@ function AdminPage() {
             .map((s) => `${s.label} | ${s.value}`)
             .join("\n")
         : "",
+      installments: Array.isArray(p.installments)
+        ? (p.installments as { months: number; installment: number; total: number }[])
+            .map((i) => `${i.months} | ${i.installment} | ${i.total}`)
+            .join("\n")
+        : "",
     });
   }
 
@@ -305,6 +336,7 @@ function AdminPage() {
             label: (parts[0] ?? "").trim(),
             value: parts.slice(1).join("|").trim(),
           })),
+        installments: parseInstallments(form.installments),
       },
     });
   }
@@ -826,6 +858,20 @@ function AdminPage() {
                   value={form.specs}
                   onChange={(e) => setForm({ ...form, specs: e.target.value })}
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <Label>Parcelamento (uma por linha: parcelas | valor da parcela | valor total)</Label>
+                <Textarea
+                  className="mt-1 font-mono text-xs"
+                  rows={5}
+                  placeholder={"6 | 403,64 | 2421,84\n12 | 214,68 | 2576,16\n18 | 152,61 | 2746,98"}
+                  value={form.installments}
+                  onChange={(e) => setForm({ ...form, installments: e.target.value })}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Deixe em branco para usar o padrão de 12x sem juros. Se o total não for informado,
+                  calculamos parcelas x valor.
+                </p>
               </div>
               <div className="sm:col-span-2 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setForm(null)}>
