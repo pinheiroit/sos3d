@@ -5,6 +5,12 @@ import type { Database } from "@/integrations/supabase/types";
 
 const specSchema = z.object({ label: z.string().max(120), value: z.string().max(400) });
 
+const installmentSchema = z.object({
+  months: z.number().int().min(2).max(48),
+  installment: z.number().min(0).max(10_000_000),
+  total: z.number().min(0).max(10_000_000),
+});
+
 const productSchema = z.object({
   slug: z.string().trim().min(2).max(120).regex(/^[a-z0-9-]+$/),
   name: z.string().trim().min(2).max(180),
@@ -33,6 +39,7 @@ const productSchema = z.object({
   active: z.boolean().default(true),
   use_cases: z.array(z.string().trim().max(120)).max(12).default([]),
   specs: z.array(specSchema).max(30).default([]),
+  installments: z.array(installmentSchema).max(24).default([]),
 });
 
 export const adminOverview = createServerFn({ method: "GET" })
@@ -90,6 +97,7 @@ export const saveProduct = createServerFn({ method: "POST" })
       active: v.active,
       use_cases: v.use_cases,
       specs: v.specs,
+      installments: v.installments,
       updated_at: new Date().toISOString(),
     };
     const query = data.id
@@ -205,6 +213,7 @@ const importRowSchema = productSchema.partial({
   active: true,
   use_cases: true,
   specs: true,
+  installments: true,
 });
 
 /** Importa/atualiza produtos em massa (chave: slug). */
@@ -250,6 +259,7 @@ export const importProducts = createServerFn({ method: "POST" })
         active: row.active ?? true,
         use_cases: row.use_cases ?? [],
         specs: row.specs ?? [],
+        installments: row.installments ?? [],
         updated_at: now,
       });
     }

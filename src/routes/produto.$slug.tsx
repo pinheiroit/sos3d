@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductCard } from "@/components/site/ProductCard";
-import { formatBRL, type Product } from "@/lib/catalog";
+import { bestPlan, formatBRL, type Product } from "@/lib/catalog";
 import { listProducts } from "@/lib/catalog.functions";
 import { useCart } from "@/lib/cart";
 
@@ -40,6 +40,8 @@ function ProductPage() {
   const { product, all } = Route.useLoaderData() as { product: Product; all: Product[] };
   const { add } = useCart();
   const [qty, setQty] = useState(1);
+  const plans = product.installments;
+  const best = bestPlan(plans);
 
 
   const related = all.filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 3);
@@ -94,8 +96,47 @@ function ProductPage() {
             )}
             <p className="text-4xl font-extrabold text-brand">{formatBRL(product.price)}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              ou 12x de {formatBRL(product.price / 12)} • à vista com 5% de desconto
+              {best
+                ? `ou até ${best.months}x de ${formatBRL(best.installment)}`
+                : `ou 12x de ${formatBRL(product.price / 12)} sem juros`}{" "}
+              • à vista com 5% de desconto
             </p>
+
+            {plans.length > 0 && (
+              <div className="mt-5 overflow-hidden rounded-lg border border-border">
+                <table className="w-full text-sm">
+                  <caption className="sr-only">Opções de parcelamento</caption>
+                  <thead className="bg-secondary/60 text-xs uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">Parcelamento</th>
+                      <th className="px-3 py-2 text-right font-semibold">Valor da parcela</th>
+                      <th className="px-3 py-2 text-right font-semibold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-border">
+                      <td className="px-3 py-2 font-medium">À vista (Pix)</td>
+                      <td className="px-3 py-2 text-right text-muted-foreground">—</td>
+                      <td className="px-3 py-2 text-right font-semibold text-success">
+                        {formatBRL(product.price * 0.95)}
+                      </td>
+                    </tr>
+                    {plans.map((p) => (
+                      <tr key={p.months} className="border-t border-border">
+                        <td className="px-3 py-2 font-medium">{p.months}x</td>
+                        <td className="px-3 py-2 text-right">{formatBRL(p.installment)}</td>
+                        <td className="px-3 py-2 text-right font-semibold text-brand">
+                          {formatBRL(p.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="border-t border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                  Valores de parcelamento já incluem acréscimos do prazo escolhido.
+                </p>
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <div className="flex h-12 items-center rounded-lg border border-border">
