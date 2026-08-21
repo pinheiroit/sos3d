@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, CreditCard, Lock, Truck } from "lucide-react";
+import { CheckCircle2, CreditCard, Lock, MessageCircle, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { paymentDiscountPercent, shippingFor, usePricing } from "@/lib/pricing";
 import { createOrder } from "@/lib/orders.functions";
+import { useSiteContent } from "@/lib/site-content";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -161,7 +162,7 @@ function CheckoutPage() {
               },
             });
             clear();
-            setDone({ reference: result.reference });
+            setDone(result);
           } catch (error) {
             toast.error("Não foi possível concluir o pedido", {
               description: error instanceof Error ? error.message : "Tente novamente.",
