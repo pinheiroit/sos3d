@@ -93,14 +93,33 @@ type ParsedRow = {
 const MAX_ROWS = 5000;
 const PREVIEW_LIMIT = 200;
 
-function sheetToMatrix(file: ArrayBuffer): string[][] {
-  const wb = XLSX.read(file, { type: "array", dense: true, cellStyles: false, cellHTML: false, sheetRows: MAX_ROWS + 1 });
-  const sheetName = wb.SheetNames[0];
-  if (!sheetName) return [];
-  const sheet = wb.Sheets[sheetName]!;
-  return XLSX.utils
-    .sheet_to_json<unknown[]>(sheet, { header: 1, blankrows: false, raw: true })
-    .map((row) => (row as unknown[]).map((c) => (c === null || c === undefined ? "" : String(c))));
+function readSpreadsheet(file: File): Promise<string[][]> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL("../../workers/products-import.worker.ts", import.meta.url), {
+      type: "module",
+    });
+    const timer = window.setTimeout(() => {
+      worker.terminate();
+      reject(new Error("A leitura excedeu o tempo limite. Remova linhas vazias formatadas e tente novamente."));
+    }, 120_000);
+
+    worker.onmessage = (event: MessageEvent<{ matrix?: string[][]; error?: string }>) => {
+      window.clearTimeout(timer);
+      worker.terminate();
+      if (event.data.error) reject(new Error(event.data.error));
+      else resolve(event.data.matrix ?? []);
+    };
+    worker.onerror = () => {
+      window.clearTimeout(timer);
+      worker.terminate();
+      reject(new Error("O navegador não conseguiu processar este arquivo."));
+    };
+
+    void file.arrayBuffer().then(
+      (buffer) => worker.postMessage(buffer, [buffer]),
+      (error: unknown) => reject(error instanceof Error ? error : new Error("Falha ao abrir o arquivo")),
+    );
+  });
 }
 
 function downloadWorkbook(rows: (string | number)[][], filename: string, sheetName: string) {
@@ -266,10 +285,9 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
 
   async function handleFile(file: File) {
     setParsing(true);
-    await new Promise((r) => setTimeout(r, 30));
     let matrix: string[][];
     try {
-      matrix = sheetToMatrix(await file.arrayBuffer());
+      matrix = await readSpreadsheet(file);
     } catch (e) {
       setParsing(false);
       toast.error("Não foi possível ler a planilha", { description: (e as Error).message });
@@ -294,7 +312,8 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       header.forEach((key, idx) => {
         values[key] = (cells[idx] ?? "").trim();
       });
-      if (!values["slug"] && values["name"]) values["slug"] = slugify(values["name"]);
+       if ((!values["slug"] || values["slug"].startsWith("=")) && values["name"])
+         values["slug"] = slugify(values["name"]);
 
       let error: string | undefined;
       if (!values["name"]) error = "Nome obrigatório";
