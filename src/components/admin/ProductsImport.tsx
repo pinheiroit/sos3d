@@ -417,7 +417,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {rows.slice(0, PREVIEW_LIMIT).map((r) => (
                   <tr key={r.line} className="border-t border-border">
                     <td className="px-3 py-2 text-muted-foreground">{r.line}</td>
                     <td className="px-3 py-2">{r.values["slug"]}</td>
