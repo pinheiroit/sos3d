@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { AlertTriangle, Download, FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
