@@ -17,8 +17,8 @@ export function sortPlans(plans: InstallmentPlan[]) {
 }
 
 /** Melhor parcela (menor valor mensal) para exibir na vitrine. */
-export function bestPlan(plans: InstallmentPlan[]): InstallmentPlan | null {
-  if (!plans.length) return null;
+export function bestPlan(plans?: InstallmentPlan[] | null): InstallmentPlan | null {
+  if (!plans || !Array.isArray(plans) || plans.length === 0) return null;
   return plans.reduce((best, p) => (p.installment < best.installment ? p : best));
 }
 
