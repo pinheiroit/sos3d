@@ -39,6 +39,7 @@ const productSchema = z.object({
   active: z.boolean().default(true),
   use_cases: z.array(z.string().trim().max(120)).max(12).default([]),
   specs: z.array(specSchema).max(30).default([]),
+  installments: z.array(installmentSchema).max(24).default([]),
 });
 
 export const adminOverview = createServerFn({ method: "GET" })
@@ -96,6 +97,7 @@ export const saveProduct = createServerFn({ method: "POST" })
       active: v.active,
       use_cases: v.use_cases,
       specs: v.specs,
+      installments: v.installments,
       updated_at: new Date().toISOString(),
     };
     const query = data.id
@@ -211,6 +213,7 @@ const importRowSchema = productSchema.partial({
   active: true,
   use_cases: true,
   specs: true,
+  installments: true,
 });
 
 /** Importa/atualiza produtos em massa (chave: slug). */
@@ -256,6 +259,7 @@ export const importProducts = createServerFn({ method: "POST" })
         active: row.active ?? true,
         use_cases: row.use_cases ?? [],
         specs: row.specs ?? [],
+        installments: row.installments ?? [],
         updated_at: now,
       });
     }
