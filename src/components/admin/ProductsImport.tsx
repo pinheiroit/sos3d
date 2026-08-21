@@ -285,7 +285,10 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       });
     }
     const header = matrix[0]!.map((h) => h.trim().toLowerCase());
-    const parsed: ParsedRow[] = matrix.slice(1).map((cells, i) => {
+    const parsed: ParsedRow[] = matrix
+      .slice(1, MAX_ROWS + 1)
+      .filter((cells) => cells.some((c) => c && c.trim()))
+      .map((cells, i) => {
       const values: Record<string, string> = {};
       header.forEach((key, idx) => {
         values[key] = (cells[idx] ?? "").trim();
