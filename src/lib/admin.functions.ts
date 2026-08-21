@@ -5,6 +5,12 @@ import type { Database } from "@/integrations/supabase/types";
 
 const specSchema = z.object({ label: z.string().max(120), value: z.string().max(400) });
 
+const installmentSchema = z.object({
+  months: z.number().int().min(2).max(48),
+  installment: z.number().min(0).max(10_000_000),
+  total: z.number().min(0).max(10_000_000),
+});
+
 const productSchema = z.object({
   slug: z.string().trim().min(2).max(120).regex(/^[a-z0-9-]+$/),
   name: z.string().trim().min(2).max(180),
