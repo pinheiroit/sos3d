@@ -330,6 +330,7 @@ export type Database = {
           id: string
           image_key: string
           image_url: string | null
+          installments: Json
           name: string
           old_price: number | null
           price: number
@@ -350,6 +351,7 @@ export type Database = {
           id?: string
           image_key?: string
           image_url?: string | null
+          installments?: Json
           name: string
           old_price?: number | null
           price?: number
@@ -370,6 +372,7 @@ export type Database = {
           id?: string
           image_key?: string
           image_url?: string | null
+          installments?: Json
           name?: string
           old_price?: number | null
           price?: number
