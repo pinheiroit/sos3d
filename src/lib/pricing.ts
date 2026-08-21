@@ -95,5 +95,5 @@ export const pricingQueryOptions = queryOptions({
 
 export function usePricing(): PricingRules {
   const { data } = useQuery(pricingQueryOptions);
-  return normalizeRules(data);
+  return normalizeRules(data?.value ?? null);
 }
