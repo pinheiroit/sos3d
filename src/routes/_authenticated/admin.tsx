@@ -101,6 +101,8 @@ function AdminPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormState | null>(null);
 
+  const { categories: categoryList } = useCategories();
+
   const overview = useQuery({
     queryKey: ["admin-overview"],
     queryFn: () => adminOverview(),
@@ -530,9 +532,11 @@ function AdminPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="impressoras">Impressoras 3D</SelectItem>
-                    <SelectItem value="filamentos">Filamentos e insumos</SelectItem>
-                    <SelectItem value="acessorios">Peças e acessórios</SelectItem>
+                    {categoryList.map((c) => (
+                      <SelectItem key={c.slug} value={c.slug}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
