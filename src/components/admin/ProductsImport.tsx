@@ -93,25 +93,39 @@ type ParsedRow = {
 const MAX_ROWS = 5000;
 const PREVIEW_LIMIT = 200;
 
-function readSpreadsheet(file: File): Promise<string[][]> {
+function readSpreadsheet(
+  file: File,
+  onProgress: (pct: number) => void,
+  registerWorker: (w: Worker | null) => void,
+): Promise<string[][]> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL("../../workers/products-import.worker.ts", import.meta.url), {
       type: "module",
     });
-    const timer = window.setTimeout(() => {
+    registerWorker(worker);
+    const finish = () => {
+      window.clearTimeout(timer);
       worker.terminate();
+      registerWorker(null);
+    };
+    const timer = window.setTimeout(() => {
+      finish();
       reject(new Error("A leitura excedeu o tempo limite. Remova linhas vazias formatadas e tente novamente."));
     }, 120_000);
 
-    worker.onmessage = (event: MessageEvent<{ matrix?: string[][]; error?: string }>) => {
-      window.clearTimeout(timer);
-      worker.terminate();
+    worker.onmessage = (
+      event: MessageEvent<{ matrix?: string[][]; error?: string; progress?: number }>,
+    ) => {
+      if (typeof event.data.progress === "number" && !event.data.matrix && !event.data.error) {
+        onProgress(Math.min(99, Math.round(event.data.progress * 100)));
+        return;
+      }
+      finish();
       if (event.data.error) reject(new Error(event.data.error));
       else resolve(event.data.matrix ?? []);
     };
     worker.onerror = () => {
-      window.clearTimeout(timer);
-      worker.terminate();
+      finish();
       reject(new Error("O navegador não conseguiu processar este arquivo."));
     };
 
@@ -121,6 +135,13 @@ function readSpreadsheet(file: File): Promise<string[][]> {
     );
   });
 }
+
+function formatEta(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "calculando...";
+  if (seconds < 60) return `~${Math.ceil(seconds)}s restantes`;
+  return `~${Math.ceil(seconds / 60)} min restantes`;
+}
+
 
 function downloadWorkbook(rows: (string | number)[][], filename: string, sheetName: string) {
   const ws = XLSX.utils.aoa_to_sheet(rows);
