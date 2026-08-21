@@ -69,7 +69,8 @@ export function ProductCard({ product }: { product: Product }) {
             {formatBRL(pix)} à vista no Pix (5% off)
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            ou 12x de {formatBRL(installment)} sem juros
+            ou até {months}x de {formatBRL(installment)}
+            {plan ? ` (total ${formatBRL(plan.total)})` : " sem juros"}
           </p>
 
           <div className="mt-4 flex gap-2">
