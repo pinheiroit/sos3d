@@ -308,6 +308,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
 
     setRows(parsed);
     setFileName(file.name);
+    setParsing(false);
   }
 
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
