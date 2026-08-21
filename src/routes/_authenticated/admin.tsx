@@ -354,7 +354,151 @@ function AdminPage() {
         </TabsList>
 
         <TabsContent value="produtos" className="mt-6 space-y-3">
-          {(data?.products ?? []).map((p) => (
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="xl:col-span-2">
+                <Label className="text-xs">Buscar (nome, slug, descrição)</Label>
+                <Input
+                  className="mt-1 h-9"
+                  placeholder="Ex.: PLA preto, impressora..."
+                  value={filters.text}
+                  onChange={(e) => setFilters((f) => ({ ...f, text: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Marca</Label>
+                <Select
+                  value={filters.brand}
+                  onValueChange={(brand) => setFilters((f) => ({ ...f, brand }))}
+                >
+                  <SelectTrigger className="mt-1 h-9">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as marcas</SelectItem>
+                    {brandOptions.map((b) => (
+                      <SelectItem key={b} value={b}>
+                        {b}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Categoria</Label>
+                <Select
+                  value={filters.category}
+                  onValueChange={(category) => setFilters((f) => ({ ...f, category }))}
+                >
+                  <SelectTrigger className="mt-1 h-9">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
+                    {categoryList.map((c) => (
+                      <SelectItem key={c.slug} value={c.slug}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Preço mín.</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className="mt-1 h-9"
+                    value={filters.priceMin}
+                    onChange={(e) => setFilters((f) => ({ ...f, priceMin: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Preço máx.</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className="mt-1 h-9"
+                    value={filters.priceMax}
+                    onChange={(e) => setFilters((f) => ({ ...f, priceMax: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Estoque mín.</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    className="mt-1 h-9"
+                    value={filters.stockMin}
+                    onChange={(e) => setFilters((f) => ({ ...f, stockMin: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Estoque máx.</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    className="mt-1 h-9"
+                    value={filters.stockMax}
+                    onChange={(e) => setFilters((f) => ({ ...f, stockMax: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Situação</Label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(status) => setFilters((f) => ({ ...f, status }))}
+                >
+                  <SelectTrigger className="mt-1 h-9">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Somente ativos</SelectItem>
+                    <SelectItem value="inactive">Somente inativos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end justify-between gap-3">
+                <p className="pb-2 text-xs text-muted-foreground">
+                  {filteredProducts.length} de {allProducts.length} produtos
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mb-1"
+                  onClick={() =>
+                    setFilters({
+                      text: "",
+                      brand: "all",
+                      category: "all",
+                      status: "all",
+                      priceMin: "",
+                      priceMax: "",
+                      stockMin: "",
+                      stockMax: "",
+                    })
+                  }
+                >
+                  Limpar filtros
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nenhum produto encontrado com os filtros atuais.
+            </p>
+          )}
+
+          {filteredProducts.map((p) => (
             <div
               key={p.id}
               className="grid gap-4 rounded-xl border border-border bg-card p-4 lg:grid-cols-[1fr_auto]"
