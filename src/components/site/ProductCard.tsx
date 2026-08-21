@@ -3,13 +3,15 @@ import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatBRL, type Product } from "@/lib/catalog";
+import { bestPlan, formatBRL, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
   const pix = product.price * 0.95;
-  const installment = product.price / 12;
+  const plan = bestPlan(product.installments);
+  const installment = plan ? plan.installment : product.price / 12;
+  const months = plan ? plan.months : 12;
   const off = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : 0;
