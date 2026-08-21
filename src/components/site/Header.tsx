@@ -50,7 +50,7 @@ export function Header() {
             <Truck className="size-3.5 shrink-0" />
             <span className="hidden sm:inline">Envio para todo o Brasil</span>
             <span className="sm:hidden">Envio nacional</span>
-            <span className="hidden md:inline">• 12x sem juros • 5% off no Pix</span>
+            
           </p>
           <div className="flex items-center gap-5">
             <Link to="/suporte" className="hidden text-white/80 hover:text-white md:inline">
