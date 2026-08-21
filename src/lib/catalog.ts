@@ -5,7 +5,7 @@ import filament1 from "@/assets/filament-1.jpg";
 import filament2 from "@/assets/filament-2.jpg";
 import filament3 from "@/assets/filament-3.jpg";
 
-export type Category = "impressoras" | "filamentos" | "acessorios";
+export type Category = "impressoras" | "filamentos" | "acessorios" | (string & {});
 
 export type Spec = { label: string; value: string };
 
@@ -29,7 +29,8 @@ export type Product = {
   specs: Spec[];
 };
 
-export const categoryLabels: Record<Category, string> = {
+/** Rótulos de fallback; a fonte oficial é a tabela de categorias. */
+export const categoryLabels: Record<string, string> = {
   impressoras: "Impressoras 3D",
   filamentos: "Filamentos e insumos",
   acessorios: "Peças e acessórios",
