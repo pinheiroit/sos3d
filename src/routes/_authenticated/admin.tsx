@@ -24,6 +24,8 @@ import { bannerDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
 import { setSiteImage } from "@/lib/uploads.functions";
 import { FooterAdmin } from "@/components/admin/FooterAdmin";
 import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
+import { CategoriesAdmin } from "@/components/admin/CategoriesAdmin";
+import { useCategories } from "@/lib/categories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
 import {
   adminOverview,
@@ -61,7 +63,7 @@ type FormState = {
   slug: string;
   name: string;
   brand: string;
-  category: "impressoras" | "filamentos" | "acessorios";
+  category: string;
   subtitle: string;
   description: string;
   price: string;
@@ -294,6 +296,7 @@ function AdminPage() {
       <Tabs defaultValue="produtos" className="mt-10">
         <TabsList>
           <TabsTrigger value="produtos">Produtos</TabsTrigger>
+          <TabsTrigger value="categorias">Categorias</TabsTrigger>
           <TabsTrigger value="importar">Importar</TabsTrigger>
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
@@ -366,6 +369,10 @@ function AdminPage() {
               </div>
             </div>
           ))}
+        </TabsContent>
+
+        <TabsContent value="categorias" className="mt-6">
+          <CategoriesAdmin />
         </TabsContent>
 
         <TabsContent value="importar" className="mt-6">
