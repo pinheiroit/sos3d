@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Download, FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
@@ -272,15 +272,14 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       const slug = (r.values["slug"] ?? "").trim();
       if (slug) lastBySlug.set(slug, r.line);
     }
-    const removed = rows.length;
-    setRows((prev) =>
-      prev.filter((r) => {
-        const slug = (r.values["slug"] ?? "").trim();
-        return !slug || lastBySlug.get(slug) === r.line;
-      }),
-    );
+    const kept = rows.filter((r) => {
+      const slug = (r.values["slug"] ?? "").trim();
+      return !slug || lastBySlug.get(slug) === r.line;
+    });
+    const removed = rows.length - kept.length;
+    setRows(kept);
     toast.success("Duplicados removidos", {
-      description: `${removed - lastBySlug.size} linhas repetidas foram descartadas (mantida a última de cada slug).`,
+      description: `${removed} linhas repetidas foram descartadas (mantida a última de cada slug).`,
     });
   }
 
