@@ -369,7 +369,7 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="importar" className="mt-6">
-          <ProductsImport />
+          <ProductsImport products={(data?.products ?? []) as never} />
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6 space-y-3">
