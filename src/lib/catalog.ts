@@ -40,6 +40,7 @@ export type Product = {
   useCases: string[];
   description: string;
   specs: Spec[];
+  installments: InstallmentPlan[];
 };
 
 /** Rótulos de fallback; a fonte oficial é a tabela de categorias. */
@@ -81,10 +82,22 @@ export type ProductRow = {
   active: boolean;
   use_cases: string[] | null;
   specs: unknown;
+  installments?: unknown;
 };
 
 export function mapProduct(row: ProductRow): Product {
   const specs = Array.isArray(row.specs) ? (row.specs as Spec[]) : [];
+  const installments = Array.isArray(row.installments)
+    ? sortPlans(
+        (row.installments as InstallmentPlan[])
+          .map((i) => ({
+            months: Number(i?.months) || 0,
+            installment: Number(i?.installment) || 0,
+            total: Number(i?.total) || 0,
+          }))
+          .filter((i) => i.months > 1 && i.installment > 0),
+      )
+    : [];
   return {
     id: row.id,
     slug: row.slug,
@@ -103,6 +116,7 @@ export function mapProduct(row: ProductRow): Product {
     active: row.active ?? true,
     useCases: row.use_cases ?? [],
     specs,
+    installments,
   };
 }
 
