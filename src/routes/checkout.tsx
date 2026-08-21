@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, CreditCard, Lock, Truck } from "lucide-react";
+import { CheckCircle2, CreditCard, Lock, MessageCircle, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { paymentDiscountPercent, shippingFor, usePricing } from "@/lib/pricing";
 import { createOrder } from "@/lib/orders.functions";
+import { useSiteContent } from "@/lib/site-content";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -25,9 +26,36 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
+type OrderResult = Awaited<ReturnType<typeof createOrder>>;
+
+const paymentLabel: Record<string, string> = {
+  pix: "Pix",
+  boleto: "Boleto",
+  cartao: "Cartão de crédito",
+};
+
+function whatsappLink(phone: string, order: OrderResult, customerName: string) {
+  const digits = (phone || "").replace(/\D/g, "");
+  const number = digits.length <= 11 ? `55${digits}` : digits;
+  const linhas = order.items
+    .map((i) => `• ${i.qty}x ${i.name} — ${formatBRL(i.unitPrice * i.qty)}`)
+    .join("\n");
+  const msg =
+    `Olá! Acabei de finalizar o pedido *${order.reference}* no site da SOS.3D.\n\n` +
+    `Cliente: ${customerName}\n` +
+    `Pagamento: ${paymentLabel[order.paymentMethod] ?? order.paymentMethod}\n\n` +
+    `${linhas}\n\n` +
+    `Subtotal: ${formatBRL(order.subtotal)}\n` +
+    `Frete: ${order.shipping > 0 ? formatBRL(order.shipping) : "Grátis"}\n` +
+    (order.discount > 0 ? `Desconto: -${formatBRL(order.discount)}\n` : "") +
+    `*Total: ${formatBRL(order.total)}*\n\n` +
+    `Gostaria de concluir o pagamento.`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
+}
+
 function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
-  const [done, setDone] = useState<{ reference: string } | null>(null);
+  const [done, setDone] = useState<OrderResult | null>(null);
   const [pagamento, setPagamento] = useState("pix");
   const [sending, setSending] = useState(false);
   const [f, setF] = useState({
@@ -45,31 +73,53 @@ function CheckoutPage() {
     setF((prev) => ({ ...prev, [k]: e.target.value }));
 
   const rules = usePricing();
+  const { footer } = useSiteContent();
   const frete = shippingFor(subtotal, rules);
   const desconto = (subtotal * paymentDiscountPercent(pagamento, rules)) / 100;
   const total = subtotal + frete - desconto;
 
   if (done) {
+    const link = whatsappLink(footer.phone, done, f.nome);
     return (
       <div className="container-page py-24 text-center">
         <CheckCircle2 className="mx-auto size-12 text-success" />
         <h1 className="mt-6 text-3xl font-bold">Pedido registrado com sucesso</h1>
-        <p className="mt-3 text-sm font-semibold">Pedido {done.reference}</p>
-        <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
-          Enviamos o resumo por e-mail. Um especialista da SOS.3D entra em contato para confirmar
-          prazos, condições de entrega e orientação de instalação.
+        <p className="mt-4 text-base">
+          Número do pedido:{" "}
+          <span className="rounded-md bg-muted px-2 py-1 font-mono text-lg font-bold">
+            {done.reference}
+          </span>
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Total {formatBRL(done.total)} · {paymentLabel[done.paymentMethod] ?? done.paymentMethod}
+        </p>
+        <p className="mx-auto mt-4 max-w-lg text-muted-foreground">
+          Para concluir o pagamento, envie o número do pedido no WhatsApp. Nossa equipe confirma
+          estoque, frete e envia os dados de pagamento.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild variant="cta">
-            <Link to="/loja">Voltar para a loja</Link>
+          <Button asChild variant="cta" size="lg">
+            <a href={link} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="size-4" /> Finalizar pagamento no WhatsApp
+            </a>
           </Button>
-          <Button asChild variant="outline">
-            <Link to="/suporte">Central de suporte</Link>
+          <Button
+            variant="outline"
+            onClick={() => {
+              navigator.clipboard?.writeText(done.reference);
+              toast.success("Número do pedido copiado");
+            }}
+          >
+            Copiar número
+          </Button>
+          <Button asChild variant="ghost">
+            <Link to="/loja">Voltar para a loja</Link>
           </Button>
         </div>
       </div>
     );
   }
+
 
   if (items.length === 0) {
     return (
@@ -112,7 +162,7 @@ function CheckoutPage() {
               },
             });
             clear();
-            setDone({ reference: result.reference });
+            setDone(result);
           } catch (error) {
             toast.error("Não foi possível concluir o pedido", {
               description: error instanceof Error ? error.message : "Tente novamente.",

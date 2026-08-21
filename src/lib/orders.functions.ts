@@ -114,7 +114,19 @@ export const createOrder = createServerFn({ method: "POST" })
         .eq("id", l.product_id);
     }
 
-    return { reference: order.reference, total: Number(order.total) };
+    return {
+      reference: order.reference,
+      total: Number(order.total),
+      subtotal,
+      shipping,
+      discount,
+      paymentMethod: data.paymentMethod,
+      items: lines.map((l) => ({
+        name: l.product_name,
+        qty: l.qty,
+        unitPrice: l.unit_price,
+      })),
+    };
   });
 
 export const listMyOrders = createServerFn({ method: "GET" })
