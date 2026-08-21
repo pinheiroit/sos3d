@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { AlertTriangle, Download, FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
@@ -93,25 +93,39 @@ type ParsedRow = {
 const MAX_ROWS = 5000;
 const PREVIEW_LIMIT = 200;
 
-function readSpreadsheet(file: File): Promise<string[][]> {
+function readSpreadsheet(
+  file: File,
+  onProgress: (pct: number) => void,
+  registerWorker: (w: Worker | null) => void,
+): Promise<string[][]> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL("../../workers/products-import.worker.ts", import.meta.url), {
       type: "module",
     });
-    const timer = window.setTimeout(() => {
+    registerWorker(worker);
+    const finish = () => {
+      window.clearTimeout(timer);
       worker.terminate();
+      registerWorker(null);
+    };
+    const timer = window.setTimeout(() => {
+      finish();
       reject(new Error("A leitura excedeu o tempo limite. Remova linhas vazias formatadas e tente novamente."));
     }, 120_000);
 
-    worker.onmessage = (event: MessageEvent<{ matrix?: string[][]; error?: string }>) => {
-      window.clearTimeout(timer);
-      worker.terminate();
+    worker.onmessage = (
+      event: MessageEvent<{ matrix?: string[][]; error?: string; progress?: number }>,
+    ) => {
+      if (typeof event.data.progress === "number" && !event.data.matrix && !event.data.error) {
+        onProgress(Math.min(99, Math.round(event.data.progress * 100)));
+        return;
+      }
+      finish();
       if (event.data.error) reject(new Error(event.data.error));
       else resolve(event.data.matrix ?? []);
     };
     worker.onerror = () => {
-      window.clearTimeout(timer);
-      worker.terminate();
+      finish();
       reject(new Error("O navegador não conseguiu processar este arquivo."));
     };
 
@@ -121,6 +135,13 @@ function readSpreadsheet(file: File): Promise<string[][]> {
     );
   });
 }
+
+function formatEta(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "calculando...";
+  if (seconds < 60) return `~${Math.ceil(seconds)}s restantes`;
+  return `~${Math.ceil(seconds / 60)} min restantes`;
+}
+
 
 function downloadWorkbook(rows: (string | number)[][], filename: string, sheetName: string) {
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -170,17 +191,69 @@ function specsToText(specs: unknown) {
 export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const cancelRef = useRef(false);
+  const startRef = useRef(0);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [parseProgress, setParseProgress] = useState(0);
+  const [parseEta, setParseEta] = useState<number>(0);
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
 
   const valid = rows.filter((r) => !r.error);
   const invalid = rows.filter((r) => r.error);
 
+  function cancelParsing() {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    cancelRef.current = true;
+    setParsing(false);
+    setParseProgress(0);
+    toast.info("Leitura cancelada");
+  }
+
+  function cancelImport() {
+    cancelRef.current = true;
+    toast.info("Cancelando importação...", {
+      description: "Os lotes já enviados foram salvos.",
+    });
+  }
+
+  function downloadErrorReport() {
+    const failed = invalid.map((r) => [
+      r.line,
+      r.error ?? "",
+      ...COLUMNS.map((c) => r.values[c] ?? ""),
+    ]);
+    if (failed.length === 0) {
+      toast.error("Nenhuma linha com erro para exportar");
+      return;
+    }
+    downloadWorkbook(
+      [["linha", "erro", ...COLUMNS], ...failed],
+      `falhas-importacao-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      "Falhas",
+    );
+    toast.success(`${failed.length} linhas com erro exportadas`);
+  }
+
+  function downloadServerErrorReport() {
+    if (serverErrors.length === 0) return;
+    downloadWorkbook(
+      [["erro"], ...serverErrors.map((e) => [e])],
+      `falhas-servidor-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      "Falhas",
+    );
+  }
+
   const run = useMutation({
     mutationFn: async () => {
+      cancelRef.current = false;
+      startRef.current = Date.now();
       setProgress({ done: 0, total: valid.length });
+
       const payload = valid.map((r) => {
         const v = r.values;
         const useCases = (v["use_cases"] ?? "")
@@ -219,8 +292,12 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       });
 
       const CHUNK = 50;
-      const total = { created: 0, updated: 0, errors: [] as string[] };
+      const total = { created: 0, updated: 0, errors: [] as string[], canceled: false };
       for (let i = 0; i < payload.length; i += CHUNK) {
+        if (cancelRef.current) {
+          total.canceled = true;
+          break;
+        }
         const chunk = payload.slice(i, i + CHUNK);
         const res = (await importProducts({ data: { rows: chunk } } as never)) as {
           created: number;
@@ -236,21 +313,32 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
     },
     onSuccess: (res) => {
       void queryClient.invalidateQueries();
-      setRows([]);
-      setFileName(null);
+      setServerErrors(res.errors);
+      setRows((prev) => prev.filter((r) => r.error));
+      if (res.canceled) {
+        toast.warning("Importação cancelada", {
+          description: `${res.created} criados e ${res.updated} atualizados antes do cancelamento.`,
+        });
+        return;
+      }
       if (res.errors.length) {
         toast.warning(`Importação parcial: ${res.created} criados, ${res.updated} atualizados`, {
           description: res.errors.slice(0, 3).join(" • "),
         });
       } else {
+        setFileName(null);
         toast.success(`Importação concluída`, {
           description: `${res.created} produtos criados e ${res.updated} atualizados.`,
         });
       }
     },
     onError: (e: Error) => toast.error("Falha na importação", { description: e.message }),
-    onSettled: () => setProgress(null),
+    onSettled: () => {
+      setProgress(null);
+      cancelRef.current = false;
+    },
   });
+
 
 
   function downloadTemplate() {
@@ -284,15 +372,36 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   }
 
   async function handleFile(file: File) {
+    cancelRef.current = false;
+    setServerErrors([]);
+    setParseProgress(0);
+    setParseEta(0);
     setParsing(true);
+    const startedAt = Date.now();
     let matrix: string[][];
     try {
-      matrix = await readSpreadsheet(file);
+      matrix = await readSpreadsheet(
+        file,
+        (pct) => {
+          setParseProgress(pct);
+          const elapsed = (Date.now() - startedAt) / 1000;
+          setParseEta(pct > 3 ? (elapsed / pct) * (100 - pct) : 0);
+        },
+        (w) => {
+          workerRef.current = w;
+        },
+      );
     } catch (e) {
       setParsing(false);
-      toast.error("Não foi possível ler a planilha", { description: (e as Error).message });
+      if (!cancelRef.current)
+        toast.error("Não foi possível ler a planilha", { description: (e as Error).message });
       return;
     }
+    if (cancelRef.current) {
+      setParsing(false);
+      return;
+    }
+
     if (matrix.length < 2) {
       setParsing(false);
       toast.error("Planilha vazia", { description: "Use o modelo com cabeçalho e ao menos 1 linha." });
@@ -332,6 +441,10 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   }
 
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+  const importEta =
+    progress && progress.done > 0
+      ? ((Date.now() - startRef.current) / 1000 / progress.done) * (progress.total - progress.done)
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -342,9 +455,18 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               <Loader2 className="size-4 animate-spin" /> Lendo planilha
             </DialogTitle>
             <DialogDescription>
-              Processando o arquivo selecionado. Isso pode levar alguns segundos.
+              Processando o arquivo em segundo plano. Você pode cancelar a qualquer momento.
             </DialogDescription>
           </DialogHeader>
+          <Progress value={parseProgress} />
+          <p className="text-sm text-muted-foreground">
+            {parseProgress}% concluído • {formatEta(parseEta)}
+          </p>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={cancelParsing}>
+              <X /> Cancelar leitura
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -360,10 +482,17 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           </DialogHeader>
           <Progress value={pct} />
           <p className="text-sm text-muted-foreground">
-            {progress?.done ?? 0} de {progress?.total ?? 0} produtos processados ({pct}%)
+            {progress?.done ?? 0} de {progress?.total ?? 0} produtos processados ({pct}%) •{" "}
+            {formatEta(importEta)}
           </p>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={cancelImport}>
+              <X /> Cancelar importação
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
+
 
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -421,6 +550,11 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               {invalid.length > 0 && <Badge variant="destructive">{invalid.length} com erro</Badge>}
             </div>
             <div className="flex gap-2">
+              {invalid.length > 0 && (
+                <Button variant="outline" size="sm" onClick={downloadErrorReport}>
+                  <Download /> Baixar erros ({invalid.length})
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={() => setRows([])}>
                 Cancelar
               </Button>
@@ -434,6 +568,41 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               </Button>
             </div>
           </div>
+
+          {invalid.length > 0 && (
+            <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+              <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <AlertTriangle className="size-4" /> {invalid.length} linhas com erro (de{" "}
+                {rows.length})
+              </p>
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                {Object.entries(
+                  invalid.reduce<Record<string, number>>((acc, r) => {
+                    const key = r.error ?? "Erro desconhecido";
+                    acc[key] = (acc[key] ?? 0) + 1;
+                    return acc;
+                  }, {}),
+                ).map(([msg, count]) => (
+                  <li key={msg}>
+                    <strong>{count}x</strong> {msg} — ex.: linha{" "}
+                    {invalid.find((r) => r.error === msg)?.line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {serverErrors.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-secondary/40 p-4">
+              <p className="text-sm text-muted-foreground">
+                O servidor recusou {serverErrors.length} registros durante a importação.
+              </p>
+              <Button variant="outline" size="sm" onClick={downloadServerErrorReport}>
+                <Download /> Baixar relatório do servidor
+              </Button>
+            </div>
+          )}
+
 
           <div className="mt-4 max-h-[420px] overflow-auto rounded-lg border border-border">
             <table className="w-full text-left text-sm">
