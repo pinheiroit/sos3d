@@ -100,6 +100,16 @@ function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormState | null>(null);
+  const [filters, setFilters] = useState({
+    text: "",
+    brand: "all",
+    category: "all",
+    status: "all",
+    priceMin: "",
+    priceMax: "",
+    stockMin: "",
+    stockMax: "",
+  });
 
   const { categories: categoryList } = useCategories();
 
