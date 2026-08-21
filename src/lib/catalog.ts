@@ -22,6 +22,29 @@ export function bestPlan(plans?: InstallmentPlan[] | null): InstallmentPlan | nu
   return plans.reduce((best, p) => (p.installment < best.installment ? p : best));
 }
 
+/** Plano de parcelamento para o número de parcelas escolhido (ou o maior possível abaixo dele). */
+export function planForMonths(
+  plans: InstallmentPlan[] | null | undefined,
+  months: number,
+): InstallmentPlan | null {
+  if (!plans || !Array.isArray(plans) || plans.length === 0) return null;
+  const exact = plans.find((p) => p.months === months);
+  if (exact) return exact;
+  const lower = plans.filter((p) => p.months <= months).sort((a, b) => b.months - a.months);
+  return lower[0] ?? sortPlans(plans)[0] ?? null;
+}
+
+/** Valor unitário no cartão: usa o total da tabela do produto quando cadastrada. */
+export function cardUnitPrice(
+  product: { price: number; installments?: InstallmentPlan[] | null },
+  months: number,
+): number {
+  const plan = planForMonths(product.installments, months);
+  return plan && plan.total > 0 ? plan.total : product.price;
+}
+
+
+
 export type Product = {
   id: string;
   slug: string;
