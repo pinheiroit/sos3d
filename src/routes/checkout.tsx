@@ -44,7 +44,9 @@ function whatsappLink(phone: string, order: OrderResult, customerName: string) {
   const msg =
     `Olá! Acabei de finalizar o pedido *${order.reference}* no site da SOS.3D.\n\n` +
     `Cliente: ${customerName}\n` +
-    `Pagamento: ${paymentLabel[order.paymentMethod] ?? order.paymentMethod}\n\n` +
+    `Pagamento: ${paymentLabel[order.paymentMethod] ?? order.paymentMethod}` +
+    (order.installmentMonths ? ` em ${order.installmentMonths}x` : "") +
+    `\n\n` +
     `${linhas}\n\n` +
     `Subtotal: ${formatBRL(order.subtotal)}\n` +
     `Frete: ${order.shipping > 0 ? formatBRL(order.shipping) : "Grátis"}\n` +

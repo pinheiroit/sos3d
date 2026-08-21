@@ -138,6 +138,7 @@ export const createOrder = createServerFn({ method: "POST" })
       shipping,
       discount,
       paymentMethod: data.paymentMethod,
+      installmentMonths: data.paymentMethod === "cartao" ? (data.installmentMonths ?? null) : null,
       items: lines.map((l) => ({
         name: l.product_name,
         qty: l.qty,
