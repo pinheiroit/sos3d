@@ -372,15 +372,36 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   }
 
   async function handleFile(file: File) {
+    cancelRef.current = false;
+    setServerErrors([]);
+    setParseProgress(0);
+    setParseEta(0);
     setParsing(true);
+    const startedAt = Date.now();
     let matrix: string[][];
     try {
-      matrix = await readSpreadsheet(file);
+      matrix = await readSpreadsheet(
+        file,
+        (pct) => {
+          setParseProgress(pct);
+          const elapsed = (Date.now() - startedAt) / 1000;
+          setParseEta(pct > 3 ? (elapsed / pct) * (100 - pct) : 0);
+        },
+        (w) => {
+          workerRef.current = w;
+        },
+      );
     } catch (e) {
       setParsing(false);
-      toast.error("Não foi possível ler a planilha", { description: (e as Error).message });
+      if (!cancelRef.current)
+        toast.error("Não foi possível ler a planilha", { description: (e as Error).message });
       return;
     }
+    if (cancelRef.current) {
+      setParsing(false);
+      return;
+    }
+
     if (matrix.length < 2) {
       setParsing(false);
       toast.error("Planilha vazia", { description: "Use o modelo com cabeçalho e ao menos 1 linha." });
