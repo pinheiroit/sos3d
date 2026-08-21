@@ -90,8 +90,11 @@ type ParsedRow = {
   error?: string;
 };
 
+const MAX_ROWS = 5000;
+const PREVIEW_LIMIT = 200;
+
 function sheetToMatrix(file: ArrayBuffer): string[][] {
-  const wb = XLSX.read(file, { type: "array" });
+  const wb = XLSX.read(file, { type: "array", dense: true, cellStyles: false, cellHTML: false, sheetRows: MAX_ROWS + 1 });
   const sheetName = wb.SheetNames[0];
   if (!sheetName) return [];
   const sheet = wb.Sheets[sheetName]!;
@@ -151,6 +154,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [parsing, setParsing] = useState(false);
 
   const valid = rows.filter((r) => !r.error);
   const invalid = rows.filter((r) => r.error);
@@ -261,13 +265,31 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   }
 
   async function handleFile(file: File) {
-    const matrix = sheetToMatrix(await file.arrayBuffer());
+    setParsing(true);
+    await new Promise((r) => setTimeout(r, 30));
+    let matrix: string[][];
+    try {
+      matrix = sheetToMatrix(await file.arrayBuffer());
+    } catch (e) {
+      setParsing(false);
+      toast.error("Não foi possível ler a planilha", { description: (e as Error).message });
+      return;
+    }
     if (matrix.length < 2) {
+      setParsing(false);
       toast.error("Planilha vazia", { description: "Use o modelo com cabeçalho e ao menos 1 linha." });
       return;
     }
+    if (matrix.length > MAX_ROWS) {
+      toast.warning(`Planilha grande`, {
+        description: `Apenas as primeiras ${MAX_ROWS} linhas serão consideradas.`,
+      });
+    }
     const header = matrix[0]!.map((h) => h.trim().toLowerCase());
-    const parsed: ParsedRow[] = matrix.slice(1).map((cells, i) => {
+    const parsed: ParsedRow[] = matrix
+      .slice(1, MAX_ROWS + 1)
+      .filter((cells) => cells.some((c) => c && c.trim()))
+      .map((cells, i) => {
       const values: Record<string, string> = {};
       header.forEach((key, idx) => {
         values[key] = (cells[idx] ?? "").trim();
@@ -287,12 +309,26 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
 
     setRows(parsed);
     setFileName(file.name);
+    setParsing(false);
   }
 
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
     <div className="space-y-6">
+      <Dialog open={parsing}>
+        <DialogContent className="sm:max-w-md [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="size-4 animate-spin" /> Lendo planilha
+            </DialogTitle>
+            <DialogDescription>
+              Processando o arquivo selecionado. Isso pode levar alguns segundos.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={run.isPending}>
         <DialogContent className="sm:max-w-md [&>button]:hidden">
           <DialogHeader>
@@ -394,7 +430,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {rows.slice(0, PREVIEW_LIMIT).map((r) => (
                   <tr key={r.line} className="border-t border-border">
                     <td className="px-3 py-2 text-muted-foreground">{r.line}</td>
                     <td className="px-3 py-2">{r.values["slug"]}</td>
@@ -414,6 +450,12 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               </tbody>
             </table>
           </div>
+          {rows.length > PREVIEW_LIMIT && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Exibindo as primeiras {PREVIEW_LIMIT} linhas de {rows.length}. A importação considera
+              todas as linhas válidas.
+            </p>
+          )}
         </div>
       )}
     </div>
