@@ -34,11 +34,18 @@ export const createOrder = createServerFn({ method: "POST" })
     const userId = await resolveOptionalUserId(getRequestHeader("authorization"));
 
     const slugs = data.items.map((i) => i.slug);
-    const { data: rows, error } = await supabaseAdmin
-      .from("products")
-      .select("id, slug, name, price, stock, active")
-      .in("slug", slugs);
+    const [{ data: rows, error }, settings] = await Promise.all([
+      supabaseAdmin
+        .from("products")
+        .select("id, slug, name, brand, category, price, stock, active")
+        .in("slug", slugs),
+      supabaseAdmin.from("site_settings").select("value").eq("key", "pricing").maybeSingle(),
+    ]);
     if (error) throw new Error(error.message);
+
+    const { normalizeRules, effectivePrice, paymentDiscountPercent, shippingFor, round2 } =
+      await import("@/lib/pricing");
+    const rules = normalizeRules(settings.data?.value ?? null);
 
     const lines = data.items.map((item) => {
       const product = (rows ?? []).find((r) => r.slug === item.slug);
@@ -48,15 +55,24 @@ export const createOrder = createServerFn({ method: "POST" })
         product_slug: product.slug,
         product_name: product.name,
         qty: item.qty,
-        unit_price: Number(product.price),
+        unit_price: effectivePrice(
+          {
+            slug: product.slug,
+            brand: product.brand,
+            category: product.category,
+            price: Number(product.price),
+          },
+          rules,
+        ),
         stock: product.stock,
       };
     });
 
-    const subtotal = lines.reduce((s, l) => s + l.qty * l.unit_price, 0);
-    const shipping = subtotal > 0 && subtotal < 500 ? 79 : 0;
-    const discount = data.paymentMethod === "pix" ? Math.round(subtotal * 0.05 * 100) / 100 : 0;
-    const total = subtotal + shipping - discount;
+    const subtotal = round2(lines.reduce((s, l) => s + l.qty * l.unit_price, 0));
+    const shipping = shippingFor(subtotal, rules);
+    const discount = round2((subtotal * paymentDiscountPercent(data.paymentMethod, rules)) / 100);
+    const total = round2(subtotal + shipping - discount);
+
 
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
