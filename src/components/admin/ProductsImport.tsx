@@ -281,8 +281,27 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
     setFileName(file.name);
   }
 
+  const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+
   return (
     <div className="space-y-6">
+      <Dialog open={run.isPending}>
+        <DialogContent className="sm:max-w-md [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="size-4 animate-spin" /> Importando produtos
+            </DialogTitle>
+            <DialogDescription>
+              Não feche esta janela. Enviando os dados da planilha em lotes.
+            </DialogDescription>
+          </DialogHeader>
+          <Progress value={pct} />
+          <p className="text-sm text-muted-foreground">
+            {progress?.done ?? 0} de {progress?.total ?? 0} produtos processados ({pct}%)
+          </p>
+        </DialogContent>
+      </Dialog>
+
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
