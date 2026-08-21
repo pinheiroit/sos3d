@@ -23,6 +23,7 @@ const checkoutSchema = z.object({
     state: z.string().trim().max(60).optional().default(""),
   }),
   paymentMethod: z.enum(["pix", "boleto", "cartao"]),
+  installmentMonths: z.number().int().min(1).max(48).optional(),
   notes: z.string().trim().max(1000).optional().default(""),
 });
 
@@ -37,7 +38,7 @@ export const createOrder = createServerFn({ method: "POST" })
     const [{ data: rows, error }, settings] = await Promise.all([
       supabaseAdmin
         .from("products")
-        .select("id, slug, name, brand, category, price, stock, active")
+        .select("id, slug, name, brand, category, price, stock, active, installments")
         .in("slug", slugs),
       supabaseAdmin.from("site_settings").select("value").eq("key", "pricing").maybeSingle(),
     ]);
@@ -46,6 +47,8 @@ export const createOrder = createServerFn({ method: "POST" })
     const { normalizeRules, effectivePrice, paymentDiscountPercent, shippingFor, round2 } =
       await import("@/lib/pricing");
     const rules = normalizeRules(settings.data?.value ?? null);
+
+    const { cardUnitPrice, type InstallmentPlan } = { cardUnitPrice: (await import("@/lib/catalog")).cardUnitPrice } as never;
 
     const lines = data.items.map((item) => {
       const product = (rows ?? []).find((r) => r.slug === item.slug);
