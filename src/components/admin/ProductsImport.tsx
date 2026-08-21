@@ -316,6 +316,19 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
 
   return (
     <div className="space-y-6">
+      <Dialog open={parsing}>
+        <DialogContent className="sm:max-w-md [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="size-4 animate-spin" /> Lendo planilha
+            </DialogTitle>
+            <DialogDescription>
+              Processando o arquivo selecionado. Isso pode levar alguns segundos.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={run.isPending}>
         <DialogContent className="sm:max-w-md [&>button]:hidden">
           <DialogHeader>
