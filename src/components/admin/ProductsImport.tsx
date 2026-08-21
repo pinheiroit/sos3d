@@ -218,6 +218,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const workerRef = useRef<Worker | null>(null);
   const cancelRef = useRef(false);
   const startRef = useRef(0);
+  const importedLinesRef = useRef<number[]>([]);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -332,6 +333,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       startRef.current = Date.now();
       setProgress({ done: 0, total: valid.length });
 
+      importedLinesRef.current = valid.map((r) => r.line);
       const payload = valid.map((r) => {
         const v = r.values;
         const useCases = (v["use_cases"] ?? "")
@@ -397,7 +399,8 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
     onSuccess: (res) => {
       void queryClient.invalidateQueries();
       setServerErrors(res.errors);
-      setRows((prev) => prev.filter((r) => r.error));
+      const importedLines = new Set(importedLinesRef.current);
+      setRows((prev) => prev.filter((r) => !importedLines.has(r.line)));
       if (res.canceled) {
         toast.warning("Importação cancelada", {
           description: `${res.created} criados e ${res.updated} atualizados antes do cancelamento.`,
@@ -507,15 +510,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
        if ((!values["slug"] || values["slug"].startsWith("=")) && values["name"])
          values["slug"] = slugify(values["name"]);
 
-      let error: string | undefined;
-      if (!values["name"]) error = "Nome obrigatório";
-      else if (!values["slug"] || !/^[a-z0-9-]+$/.test(values["slug"]))
-        error = "Slug inválido (use apenas letras minúsculas, números e hífen)";
-      else if (!categorySlugs.includes(values["category"] ?? ""))
-        error = `Categoria deve ser uma destas: ${categorySlugs.join(", ")}`;
-      else if (toNumber(values["price"] ?? "") === null) error = "Preço inválido";
-
-      return error ? { line: i + 2, values, error } : { line: i + 2, values };
+      return { line: i + 2, values };
     });
 
     setRows(parsed);
