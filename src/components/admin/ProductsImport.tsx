@@ -5,6 +5,14 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { importProducts } from "@/lib/admin.functions";
 
 const COLUMNS = [
@@ -142,12 +150,14 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const valid = rows.filter((r) => !r.error);
   const invalid = rows.filter((r) => r.error);
 
   const run = useMutation({
     mutationFn: async () => {
+      setProgress({ done: 0, total: valid.length });
       const payload = valid.map((r) => {
         const v = r.values;
         const useCases = (v["use_cases"] ?? "")
@@ -184,11 +194,22 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           specs,
         };
       });
-      return (await importProducts({ data: { rows: payload } } as never)) as {
-        created: number;
-        updated: number;
-        errors: string[];
-      };
+
+      const CHUNK = 50;
+      const total = { created: 0, updated: 0, errors: [] as string[] };
+      for (let i = 0; i < payload.length; i += CHUNK) {
+        const chunk = payload.slice(i, i + CHUNK);
+        const res = (await importProducts({ data: { rows: chunk } } as never)) as {
+          created: number;
+          updated: number;
+          errors: string[];
+        };
+        total.created += res.created;
+        total.updated += res.updated;
+        total.errors.push(...res.errors);
+        setProgress({ done: Math.min(i + CHUNK, payload.length), total: payload.length });
+      }
+      return total;
     },
     onSuccess: (res) => {
       void queryClient.invalidateQueries();
@@ -205,7 +226,9 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       }
     },
     onError: (e: Error) => toast.error("Falha na importação", { description: e.message }),
+    onSettled: () => setProgress(null),
   });
+
 
   function downloadTemplate() {
     downloadWorkbook([[...COLUMNS], ...TEMPLATE_ROWS], "modelo-produtos-sos3d.xlsx", "Produtos");
@@ -266,8 +289,27 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
     setFileName(file.name);
   }
 
+  const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+
   return (
     <div className="space-y-6">
+      <Dialog open={run.isPending}>
+        <DialogContent className="sm:max-w-md [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="size-4 animate-spin" /> Importando produtos
+            </DialogTitle>
+            <DialogDescription>
+              Não feche esta janela. Enviando os dados da planilha em lotes.
+            </DialogDescription>
+          </DialogHeader>
+          <Progress value={pct} />
+          <p className="text-sm text-muted-foreground">
+            {progress?.done ?? 0} de {progress?.total ?? 0} produtos processados ({pct}%)
+          </p>
+        </DialogContent>
+      </Dialog>
+
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
