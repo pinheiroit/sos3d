@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { paymentDiscountPercent, shippingFor, usePricing } from "@/lib/pricing";
+import { cardUnitPrice } from "@/lib/catalog";
 import { createOrder } from "@/lib/orders.functions";
 import { useSiteContent } from "@/lib/site-content";
 
@@ -43,7 +44,9 @@ function whatsappLink(phone: string, order: OrderResult, customerName: string) {
   const msg =
     `Olá! Acabei de finalizar o pedido *${order.reference}* no site da SOS.3D.\n\n` +
     `Cliente: ${customerName}\n` +
-    `Pagamento: ${paymentLabel[order.paymentMethod] ?? order.paymentMethod}\n\n` +
+    `Pagamento: ${paymentLabel[order.paymentMethod] ?? order.paymentMethod}` +
+    (order.installmentMonths ? ` em ${order.installmentMonths}x` : "") +
+    `\n\n` +
     `${linhas}\n\n` +
     `Subtotal: ${formatBRL(order.subtotal)}\n` +
     `Frete: ${order.shipping > 0 ? formatBRL(order.shipping) : "Grátis"}\n` +
@@ -74,9 +77,20 @@ function CheckoutPage() {
 
   const rules = usePricing();
   const { footer } = useSiteContent();
-  const frete = shippingFor(subtotal, rules);
-  const desconto = (subtotal * paymentDiscountPercent(pagamento, rules)) / 100;
-  const total = subtotal + frete - desconto;
+
+  const monthOptions = Array.from(
+    new Set(items.flatMap(({ product }) => (product.installments ?? []).map((p) => p.months))),
+  ).sort((a, b) => a - b);
+  const [parcelas, setParcelas] = useState<number | null>(null);
+  const parcelasSel = parcelas ?? monthOptions[monthOptions.length - 1] ?? rules.defaultInstallments;
+
+  const isCard = pagamento === "cartao";
+  const baseSubtotal = isCard
+    ? items.reduce((s, { product, qty }) => s + cardUnitPrice(product, parcelasSel) * qty, 0)
+    : subtotal;
+  const frete = shippingFor(baseSubtotal, rules);
+  const desconto = (baseSubtotal * paymentDiscountPercent(pagamento, rules)) / 100;
+  const total = baseSubtotal + frete - desconto;
 
   if (done) {
     const link = whatsappLink(footer.phone, done, f.nome);
@@ -158,6 +172,7 @@ function CheckoutPage() {
                   state: f.uf,
                 },
                 paymentMethod: pagamento as "pix" | "boleto" | "cartao",
+                installmentMonths: isCard ? parcelasSel : undefined,
                 notes: "",
               },
             });
@@ -244,6 +259,32 @@ function CheckoutPage() {
                 </label>
               ))}
             </RadioGroup>
+            {isCard && monthOptions.length > 0 && (
+              <div className="mt-4 rounded-lg border border-border bg-muted/40 p-4">
+                <Label className="text-xs font-semibold uppercase tracking-wide">
+                  Número de parcelas
+                </Label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {monthOptions.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setParcelas(m)}
+                      className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        m === parcelasSel
+                          ? "border-tech bg-tech/10 text-tech"
+                          : "border-border hover:border-tech/60"
+                      }`}
+                    >
+                      {m}x
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  O valor total no cartão segue a tabela de parcelamento cadastrada em cada produto.
+                </p>
+              </div>
+            )}
             <label className="mt-5 flex items-start gap-2.5 text-sm">
               <Checkbox required className="mt-0.5" />
               <span className="text-muted-foreground">
@@ -262,7 +303,9 @@ function CheckoutPage() {
                 <span className="text-muted-foreground">
                   {qty}× {product.name}
                 </span>
-                <span className="shrink-0 font-medium">{formatBRL(product.price * qty)}</span>
+                <span className="shrink-0 font-medium">
+                  {formatBRL((isCard ? cardUnitPrice(product, parcelasSel) : product.price) * qty)}
+                </span>
               </li>
             ))}
           </ul>
@@ -273,7 +316,7 @@ function CheckoutPage() {
             </div>
             {desconto > 0 && (
               <div className="flex justify-between text-success">
-                <dt>Desconto Pix</dt>
+                <dt>Desconto</dt>
                 <dd>-{formatBRL(desconto)}</dd>
               </div>
             )}

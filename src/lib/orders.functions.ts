@@ -23,6 +23,7 @@ const checkoutSchema = z.object({
     state: z.string().trim().max(60).optional().default(""),
   }),
   paymentMethod: z.enum(["pix", "boleto", "cartao"]),
+  installmentMonths: z.number().int().min(1).max(48).optional(),
   notes: z.string().trim().max(1000).optional().default(""),
 });
 
@@ -37,7 +38,7 @@ export const createOrder = createServerFn({ method: "POST" })
     const [{ data: rows, error }, settings] = await Promise.all([
       supabaseAdmin
         .from("products")
-        .select("id, slug, name, brand, category, price, stock, active")
+        .select("id, slug, name, brand, category, price, stock, active, installments")
         .in("slug", slugs),
       supabaseAdmin.from("site_settings").select("value").eq("key", "pricing").maybeSingle(),
     ]);
@@ -47,6 +48,18 @@ export const createOrder = createServerFn({ method: "POST" })
       await import("@/lib/pricing");
     const rules = normalizeRules(settings.data?.value ?? null);
 
+    type Plan = { months: number; installment: number; total: number };
+    const cardTotal = (raw: unknown, months: number, fallback: number) => {
+      const plans = Array.isArray(raw) ? (raw as Plan[]).filter((p) => p && p.total > 0) : [];
+      if (plans.length === 0) return fallback;
+      const exact = plans.find((p) => Number(p.months) === months);
+      const lower = plans
+        .filter((p) => Number(p.months) <= months)
+        .sort((a, b) => Number(b.months) - Number(a.months));
+      const plan = exact ?? lower[0] ?? [...plans].sort((a, b) => Number(a.months) - Number(b.months))[0];
+      return plan ? Number(plan.total) : fallback;
+    };
+
     const lines = data.items.map((item) => {
       const product = (rows ?? []).find((r) => r.slug === item.slug);
       if (!product || !product.active) throw new Error(`Produto indisponível: ${item.slug}`);
@@ -55,15 +68,19 @@ export const createOrder = createServerFn({ method: "POST" })
         product_slug: product.slug,
         product_name: product.name,
         qty: item.qty,
-        unit_price: effectivePrice(
-          {
-            slug: product.slug,
-            brand: product.brand,
-            category: product.category,
-            price: Number(product.price),
-          },
-          rules,
-        ),
+        unit_price: (() => {
+          const base = effectivePrice(
+            {
+              slug: product.slug,
+              brand: product.brand,
+              category: product.category,
+              price: Number(product.price),
+            },
+            rules,
+          );
+          if (data.paymentMethod !== "cartao") return base;
+          return cardTotal(product.installments, data.installmentMonths ?? rules.defaultInstallments, base);
+        })(),
         stock: product.stock,
       };
     });
@@ -121,6 +138,7 @@ export const createOrder = createServerFn({ method: "POST" })
       shipping,
       discount,
       paymentMethod: data.paymentMethod,
+      installmentMonths: data.paymentMethod === "cartao" ? (data.installmentMonths ?? null) : null,
       items: lines.map((l) => ({
         name: l.product_name,
         qty: l.qty,
