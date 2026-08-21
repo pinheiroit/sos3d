@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { importProducts } from "@/lib/admin.functions";
@@ -23,6 +24,23 @@ const COLUMNS = [
   "specs",
 ] as const;
 
+type ProductRow = {
+  slug: string;
+  name: string;
+  brand: string | null;
+  category: string;
+  subtitle: string | null;
+  description: string | null;
+  price: number;
+  old_price: number | null;
+  image_url: string | null;
+  badge: string | null;
+  stock: number;
+  active: boolean;
+  use_cases: unknown;
+  specs: unknown;
+};
+
 const TEMPLATE_ROWS = [
   [
     "impressora-exemplo-x1",
@@ -31,11 +49,11 @@ const TEMPLATE_ROWS = [
     "impressoras",
     "Alta velocidade com AMS",
     "Impressora core XY com câmara fechada e nivelamento automático.",
-    "6499.90",
-    "6999.90",
+    6499.9,
+    6999.9,
     "",
     "Novidade",
-    "5",
+    5,
     "sim",
     "Prototipagem|Peças técnicas",
     "Volume: 256x256x256mm|Bico: 0.4mm",
@@ -47,11 +65,11 @@ const TEMPLATE_ROWS = [
     "filamentos",
     "PLA premium 1,75mm",
     "Rolo de 1kg com tolerância de ±0,02mm.",
-    "119,90",
+    119.9,
     "",
     "",
     "",
-    "40",
+    40,
     "sim",
     "Uso geral",
     "Diâmetro: 1,75mm|Peso: 1kg",
@@ -64,49 +82,22 @@ type ParsedRow = {
   error?: string;
 };
 
-function csvEscape(value: string) {
-  return /[";\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+function sheetToMatrix(file: ArrayBuffer): string[][] {
+  const wb = XLSX.read(file, { type: "array" });
+  const sheetName = wb.SheetNames[0];
+  if (!sheetName) return [];
+  const sheet = wb.Sheets[sheetName]!;
+  return XLSX.utils
+    .sheet_to_json<unknown[]>(sheet, { header: 1, blankrows: false, raw: true })
+    .map((row) => (row as unknown[]).map((c) => (c === null || c === undefined ? "" : String(c))));
 }
 
-function buildTemplate() {
-  return [
-    COLUMNS.join(";"),
-    ...TEMPLATE_ROWS.map((row) => row.map(csvEscape).join(";")),
-  ].join("\r\n");
-}
-
-function splitLines(text: string) {
-  const rows: string[][] = [];
-  let cell = "";
-  let row: string[] = [];
-  let quoted = false;
-  const delimiter = text.split("\n")[0]?.includes(";") ? ";" : ",";
-
-  for (let i = 0; i < text.length; i += 1) {
-    const char = text[i];
-    if (quoted) {
-      if (char === '"') {
-        if (text[i + 1] === '"') {
-          cell += '"';
-          i += 1;
-        } else quoted = false;
-      } else cell += char;
-      continue;
-    }
-    if (char === '"') quoted = true;
-    else if (char === delimiter) {
-      row.push(cell);
-      cell = "";
-    } else if (char === "\n") {
-      row.push(cell.replace(/\r$/, ""));
-      rows.push(row);
-      row = [];
-      cell = "";
-    } else cell += char;
-  }
-  row.push(cell.replace(/\r$/, ""));
-  if (row.some((v) => v.trim() !== "")) rows.push(row);
-  return rows;
+function downloadWorkbook(rows: (string | number)[][], filename: string, sheetName: string) {
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = (rows[0] ?? []).map(() => ({ wch: 22 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename);
 }
 
 function toNumber(raw: string): number | null {
@@ -135,7 +126,18 @@ function slugify(value: string) {
     .slice(0, 120);
 }
 
-export function ProductsImport() {
+function specsToText(specs: unknown) {
+  if (!Array.isArray(specs)) return "";
+  return specs
+    .map((s) => {
+      const item = s as { label?: string; value?: string };
+      return item?.label ? `${item.label}: ${item.value ?? ""}` : "";
+    })
+    .filter(Boolean)
+    .join("|");
+}
+
+export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -206,18 +208,37 @@ export function ProductsImport() {
   });
 
   function downloadTemplate() {
-    const blob = new Blob(["\uFEFF" + buildTemplate()], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "modelo-produtos-sos3d.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadWorkbook([[...COLUMNS], ...TEMPLATE_ROWS], "modelo-produtos-sos3d.xlsx", "Produtos");
+  }
+
+  function exportProducts() {
+    if (products.length === 0) {
+      toast.error("Nenhum produto para exportar");
+      return;
+    }
+    const data = products.map((p) => [
+      p.slug,
+      p.name,
+      p.brand ?? "",
+      p.category,
+      p.subtitle ?? "",
+      p.description ?? "",
+      p.price,
+      p.old_price ?? "",
+      p.image_url ?? "",
+      p.badge ?? "",
+      p.stock,
+      p.active ? "sim" : "não",
+      Array.isArray(p.use_cases) ? (p.use_cases as string[]).join("|") : "",
+      specsToText(p.specs),
+    ]);
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadWorkbook([[...COLUMNS], ...data], `produtos-sos3d-${stamp}.xlsx`, "Produtos");
+    toast.success(`${products.length} produtos exportados`);
   }
 
   async function handleFile(file: File) {
-    const text = await file.text();
-    const matrix = splitLines(text.replace(/^\uFEFF/, ""));
+    const matrix = sheetToMatrix(await file.arrayBuffer());
     if (matrix.length < 2) {
       toast.error("Planilha vazia", { description: "Use o modelo com cabeçalho e ao menos 1 linha." });
       return;
@@ -251,21 +272,25 @@ export function ProductsImport() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h3 className="flex items-center gap-2 font-semibold">
-              <FileSpreadsheet className="size-4" /> Importação em massa
+              <FileSpreadsheet className="size-4" /> Importação e exportação em massa
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Baixe o modelo, preencha no Excel ou Google Planilhas e salve como CSV. Produtos com o
-              mesmo <strong>slug</strong> são atualizados; os demais são criados.
+              Baixe o modelo em Excel, preencha e envie de volta. Produtos com o mesmo{" "}
+              <strong>slug</strong> são atualizados; os demais são criados. Você também pode exportar
+              o catálogo atual, editar na planilha e reimportar.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={downloadTemplate}>
-              <Download /> Baixar modelo (CSV)
+              <Download /> Baixar modelo (Excel)
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportProducts}>
+              <Download /> Exportar produtos ({products.length})
             </Button>
             <input
               ref={inputRef}
               type="file"
-              accept=".csv,text/csv"
+              accept=".xlsx,.xls,.csv"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -284,8 +309,8 @@ export function ProductsImport() {
             <strong>Colunas:</strong> {COLUMNS.join(", ")}
           </p>
           <p>
-            <strong>Formatos:</strong> preço 1234.90 ou 1.234,90 • ativo sim/não • use_cases e specs
-            separados por | (specs no formato <code>Rótulo: valor</code>)
+            <strong>Formatos:</strong> aceita .xlsx, .xls e .csv • preço 1234.90 ou 1.234,90 • ativo
+            sim/não • use_cases e specs separados por | (specs no formato <code>Rótulo: valor</code>)
           </p>
         </div>
       </div>
