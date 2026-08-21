@@ -9,6 +9,19 @@ export type Category = "impressoras" | "filamentos" | "acessorios" | (string & {
 
 export type Spec = { label: string; value: string };
 
+/** Plano de parcelamento cadastrado pelo admin (valores já com juros/acréscimo). */
+export type InstallmentPlan = { months: number; installment: number; total: number };
+
+export function sortPlans(plans: InstallmentPlan[]) {
+  return [...plans].sort((a, b) => a.months - b.months);
+}
+
+/** Melhor parcela (menor valor mensal) para exibir na vitrine. */
+export function bestPlan(plans: InstallmentPlan[]): InstallmentPlan | null {
+  if (!plans.length) return null;
+  return plans.reduce((best, p) => (p.installment < best.installment ? p : best));
+}
+
 export type Product = {
   id: string;
   slug: string;
