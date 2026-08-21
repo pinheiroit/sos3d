@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Download, FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
@@ -88,7 +88,28 @@ const TEMPLATE_ROWS = [
 type ParsedRow = {
   line: number;
   values: Record<string, string>;
-  error?: string;
+};
+
+type CheckedRow = ParsedRow & {
+  error?: string | undefined;
+  duplicateOf?: number[] | undefined;
+};
+
+const COLUMN_LABELS: Record<string, string> = {
+  slug: "Slug",
+  name: "Nome",
+  brand: "Marca",
+  category: "Categoria",
+  subtitle: "Subtítulo",
+  description: "Descrição",
+  price: "Preço",
+  old_price: "Preço antigo",
+  image_url: "Imagem (URL)",
+  badge: "Selo",
+  stock: "Estoque",
+  active: "Ativo",
+  use_cases: "Usos",
+  specs: "Specs",
 };
 
 const MAX_ROWS = 5000;
@@ -197,6 +218,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const workerRef = useRef<Worker | null>(null);
   const cancelRef = useRef(false);
   const startRef = useRef(0);
+  const importedLinesRef = useRef<number[]>([]);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -205,8 +227,62 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const [parseEta, setParseEta] = useState<number>(0);
   const [serverErrors, setServerErrors] = useState<string[]>([]);
 
-  const valid = rows.filter((r) => !r.error);
-  const invalid = rows.filter((r) => r.error);
+  const checked = useMemo<CheckedRow[]>(() => {
+    const bySlug = new Map<string, number[]>();
+    for (const r of rows) {
+      const slug = (r.values["slug"] ?? "").trim();
+      if (!slug) continue;
+      bySlug.set(slug, [...(bySlug.get(slug) ?? []), r.line]);
+    }
+    return rows.map((r) => {
+      const v = r.values;
+      const slug = (v["slug"] ?? "").trim();
+      let error: string | undefined;
+      if (!(v["name"] ?? "").trim()) error = "Nome obrigatório";
+      else if (!slug || !/^[a-z0-9-]+$/.test(slug))
+        error = "Slug inválido (use apenas letras minúsculas, números e hífen)";
+      else if (!categorySlugs.includes((v["category"] ?? "").trim()))
+        error = `Categoria deve ser uma destas: ${categorySlugs.join(", ")}`;
+      else if (toNumber(v["price"] ?? "") === null) error = "Preço inválido";
+      const dup = bySlug.get(slug);
+      const duplicateOf = dup && dup.length > 1 ? dup.filter((l) => l !== r.line) : undefined;
+      return { ...r, error, duplicateOf };
+    });
+  }, [rows, categorySlugs.join(",")]);
+
+  const valid = checked.filter((r) => !r.error);
+  const invalid = checked.filter((r) => r.error);
+  const duplicates = checked.filter((r) => r.duplicateOf?.length);
+  const duplicateSlugs = Array.from(
+    new Set(duplicates.map((r) => (r.values["slug"] ?? "").trim())),
+  );
+
+  function updateCell(line: number, column: string, value: string) {
+    setRows((prev) =>
+      prev.map((r) => (r.line === line ? { ...r, values: { ...r.values, [column]: value } } : r)),
+    );
+  }
+
+  function removeRow(line: number) {
+    setRows((prev) => prev.filter((r) => r.line !== line));
+  }
+
+  function dedupeKeepLast() {
+    const lastBySlug = new Map<string, number>();
+    for (const r of rows) {
+      const slug = (r.values["slug"] ?? "").trim();
+      if (slug) lastBySlug.set(slug, r.line);
+    }
+    const kept = rows.filter((r) => {
+      const slug = (r.values["slug"] ?? "").trim();
+      return !slug || lastBySlug.get(slug) === r.line;
+    });
+    const removed = rows.length - kept.length;
+    setRows(kept);
+    toast.success("Duplicados removidos", {
+      description: `${removed} linhas repetidas foram descartadas (mantida a última de cada slug).`,
+    });
+  }
 
   function cancelParsing() {
     workerRef.current?.terminate();
@@ -257,6 +333,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       startRef.current = Date.now();
       setProgress({ done: 0, total: valid.length });
 
+      importedLinesRef.current = valid.map((r) => r.line);
       const payload = valid.map((r) => {
         const v = r.values;
         const useCases = (v["use_cases"] ?? "")
@@ -322,7 +399,8 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
     onSuccess: (res) => {
       void queryClient.invalidateQueries();
       setServerErrors(res.errors);
-      setRows((prev) => prev.filter((r) => r.error));
+      const importedLines = new Set(importedLinesRef.current);
+      setRows((prev) => prev.filter((r) => !importedLines.has(r.line)));
       if (res.canceled) {
         toast.warning("Importação cancelada", {
           description: `${res.created} criados e ${res.updated} atualizados antes do cancelamento.`,
@@ -432,15 +510,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
        if ((!values["slug"] || values["slug"].startsWith("=")) && values["name"])
          values["slug"] = slugify(values["name"]);
 
-      let error: string | undefined;
-      if (!values["name"]) error = "Nome obrigatório";
-      else if (!values["slug"] || !/^[a-z0-9-]+$/.test(values["slug"]))
-        error = "Slug inválido (use apenas letras minúsculas, números e hífen)";
-      else if (!categorySlugs.includes(values["category"] ?? ""))
-        error = `Categoria deve ser uma destas: ${categorySlugs.join(", ")}`;
-      else if (toNumber(values["price"] ?? "") === null) error = "Preço inválido";
-
-      return error ? { line: i + 2, values, error } : { line: i + 2, values };
+      return { line: i + 2, values };
     });
 
     setRows(parsed);
@@ -556,6 +626,11 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
               <p className="text-sm font-medium">{fileName}</p>
               <Badge variant="secondary">{valid.length} prontos</Badge>
               {invalid.length > 0 && <Badge variant="destructive">{invalid.length} com erro</Badge>}
+              {duplicates.length > 0 && (
+                <Badge variant="outline" className="border-amber-500 text-amber-600">
+                  {duplicateSlugs.length} slugs duplicados
+                </Badge>
+              )}
             </div>
             <div className="flex gap-2">
               {invalid.length > 0 && (
@@ -612,34 +687,116 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           )}
 
 
-          <div className="mt-4 max-h-[420px] overflow-auto rounded-lg border border-border">
+          {duplicates.length > 0 && (
+            <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+                    <AlertTriangle className="size-4" /> {duplicateSlugs.length} slugs duplicados na
+                    planilha ({duplicates.length} linhas)
+                  </p>
+                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                    {duplicateSlugs.slice(0, 8).map((slug) => (
+                      <li key={slug}>
+                        <strong>{slug}</strong> — linhas{" "}
+                        {checked
+                          .filter((r) => (r.values["slug"] ?? "").trim() === slug)
+                          .map((r) => r.line)
+                          .join(", ")}
+                      </li>
+                    ))}
+                    {duplicateSlugs.length > 8 && <li>e mais {duplicateSlugs.length - 8} slugs...</li>}
+                  </ul>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Se importar assim, apenas a última linha de cada slug será salva.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={dedupeKeepLast}>
+                  Remover duplicados (manter a última)
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            Você pode editar qualquer campo abaixo antes de importar — as validações são atualizadas
+            automaticamente.
+          </p>
+
+          <div className="mt-2 max-h-[520px] overflow-auto rounded-lg border border-border">
             <table className="w-full text-left text-sm">
-              <thead className="bg-secondary text-xs uppercase text-muted-foreground">
+              <thead className="sticky top-0 z-10 bg-secondary text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2">Linha</th>
-                  <th className="px-3 py-2">Slug</th>
-                  <th className="px-3 py-2">Nome</th>
-                  <th className="px-3 py-2">Categoria</th>
-                  <th className="px-3 py-2">Preço</th>
-                  <th className="px-3 py-2">Estoque</th>
+                  {COLUMNS.map((c) => (
+                    <th key={c} className="px-2 py-2 whitespace-nowrap">
+                      {COLUMN_LABELS[c] ?? c}
+                    </th>
+                  ))}
                   <th className="px-3 py-2">Situação</th>
+                  <th className="px-2 py-2"></th>
                 </tr>
               </thead>
               <tbody>
-                {rows.slice(0, PREVIEW_LIMIT).map((r) => (
-                  <tr key={r.line} className="border-t border-border">
-                    <td className="px-3 py-2 text-muted-foreground">{r.line}</td>
-                    <td className="px-3 py-2">{r.values["slug"]}</td>
-                    <td className="px-3 py-2">{r.values["name"]}</td>
-                    <td className="px-3 py-2">{r.values["category"]}</td>
-                    <td className="px-3 py-2">{r.values["price"]}</td>
-                    <td className="px-3 py-2">{r.values["stock"]}</td>
-                    <td className="px-3 py-2">
+                {checked.slice(0, PREVIEW_LIMIT).map((r) => (
+                  <tr
+                    key={r.line}
+                    className={`border-t border-border ${
+                      r.error ? "bg-destructive/5" : r.duplicateOf?.length ? "bg-amber-500/10" : ""
+                    }`}
+                  >
+                    <td className="px-3 py-1 text-muted-foreground">{r.line}</td>
+                    {COLUMNS.map((c) => (
+                      <td key={c} className="px-1 py-1">
+                        {c === "category" ? (
+                          <select
+                            className="min-w-[9rem] rounded-md border border-border bg-background px-2 py-1 text-xs"
+                            value={r.values[c] ?? ""}
+                            onChange={(e) => updateCell(r.line, c, e.target.value)}
+                          >
+                            <option value="">—</option>
+                            {categorySlugs.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
+                            {r.values[c] && !categorySlugs.includes(r.values[c]!) && (
+                              <option value={r.values[c]}>{r.values[c]} (inválida)</option>
+                            )}
+                          </select>
+                        ) : (
+                          <input
+                            className={`w-full min-w-[8rem] rounded-md border bg-background px-2 py-1 text-xs ${
+                              c === "description" || c === "specs" || c === "use_cases"
+                                ? "min-w-[16rem]"
+                                : ""
+                            } border-border`}
+                            value={r.values[c] ?? ""}
+                            onChange={(e) => updateCell(r.line, c, e.target.value)}
+                          />
+                        )}
+                      </td>
+                    ))}
+                    <td className="px-3 py-1 text-xs whitespace-nowrap">
                       {r.error ? (
                         <span className="text-destructive">{r.error}</span>
+                      ) : r.duplicateOf?.length ? (
+                        <span className="text-amber-600 dark:text-amber-400">
+                          Slug duplicado (linhas {r.duplicateOf.join(", ")})
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">OK</span>
                       )}
+                    </td>
+                    <td className="px-2 py-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remover linha ${r.line}`}
+                        onClick={() => removeRow(r.line)}
+                      >
+                        <X className="size-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
