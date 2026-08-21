@@ -263,6 +263,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           .split(/[|;]/)
           .map((s) => s.trim())
           .filter(Boolean)
+          .map((s) => s.slice(0, 120))
           .slice(0, 12);
         const specs = (v["specs"] ?? "")
           .split("|")
@@ -275,7 +276,11 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           .filter((s) => s.label && s.value)
           .slice(0, 30);
         const oldPrice = toNumber(v["old_price"] ?? "");
-        const imageUrl = (v["image_url"] ?? "").trim();
+        const rawImageUrl = (v["image_url"] ?? "").trim();
+        const imageUrl =
+          rawImageUrl.length <= 2000 && (rawImageUrl.startsWith("/") || /^https?:\/\//.test(rawImageUrl))
+            ? rawImageUrl
+            : "";
         return {
           slug: v["slug"]!,
           name: v["name"]!.trim(),
