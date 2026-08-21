@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { paymentDiscountPercent, shippingFor, usePricing } from "@/lib/pricing";
 import { createOrder } from "@/lib/orders.functions";
 
 export const Route = createFileRoute("/checkout")({
@@ -43,8 +44,9 @@ function CheckoutPage() {
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
 
-  const frete = subtotal > 0 && subtotal < 500 ? 79 : 0;
-  const desconto = pagamento === "pix" ? subtotal * 0.05 : 0;
+  const rules = usePricing();
+  const frete = shippingFor(subtotal, rules);
+  const desconto = (subtotal * paymentDiscountPercent(pagamento, rules)) / 100;
   const total = subtotal + frete - desconto;
 
   if (done) {
@@ -168,7 +170,7 @@ function CheckoutPage() {
               </div>
             </div>
             <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-              <Truck className="size-4 text-tech" /> Frete grátis para pedidos acima de R$ 500,00.
+              <Truck className="size-4 text-tech" /> Frete grátis para pedidos acima de {formatBRL(rules.freeShippingFrom)}.
             </p>
           </fieldset>
 
@@ -176,8 +178,8 @@ function CheckoutPage() {
             <legend className="px-2 text-sm font-semibold uppercase tracking-wide">Pagamento</legend>
             <RadioGroup value={pagamento} onValueChange={setPagamento} className="gap-3">
               {[
-                { v: "pix", t: "Pix", d: "5% de desconto, aprovação imediata" },
-                { v: "cartao", t: "Cartão de crédito", d: "Até 12x sem juros" },
+                { v: "pix", t: "Pix", d: `${rules.pixDiscountPercent}% de desconto, aprovação imediata` },
+                { v: "cartao", t: "Cartão de crédito", d: `Até ${rules.defaultInstallments}x sem juros` },
                 { v: "boleto", t: "Boleto / faturamento", d: "Para empresas e instituições" },
               ].map((o) => (
                 <label

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductCard } from "@/components/site/ProductCard";
 import { bestPlan, formatBRL, type Product } from "@/lib/catalog";
+import { usePricing } from "@/lib/pricing";
 import { listProducts } from "@/lib/catalog.functions";
 import { useCart } from "@/lib/cart";
 
@@ -42,6 +43,7 @@ function ProductPage() {
   const [qty, setQty] = useState(1);
   const plans = product.installments;
   const best = bestPlan(plans);
+  const rules = usePricing();
 
 
   const related = all.filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 3);
@@ -98,8 +100,8 @@ function ProductPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {best
                 ? `ou até ${best.months}x de ${formatBRL(best.installment)}`
-                : `ou 12x de ${formatBRL(product.price / 12)} sem juros`}{" "}
-              • à vista com 5% de desconto
+                : `ou ${rules.defaultInstallments}x de ${formatBRL(product.price / rules.defaultInstallments)} sem juros`}{" "}
+              • à vista com {rules.pixDiscountPercent}% de desconto
             </p>
 
             {plans.length > 0 && (
@@ -118,7 +120,7 @@ function ProductPage() {
                       <td className="px-3 py-2 font-medium">À vista (Pix)</td>
                       <td className="px-3 py-2 text-right text-muted-foreground">—</td>
                       <td className="px-3 py-2 text-right font-semibold text-success">
-                        {formatBRL(product.price * 0.95)}
+                        {formatBRL(product.price * (1 - rules.pixDiscountPercent / 100))}
                       </td>
                     </tr>
                     {plans.map((p) => (

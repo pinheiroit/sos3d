@@ -19,6 +19,7 @@ import { siteContentQueryOptions } from "@/lib/site-content";
 import { siteImagesQueryOptions } from "@/lib/site-images";
 import { productsQueryOptions } from "@/lib/products";
 import { categoriesQueryOptions } from "@/lib/categories";
+import { pricingQueryOptions } from "@/lib/pricing";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -111,6 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       context.queryClient.ensureQueryData(siteImagesQueryOptions),
       context.queryClient.ensureQueryData(productsQueryOptions),
       context.queryClient.ensureQueryData(categoriesQueryOptions),
+      context.queryClient.ensureQueryData(pricingQueryOptions),
     ]);
   },
   shellComponent: RootShell,

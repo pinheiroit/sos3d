@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { bestPlan, formatBRL, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { usePricing } from "@/lib/pricing";
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
-  const pix = product.price * 0.95;
+  const rules = usePricing();
+  const pix = product.price * (1 - rules.pixDiscountPercent / 100);
   const plan = bestPlan(product.installments);
-  const installment = plan ? plan.installment : product.price / 12;
-  const months = plan ? plan.months : 12;
+  const installment = plan ? plan.installment : product.price / rules.defaultInstallments;
+  const months = plan ? plan.months : rules.defaultInstallments;
   const off = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : 0;
@@ -66,7 +68,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
           <p className="text-xl font-bold text-brand">{formatBRL(product.price)}</p>
           <p className="text-xs font-medium text-success">
-            {formatBRL(pix)} à vista no Pix (5% off)
+            {formatBRL(pix)} à vista no Pix ({rules.pixDiscountPercent}% off)
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             ou até {months}x de {formatBRL(installment)}

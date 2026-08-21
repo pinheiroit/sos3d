@@ -25,6 +25,7 @@ import { setSiteImage } from "@/lib/uploads.functions";
 import { FooterAdmin } from "@/components/admin/FooterAdmin";
 import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
 import { CategoriesAdmin } from "@/components/admin/CategoriesAdmin";
+import { PricingAdmin } from "@/components/admin/PricingAdmin";
 import { useCategories } from "@/lib/categories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
 import {
@@ -382,6 +383,7 @@ function AdminPage() {
           <TabsTrigger value="membros">Membros</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="marcas">Marcas</TabsTrigger>
+          <TabsTrigger value="regras">Regras</TabsTrigger>
           <TabsTrigger value="rodape">Rodapé</TabsTrigger>
         </TabsList>
 
@@ -703,6 +705,10 @@ function AdminPage() {
 
         <TabsContent value="marcas" className="mt-6">
           <BrandsAdmin />
+        </TabsContent>
+
+        <TabsContent value="regras" className="mt-6">
+          <PricingAdmin />
         </TabsContent>
 
         <TabsContent value="rodape" className="mt-6">
