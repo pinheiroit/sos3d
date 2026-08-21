@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductCard } from "@/components/site/ProductCard";
 import { bestPlan, formatBRL, type Product } from "@/lib/catalog";
+import { usePricing } from "@/lib/pricing";
 import { listProducts } from "@/lib/catalog.functions";
 import { useCart } from "@/lib/cart";
 
@@ -42,6 +43,7 @@ function ProductPage() {
   const [qty, setQty] = useState(1);
   const plans = product.installments;
   const best = bestPlan(plans);
+  const rules = usePricing();
 
 
   const related = all.filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 3);

@@ -707,6 +707,10 @@ function AdminPage() {
           <BrandsAdmin />
         </TabsContent>
 
+        <TabsContent value="regras" className="mt-6">
+          <PricingAdmin />
+        </TabsContent>
+
         <TabsContent value="rodape" className="mt-6">
           <FooterAdmin />
         </TabsContent>
