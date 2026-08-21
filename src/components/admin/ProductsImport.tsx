@@ -292,8 +292,12 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       });
 
       const CHUNK = 50;
-      const total = { created: 0, updated: 0, errors: [] as string[] };
+      const total = { created: 0, updated: 0, errors: [] as string[], canceled: false };
       for (let i = 0; i < payload.length; i += CHUNK) {
+        if (cancelRef.current) {
+          total.canceled = true;
+          break;
+        }
         const chunk = payload.slice(i, i + CHUNK);
         const res = (await importProducts({ data: { rows: chunk } } as never)) as {
           created: number;
@@ -309,21 +313,32 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
     },
     onSuccess: (res) => {
       void queryClient.invalidateQueries();
-      setRows([]);
-      setFileName(null);
+      setServerErrors(res.errors);
+      setRows((prev) => prev.filter((r) => r.error));
+      if (res.canceled) {
+        toast.warning("Importação cancelada", {
+          description: `${res.created} criados e ${res.updated} atualizados antes do cancelamento.`,
+        });
+        return;
+      }
       if (res.errors.length) {
         toast.warning(`Importação parcial: ${res.created} criados, ${res.updated} atualizados`, {
           description: res.errors.slice(0, 3).join(" • "),
         });
       } else {
+        setFileName(null);
         toast.success(`Importação concluída`, {
           description: `${res.created} produtos criados e ${res.updated} atualizados.`,
         });
       }
     },
     onError: (e: Error) => toast.error("Falha na importação", { description: e.message }),
-    onSettled: () => setProgress(null),
+    onSettled: () => {
+      setProgress(null);
+      cancelRef.current = false;
+    },
   });
+
 
 
   function downloadTemplate() {
