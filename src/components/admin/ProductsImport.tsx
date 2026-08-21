@@ -142,6 +142,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const valid = rows.filter((r) => !r.error);
   const invalid = rows.filter((r) => r.error);
@@ -185,11 +186,22 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           specs,
         };
       });
-      return (await importProducts({ data: { rows: payload } } as never)) as {
-        created: number;
-        updated: number;
-        errors: string[];
-      };
+
+      const CHUNK = 50;
+      const total = { created: 0, updated: 0, errors: [] as string[] };
+      for (let i = 0; i < payload.length; i += CHUNK) {
+        const chunk = payload.slice(i, i + CHUNK);
+        const res = (await importProducts({ data: { rows: chunk } } as never)) as {
+          created: number;
+          updated: number;
+          errors: string[];
+        };
+        total.created += res.created;
+        total.updated += res.updated;
+        total.errors.push(...res.errors);
+        setProgress({ done: Math.min(i + CHUNK, payload.length), total: payload.length });
+      }
+      return total;
     },
     onSuccess: (res) => {
       void queryClient.invalidateQueries();
@@ -206,7 +218,9 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       }
     },
     onError: (e: Error) => toast.error("Falha na importação", { description: e.message }),
+    onSettled: () => setProgress(null),
   });
+
 
   function downloadTemplate() {
     downloadWorkbook([[...COLUMNS], ...TEMPLATE_ROWS], "modelo-produtos-sos3d.xlsx", "Produtos");
