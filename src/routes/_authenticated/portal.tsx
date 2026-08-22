@@ -131,11 +131,18 @@ function PortalPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {data.courses.map((course) => (
+              {data.courses.map((course) => {
+                const doneCount = course.lessons.filter(
+                  (l) => progressByLesson.get(l.id)?.completed,
+                ).length;
+                return (
                 <article key={course.id} className="rounded-xl border border-border bg-card p-6">
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge variant="secondary">{course.level}</Badge>
                     <h2 className="text-xl font-bold">{course.title}</h2>
+                    <Badge variant="outline">
+                      {doneCount}/{course.lessons.length} aulas concluídas
+                    </Badge>
                   </div>
                   <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
                     {course.description}
@@ -144,26 +151,43 @@ function PortalPage() {
                   <Accordion type="single" collapsible className="mt-5">
                     {[...course.lessons]
                       .sort((a, b) => a.sort_order - b.sort_order)
-                      .map((lesson) => (
+                      .map((lesson) => {
+                        const lp = progressByLesson.get(lesson.id);
+                        return (
                         <AccordionItem key={lesson.id} value={lesson.id}>
                           <AccordionTrigger className="text-left">
                             <span className="flex flex-1 flex-wrap items-center gap-3 pr-3">
-                              <BookOpen className="size-4 shrink-0 text-tech" />
+                              {lp?.completed ? (
+                                <CheckCircle2 className="size-4 shrink-0 text-tech" />
+                              ) : (
+                                <BookOpen className="size-4 shrink-0 text-tech" />
+                              )}
                               <span className="font-medium">{lesson.title}</span>
                               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Clock className="size-3.5" /> {lesson.duration_min} min
                               </span>
+                              {lp && !lp.completed && lp.total_pages > 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  · pág. {lp.last_page}/{lp.total_pages}
+                                </span>
+                              )}
+                              {lp?.completed && (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  Concluída
+                                </Badge>
+                              )}
                             </span>
                           </AccordionTrigger>
                           <AccordionContent>
                             <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                            <LessonMedia lesson={lesson} />
+                            <LessonMedia lesson={lesson} progress={lp ?? null} />
                           </AccordionContent>
                         </AccordionItem>
-                      ))}
+                      );})}
                   </Accordion>
                 </article>
-              ))}
+              );})}
+
             </div>
           )}
         </TabsContent>
