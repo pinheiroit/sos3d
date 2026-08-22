@@ -30,12 +30,22 @@ export const myPortal = createServerFn({ method: "GET" })
     ]);
 
     const isMember = Boolean(membership.data?.active);
+    const printerModelId = membership.data?.printer_model_id ?? null;
+
+    const models = await context.supabase
+      .from("printer_models")
+      .select("id, slug, name, description")
+      .order("sort_order", { ascending: true });
+    const printerModel =
+      (models.data ?? []).find((m) => m.id === printerModelId) ?? null;
+
     let courses: PortalCourse[] = [];
-    if (isMember) {
+    if (isMember && printerModelId) {
       const { data, error } = await context.supabase
         .from("courses")
         .select("id, slug, title, description, level, cover_key, sort_order, lessons(*)")
         .eq("published", true)
+        .eq("printer_model_id", printerModelId)
         .order("sort_order", { ascending: true });
       if (error) throw new Error(error.message);
       courses = (data ?? []) as PortalCourse[];
@@ -45,6 +55,8 @@ export const myPortal = createServerFn({ method: "GET" })
       profile: profile.data ?? null,
       membership: membership.data ?? null,
       isMember,
+      printerModel,
+      needsPrinterModel: isMember && !printerModelId,
       isAdmin: (roles.data ?? []).some((r) => r.role === "admin"),
       courses,
     };
