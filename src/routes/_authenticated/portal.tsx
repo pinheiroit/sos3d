@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
+  CheckCircle2,
   Clock,
   ExternalLink,
   GraduationCap,
@@ -22,8 +23,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatBRL } from "@/lib/catalog";
 import { myPortal } from "@/lib/portal.functions";
 import { getLessonMedia } from "@/lib/courses.functions";
+import { myLessonProgress, saveLessonProgress } from "@/lib/progress.functions";
 import { listMyOrders } from "@/lib/orders.functions";
 import { supabase } from "@/integrations/supabase/client";
+
+const PdfLessonViewer = lazy(() => import("@/components/site/PdfLessonViewer"));
+
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({
@@ -55,6 +60,9 @@ function PortalPage() {
   const queryClient = useQueryClient();
   const portal = useQuery({ queryKey: ["portal"], queryFn: () => myPortal() });
   const orders = useQuery({ queryKey: ["my-orders"], queryFn: () => listMyOrders() });
+  const progress = useQuery({ queryKey: ["lesson-progress"], queryFn: () => myLessonProgress() });
+  const progressByLesson = new Map((progress.data ?? []).map((p) => [p.lesson_id, p]));
+
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -123,11 +131,18 @@ function PortalPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {data.courses.map((course) => (
+              {data.courses.map((course) => {
+                const doneCount = course.lessons.filter(
+                  (l) => progressByLesson.get(l.id)?.completed,
+                ).length;
+                return (
                 <article key={course.id} className="rounded-xl border border-border bg-card p-6">
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge variant="secondary">{course.level}</Badge>
                     <h2 className="text-xl font-bold">{course.title}</h2>
+                    <Badge variant="outline">
+                      {doneCount}/{course.lessons.length} aulas concluídas
+                    </Badge>
                   </div>
                   <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
                     {course.description}
@@ -136,26 +151,43 @@ function PortalPage() {
                   <Accordion type="single" collapsible className="mt-5">
                     {[...course.lessons]
                       .sort((a, b) => a.sort_order - b.sort_order)
-                      .map((lesson) => (
+                      .map((lesson) => {
+                        const lp = progressByLesson.get(lesson.id);
+                        return (
                         <AccordionItem key={lesson.id} value={lesson.id}>
                           <AccordionTrigger className="text-left">
                             <span className="flex flex-1 flex-wrap items-center gap-3 pr-3">
-                              <BookOpen className="size-4 shrink-0 text-tech" />
+                              {lp?.completed ? (
+                                <CheckCircle2 className="size-4 shrink-0 text-tech" />
+                              ) : (
+                                <BookOpen className="size-4 shrink-0 text-tech" />
+                              )}
                               <span className="font-medium">{lesson.title}</span>
                               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Clock className="size-3.5" /> {lesson.duration_min} min
                               </span>
+                              {lp && !lp.completed && lp.total_pages > 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  · pág. {lp.last_page}/{lp.total_pages}
+                                </span>
+                              )}
+                              {lp?.completed && (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  Concluída
+                                </Badge>
+                              )}
                             </span>
                           </AccordionTrigger>
                           <AccordionContent>
                             <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                            <LessonMedia lesson={lesson} />
+                            <LessonMedia lesson={lesson} progress={lp ?? null} />
                           </AccordionContent>
                         </AccordionItem>
-                      ))}
+                      );})}
                   </Accordion>
                 </article>
-              ))}
+              );})}
+
             </div>
           )}
         </TabsContent>
@@ -210,9 +242,39 @@ type PortalLesson = {
   resource_url: string | null;
 };
 
-function LessonMedia({ lesson }: { lesson: PortalLesson }) {
+type LessonProgressRow = {
+  lesson_id: string;
+  last_page: number;
+  total_pages: number;
+  completed: boolean;
+};
+
+function isPdf(url: string | null) {
+  if (!url) return false;
+  return url.toLowerCase().split("?")[0]!.endsWith(".pdf");
+}
+
+function LessonMedia({
+  lesson,
+  progress,
+}: {
+  lesson: PortalLesson;
+  progress: LessonProgressRow | null;
+}) {
+  const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const saveProgress = useMutation({
+    mutationFn: (v: { lastPage: number; totalPages: number; completed: boolean }) =>
+      saveLessonProgress({ data: { lessonId: lesson.id, ...v } } as never),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lesson-progress"] }),
+  });
+
+  const pdfLesson = isPdf(lesson.resource_url);
 
   async function openField(field: "video" | "resource") {
     setLoading(true);
@@ -222,6 +284,7 @@ function LessonMedia({ lesson }: { lesson: PortalLesson }) {
       };
       if (!res.url) return;
       if (field === "video") setVideoUrl(res.url);
+      else if (pdfLesson) setPdfUrl(res.url);
       else window.open(res.url, "_blank", "noopener");
     } finally {
       setLoading(false);
@@ -241,6 +304,22 @@ function LessonMedia({ lesson }: { lesson: PortalLesson }) {
           className="w-full max-w-3xl rounded-lg border border-border bg-black"
         />
       )}
+
+      {pdfUrl && mounted && (
+        <Suspense
+          fallback={<p className="text-sm text-muted-foreground">Carregando visualizador…</p>}
+        >
+          <PdfLessonViewer
+            url={pdfUrl}
+            initialPage={progress?.last_page ?? 1}
+            completed={progress?.completed ?? false}
+            onProgress={(page, totalPages, completed) =>
+              saveProgress.mutate({ lastPage: page, totalPages, completed })
+            }
+          />
+        </Suspense>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {lesson.video_url && !videoUrl && (
           isEmbeddedLink ? (
@@ -255,12 +334,22 @@ function LessonMedia({ lesson }: { lesson: PortalLesson }) {
             </Button>
           )
         )}
-        {lesson.resource_url && (
+        {lesson.resource_url && !pdfUrl && (
           <Button size="sm" variant="outline" disabled={loading} onClick={() => void openField("resource")}>
-            Material de apoio
+            {loading ? "Carregando…" : pdfLesson ? "Abrir apostila (PDF)" : "Material de apoio"}
+          </Button>
+        )}
+        {!lesson.resource_url && !progress?.completed && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => saveProgress.mutate({ lastPage: 1, totalPages: 0, completed: true })}
+          >
+            Marcar aula como concluída
           </Button>
         )}
       </div>
     </div>
   );
+
 }
