@@ -15,6 +15,7 @@ const courseSchema = z.object({
   description: z.string().trim().max(4000).default(""),
   level: z.string().trim().min(2).max(60).default("Iniciante"),
   cover_key: z.string().trim().max(60).default("printer-1"),
+  printer_model_id: z.string().uuid().nullable().default(null),
   published: z.boolean().default(true),
   sort_order: z.number().int().min(0).max(9999).default(0),
 });

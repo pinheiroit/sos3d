@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Film, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,14 @@ import {
   saveCourse,
   saveLesson,
 } from "@/lib/courses.functions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { listPrinterModels, type PrinterModelRow } from "@/lib/printer-models.functions";
 
 type Lesson = {
   id: string;
@@ -36,6 +44,7 @@ type Course = {
   description: string;
   level: string;
   cover_key: string;
+  printer_model_id: string | null;
   published: boolean;
   sort_order: number;
   lessons: Lesson[];
@@ -50,6 +59,7 @@ const emptyCourse: CourseForm = {
   description: "",
   level: "Iniciante",
   cover_key: "printer-1",
+  printer_model_id: null,
   published: true,
   sort_order: 0,
 };
@@ -158,6 +168,14 @@ function MediaUpload({
 
 export function CoursesAdmin({ courses }: { courses: Course[] }) {
   const queryClient = useQueryClient();
+  const models = useQuery({
+    queryKey: ["printer-models"],
+    queryFn: () => listPrinterModels(),
+    retry: false,
+  });
+  const modelList = (models.data ?? []) as PrinterModelRow[];
+  const modelName = (id: string | null) =>
+    modelList.find((m) => m.id === id)?.name ?? "Sem modelo";
   const [courseForm, setCourseForm] = useState<CourseForm | null>(null);
   const [courseId, setCourseId] = useState<string | null>(null);
   const [lessonForm, setLessonForm] = useState<LessonForm | null>(null);
@@ -242,6 +260,9 @@ export function CoursesAdmin({ courses }: { courses: Course[] }) {
                     {course.published ? course.level : "Rascunho"}
                   </Badge>
                   <h3 className="text-lg font-bold">{course.title}</h3>
+                  <Badge variant={course.printer_model_id ? "outline" : "destructive"}>
+                    {modelName(course.printer_model_id)}
+                  </Badge>
                   <span className="text-xs text-muted-foreground">
                     {course.lessons.length} aula(s)
                   </span>
@@ -370,6 +391,27 @@ export function CoursesAdmin({ courses }: { courses: Course[] }) {
                     value={courseForm.level}
                     onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Modelo de impressora</Label>
+                  <Select
+                    value={courseForm.printer_model_id ?? "none"}
+                    onValueChange={(v) =>
+                      setCourseForm({ ...courseForm, printer_model_id: v === "none" ? null : v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o modelo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem modelo (não aparece no portal)</SelectItem>
+                      {modelList.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Ordem</Label>
