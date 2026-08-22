@@ -24,7 +24,7 @@ export const listProducts = createServerFn({ method: "GET" }).handler(async () =
     client
       .from("products")
       .select(
-        "id, slug, name, brand, category, subtitle, description, price, old_price, image_key, image_url, badge, stock, active, use_cases, specs, installments",
+        "id, slug, name, brand, category, subcategory, subtitle, description, price, old_price, image_key, image_url, badge, stock, active, use_cases, specs, installments",
       )
       .eq("active", true)
       .order("created_at", { ascending: true }),

@@ -21,6 +21,12 @@ const productSchema = z.object({
     .min(2)
     .max(60)
     .regex(/^[a-z0-9-]+$/, "Categoria inválida"),
+  subcategory: z
+    .string()
+    .trim()
+    .max(60)
+    .regex(/^[a-z0-9-]*$/, "Subcategoria inválida")
+    .default(""),
   subtitle: z.string().trim().max(300).default(""),
   description: z.string().trim().max(4000).default(""),
   price: z.number().min(0).max(10_000_000),
@@ -86,6 +92,7 @@ export const saveProduct = createServerFn({ method: "POST" })
       name: v.name,
       brand: v.brand,
       category: v.category,
+      subcategory: v.subcategory ?? "",
       subtitle: v.subtitle,
       description: v.description,
       price: v.price,
@@ -248,6 +255,7 @@ export const importProducts = createServerFn({ method: "POST" })
         name: row.name,
         brand: row.brand ?? "SOS.3D",
         category: row.category,
+        subcategory: row.subcategory ?? "",
         subtitle: row.subtitle ?? "",
         description: row.description ?? "",
         price: row.price,
