@@ -242,9 +242,39 @@ type PortalLesson = {
   resource_url: string | null;
 };
 
-function LessonMedia({ lesson }: { lesson: PortalLesson }) {
+type LessonProgressRow = {
+  lesson_id: string;
+  last_page: number;
+  total_pages: number;
+  completed: boolean;
+};
+
+function isPdf(url: string | null) {
+  if (!url) return false;
+  return url.toLowerCase().split("?")[0]!.endsWith(".pdf");
+}
+
+function LessonMedia({
+  lesson,
+  progress,
+}: {
+  lesson: PortalLesson;
+  progress: LessonProgressRow | null;
+}) {
+  const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const saveProgress = useMutation({
+    mutationFn: (v: { lastPage: number; totalPages: number; completed: boolean }) =>
+      saveLessonProgress({ data: { lessonId: lesson.id, ...v } } as never),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lesson-progress"] }),
+  });
+
+  const pdfLesson = isPdf(lesson.resource_url);
 
   async function openField(field: "video" | "resource") {
     setLoading(true);
@@ -254,6 +284,7 @@ function LessonMedia({ lesson }: { lesson: PortalLesson }) {
       };
       if (!res.url) return;
       if (field === "video") setVideoUrl(res.url);
+      else if (pdfLesson) setPdfUrl(res.url);
       else window.open(res.url, "_blank", "noopener");
     } finally {
       setLoading(false);
@@ -273,6 +304,22 @@ function LessonMedia({ lesson }: { lesson: PortalLesson }) {
           className="w-full max-w-3xl rounded-lg border border-border bg-black"
         />
       )}
+
+      {pdfUrl && mounted && (
+        <Suspense
+          fallback={<p className="text-sm text-muted-foreground">Carregando visualizador…</p>}
+        >
+          <PdfLessonViewer
+            url={pdfUrl}
+            initialPage={progress?.last_page ?? 1}
+            completed={progress?.completed ?? false}
+            onProgress={(page, totalPages, completed) =>
+              saveProgress.mutate({ lastPage: page, totalPages, completed })
+            }
+          />
+        </Suspense>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {lesson.video_url && !videoUrl && (
           isEmbeddedLink ? (
@@ -287,12 +334,22 @@ function LessonMedia({ lesson }: { lesson: PortalLesson }) {
             </Button>
           )
         )}
-        {lesson.resource_url && (
+        {lesson.resource_url && !pdfUrl && (
           <Button size="sm" variant="outline" disabled={loading} onClick={() => void openField("resource")}>
-            Material de apoio
+            {loading ? "Carregando…" : pdfLesson ? "Abrir apostila (PDF)" : "Material de apoio"}
+          </Button>
+        )}
+        {!lesson.resource_url && !progress?.completed && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => saveProgress.mutate({ lastPage: 1, totalPages: 0, completed: true })}
+          >
+            Marcar aula como concluída
           </Button>
         )}
       </div>
     </div>
   );
+
 }
