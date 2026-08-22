@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
+  CheckCircle2,
   Clock,
   ExternalLink,
   GraduationCap,
@@ -22,8 +23,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatBRL } from "@/lib/catalog";
 import { myPortal } from "@/lib/portal.functions";
 import { getLessonMedia } from "@/lib/courses.functions";
+import { myLessonProgress, saveLessonProgress } from "@/lib/progress.functions";
 import { listMyOrders } from "@/lib/orders.functions";
 import { supabase } from "@/integrations/supabase/client";
+
+const PdfLessonViewer = lazy(() => import("@/components/site/PdfLessonViewer"));
+
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({
