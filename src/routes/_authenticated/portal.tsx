@@ -88,15 +88,22 @@ function PortalPage() {
           </h1>
           <p className="mt-2 text-muted-foreground">
             {data?.isMember
-              ? data.printerModel
-                ? `Sua trilha de estudos é a da ${data.printerModel.name} — bons estudos!`
+              ? data.printerModels.length
+                ? `Suas trilhas de estudo: ${data.printerModels.map((m) => m.name).join(", ")} — bons estudos!`
                 : "Seu acesso está ativo. Falta definirmos o modelo da sua impressora para liberar a trilha."
               : "Acompanhe seus pedidos. O acesso aos cursos é liberado após a compra de uma impressora."}
           </p>
-          {data?.isMember && data.printerModel ? (
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs">
-              <Printer className="size-3.5 text-tech" />
-              Trilha: <strong>{data.printerModel.name}</strong>
+          {data?.isMember && data.printerModels.length ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {data.printerModels.map((m) => (
+                <span
+                  key={m.id}
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs"
+                >
+                  <Printer className="size-3.5 text-tech" />
+                  <strong>{m.name}</strong>
+                </span>
+              ))}
             </div>
           ) : null}
         </div>
@@ -144,7 +151,8 @@ function PortalPage() {
               <h2 className="mt-4 text-lg font-semibold">Vamos definir sua impressora</h2>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
                 As trilhas de estudo são organizadas por modelo de impressora. Informe ao suporte
-                qual modelo você adquiriu (ou o número do pedido) para liberarmos a trilha correta.
+                quais modelos você adquiriu (ou o número do pedido) para liberarmos as trilhas
+                corretas.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Button asChild variant="cta">
@@ -156,7 +164,7 @@ function PortalPage() {
             <div className="rounded-xl border border-dashed border-border p-12 text-center">
               <GraduationCap className="mx-auto size-9 text-steel" />
               <h2 className="mt-4 text-lg font-semibold">
-                Conteúdos da {data.printerModel?.name} em produção
+                Conteúdos das suas impressoras em produção
               </h2>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
                 Ainda não há cursos publicados para o seu modelo. Assim que publicarmos, eles

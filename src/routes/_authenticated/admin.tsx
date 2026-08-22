@@ -197,7 +197,12 @@ function AdminPage() {
   });
 
   const membership = useMutation({
-    mutationFn: (input: { userId: string; active: boolean; printerModelId?: string | null }) =>
+    mutationFn: (input: {
+      userId: string;
+      active: boolean;
+      printerModelId?: string | null;
+      printerModelIds?: string[];
+    }) =>
       setMembership({ data: input } as never),
     onSuccess: () => {
       toast.success("Acesso atualizado");
@@ -704,53 +709,75 @@ function AdminPage() {
         <TabsContent value="membros" className="mt-6 space-y-3">
           {(data?.profiles ?? []).map((profile) => {
             const m = (data?.memberships ?? []).find((x) => x.user_id === profile.id);
+            const selectedIds = (data?.memberModels ?? [])
+              .filter((x) => x.user_id === profile.id)
+              .map((x) => x.printer_model_id);
+            const toggleModel = (id: string, checked: boolean) => {
+              const next = checked
+                ? Array.from(new Set([...selectedIds, id]))
+                : selectedIds.filter((x) => x !== id);
+              membership.mutate({
+                userId: profile.id,
+                active: Boolean(m?.active),
+                printerModelId: next[0] ?? null,
+                printerModelIds: next,
+              });
+            };
             return (
               <div
                 key={profile.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-4"
+                className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-card p-4"
               >
                 <div>
                   <p className="font-semibold">{profile.full_name || "Sem nome"}</p>
                   <p className="text-xs text-muted-foreground">{profile.email}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-start gap-4">
                   {m?.active && <Badge className="bg-success text-white">Membro ativo</Badge>}
-                  <div>
-                    <Label className="text-xs">Impressora comprada</Label>
-                    <Select
-                      value={m?.printer_model_id ?? "none"}
-                      onValueChange={(v) =>
+                  <div className="max-w-md">
+                    <Label className="text-xs">Impressoras compradas</Label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(printerModels.data ?? []).map((pm) => {
+                        const checked = selectedIds.includes(pm.id);
+                        return (
+                          <button
+                            key={pm.id}
+                            type="button"
+                            onClick={() => toggleModel(pm.id, !checked)}
+                            className={`rounded-full border px-3 py-1 text-xs transition ${
+                              checked
+                                ? "border-tech bg-tech text-white"
+                                : "border-border bg-background text-muted-foreground"
+                            }`}
+                          >
+                            {pm.name}
+                          </button>
+                        );
+                      })}
+                      {!(printerModels.data ?? []).length && (
+                        <span className="text-xs text-muted-foreground">
+                          Cadastre modelos na aba Modelos.
+                        </span>
+                      )}
+                    </div>
+                    {!selectedIds.length && (
+                      <p className="mt-2 text-xs text-muted-foreground">Nenhum modelo definido.</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={Boolean(m?.active)}
+                      onCheckedChange={(active) =>
                         membership.mutate({
                           userId: profile.id,
-                          active: Boolean(m?.active),
-                          printerModelId: v === "none" ? null : v,
+                          active,
+                          printerModelId: selectedIds[0] ?? null,
+                          printerModelIds: selectedIds,
                         })
                       }
-                    >
-                      <SelectTrigger className="mt-1 h-9 w-56">
-                        <SelectValue placeholder="Sem modelo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sem modelo definido</SelectItem>
-                        {(printerModels.data ?? []).map((pm) => (
-                          <SelectItem key={pm.id} value={pm.id}>
-                            {pm.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
+                    <span className="text-xs text-muted-foreground">Acesso ao portal</span>
                   </div>
-                  <Switch
-                    checked={Boolean(m?.active)}
-                    onCheckedChange={(active) =>
-                      membership.mutate({
-                        userId: profile.id,
-                        active,
-                        printerModelId: m?.printer_model_id ?? null,
-                      })
-                    }
-                  />
-                  <span className="text-xs text-muted-foreground">Acesso ao portal</span>
                 </div>
               </div>
             );
