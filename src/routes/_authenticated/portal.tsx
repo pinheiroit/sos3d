@@ -60,6 +60,9 @@ function PortalPage() {
   const queryClient = useQueryClient();
   const portal = useQuery({ queryKey: ["portal"], queryFn: () => myPortal() });
   const orders = useQuery({ queryKey: ["my-orders"], queryFn: () => listMyOrders() });
+  const progress = useQuery({ queryKey: ["lesson-progress"], queryFn: () => myLessonProgress() });
+  const progressByLesson = new Map((progress.data ?? []).map((p) => [p.lesson_id, p]));
+
 
   async function signOut() {
     await queryClient.cancelQueries();
