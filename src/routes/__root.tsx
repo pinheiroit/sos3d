@@ -107,7 +107,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   loader: async ({ context }) => {
-    await Promise.all([
+    // allSettled: uma falha pontual de um destes prefetches não pode derrubar o site inteiro.
+    await Promise.allSettled([
       context.queryClient.ensureQueryData(siteContentQueryOptions),
       context.queryClient.ensureQueryData(siteImagesQueryOptions),
       context.queryClient.ensureQueryData(productsQueryOptions),
