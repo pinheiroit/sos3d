@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,6 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatBRL } from "@/lib/catalog";
 import { myPortal } from "@/lib/portal.functions";
+import { getLessonMedia } from "@/lib/courses.functions";
 import { listMyOrders } from "@/lib/orders.functions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -147,22 +149,7 @@ function PortalPage() {
                           </AccordionTrigger>
                           <AccordionContent>
                             <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {lesson.video_url && (
-                                <Button asChild size="sm" variant="tech">
-                                  <a href={lesson.video_url} target="_blank" rel="noreferrer">
-                                    Assistir <ExternalLink />
-                                  </a>
-                                </Button>
-                              )}
-                              {lesson.resource_url && (
-                                <Button asChild size="sm" variant="outline">
-                                  <a href={lesson.resource_url} target="_blank" rel="noreferrer">
-                                    Material de apoio
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
+                            <LessonMedia lesson={lesson} />
                           </AccordionContent>
                         </AccordionItem>
                       ))}
@@ -213,6 +200,67 @@ function PortalPage() {
           )}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+type PortalLesson = {
+  id: string;
+  video_url: string | null;
+  resource_url: string | null;
+};
+
+function LessonMedia({ lesson }: { lesson: PortalLesson }) {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function openField(field: "video" | "resource") {
+    setLoading(true);
+    try {
+      const res = (await getLessonMedia({ data: { lessonId: lesson.id, field } } as never)) as {
+        url: string | null;
+      };
+      if (!res.url) return;
+      if (field === "video") setVideoUrl(res.url);
+      else window.open(res.url, "_blank", "noopener");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const isEmbeddedLink =
+    !!lesson.video_url && !lesson.video_url.startsWith("storage:");
+
+  return (
+    <div className="mt-3 space-y-3">
+      {videoUrl && (
+        <video
+          src={videoUrl}
+          controls
+          autoPlay
+          className="w-full max-w-3xl rounded-lg border border-border bg-black"
+        />
+      )}
+      <div className="flex flex-wrap gap-2">
+        {lesson.video_url && !videoUrl && (
+          isEmbeddedLink ? (
+            <Button asChild size="sm" variant="tech">
+              <a href={lesson.video_url} target="_blank" rel="noreferrer">
+                Assistir <ExternalLink />
+              </a>
+            </Button>
+          ) : (
+            <Button size="sm" variant="tech" disabled={loading} onClick={() => void openField("video")}>
+              {loading ? "Carregando…" : "Assistir aula"}
+            </Button>
+          )
+        )}
+        {lesson.resource_url && (
+          <Button size="sm" variant="outline" disabled={loading} onClick={() => void openField("resource")}>
+            Material de apoio
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
