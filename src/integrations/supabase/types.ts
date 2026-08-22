@@ -69,6 +69,7 @@ export type Database = {
           description: string
           id: string
           level: string
+          printer_model_id: string | null
           published: boolean
           slug: string
           sort_order: number
@@ -81,6 +82,7 @@ export type Database = {
           description?: string
           id?: string
           level?: string
+          printer_model_id?: string | null
           published?: boolean
           slug: string
           sort_order?: number
@@ -93,13 +95,22 @@ export type Database = {
           description?: string
           id?: string
           level?: string
+          printer_model_id?: string | null
           published?: boolean
           slug?: string
           sort_order?: number
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_printer_model_id_fkey"
+            columns: ["printer_model_id"]
+            isOneToOne: false
+            referencedRelation: "printer_models"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_progress: {
         Row: {
@@ -199,6 +210,7 @@ export type Database = {
           id: string
           notes: string | null
           printer_model: string | null
+          printer_model_id: string | null
           updated_at: string
           user_id: string
         }
@@ -208,6 +220,7 @@ export type Database = {
           id?: string
           notes?: string | null
           printer_model?: string | null
+          printer_model_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -217,10 +230,19 @@ export type Database = {
           id?: string
           notes?: string | null
           printer_model?: string | null
+          printer_model_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "memberships_printer_model_id_fkey"
+            columns: ["printer_model_id"]
+            isOneToOne: false
+            referencedRelation: "printer_models"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -360,6 +382,39 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      printer_models: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -571,6 +626,7 @@ export type Database = {
         Returns: boolean
       }
       is_active_member: { Args: { _user_id: string }; Returns: boolean }
+      member_printer_model: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "member"
