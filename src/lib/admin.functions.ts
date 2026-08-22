@@ -213,6 +213,7 @@ export const setMembership = createServerFn({ method: "POST" })
 
 const importRowSchema = productSchema.partial({
   brand: true,
+  subcategory: true,
   subtitle: true,
   description: true,
   image_key: true,
