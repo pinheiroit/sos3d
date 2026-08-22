@@ -31,7 +31,7 @@ const atalhos = [
   { icon: Layers, label: "Filamentos", to: "/filamentos" as const },
   { icon: Wrench, label: "Peças e acessórios", to: "/loja" as const },
   { icon: Scan, label: "Impressão sob demanda", to: "/impressao-3d" as const },
-  { icon: Boxes, label: "Área Maker", to: "/makers" as const },
+  { icon: Boxes, label: "Área Maker", to: "/portal" as const },
   { icon: Tag, label: "Ofertas", to: "/loja" as const },
 ];
 
@@ -136,7 +136,7 @@ function Index() {
                 <Link to="/impressao-3d">Solicitar impressão</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/makers">Área Maker</Link>
+                <Link to="/portal">Área Maker</Link>
               </Button>
             </div>
           </div>

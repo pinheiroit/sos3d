@@ -23,7 +23,7 @@ const departments = [
   { to: "/impressoras", label: "Impressoras 3D" },
   { to: "/filamentos", label: "Filamentos" },
   { to: "/impressao-3d", label: "Impressão sob demanda" },
-  { to: "/makers", label: "Área Maker" },
+  { to: "/portal", label: "Área Maker" },
   { to: "/suporte", label: "Suporte" },
   { to: "/empresa", label: "Empresa" },
 ] as const;

@@ -36,7 +36,7 @@ export const defaultFooter: FooterContent = {
       title: "Institucional",
       links: [
         { to: "/empresa", label: "Quem somos" },
-        { to: "/makers", label: "Área Maker" },
+        { to: "/portal", label: "Área Maker" },
         { to: "/contato", label: "Contato" },
       ],
     },

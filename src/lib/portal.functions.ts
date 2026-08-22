@@ -30,22 +30,31 @@ export const myPortal = createServerFn({ method: "GET" })
     ]);
 
     const isMember = Boolean(membership.data?.active);
-    const printerModelId = membership.data?.printer_model_id ?? null;
+
+    const links = await context.supabase
+      .from("membership_printer_models")
+      .select("printer_model_id")
+      .eq("user_id", context.userId);
+    const linkedIds = (links.data ?? []).map((l) => l.printer_model_id);
+    const modelIds = linkedIds.length
+      ? linkedIds
+      : membership.data?.printer_model_id
+        ? [membership.data.printer_model_id]
+        : [];
 
     const models = await context.supabase
       .from("printer_models")
       .select("id, slug, name, description")
       .order("sort_order", { ascending: true });
-    const printerModel =
-      (models.data ?? []).find((m) => m.id === printerModelId) ?? null;
+    const printerModels = (models.data ?? []).filter((m) => modelIds.includes(m.id));
 
     let courses: PortalCourse[] = [];
-    if (isMember && printerModelId) {
+    if (isMember && modelIds.length) {
       const { data, error } = await context.supabase
         .from("courses")
-        .select("id, slug, title, description, level, cover_key, sort_order, lessons(*)")
+        .select("id, slug, title, description, level, cover_key, sort_order, printer_model_id, lessons(*)")
         .eq("published", true)
-        .eq("printer_model_id", printerModelId)
+        .in("printer_model_id", modelIds)
         .order("sort_order", { ascending: true });
       if (error) throw new Error(error.message);
       courses = (data ?? []) as PortalCourse[];
@@ -55,8 +64,9 @@ export const myPortal = createServerFn({ method: "GET" })
       profile: profile.data ?? null,
       membership: membership.data ?? null,
       isMember,
-      printerModel,
-      needsPrinterModel: isMember && !printerModelId,
+      printerModels,
+      printerModel: printerModels[0] ?? null,
+      needsPrinterModel: isMember && modelIds.length === 0,
       isAdmin: (roles.data ?? []).some((r) => r.role === "admin"),
       courses,
     };
