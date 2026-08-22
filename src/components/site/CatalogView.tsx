@@ -16,6 +16,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { brandsOf, formatBRL, type Category } from "@/lib/catalog";
 import { useProducts } from "@/lib/products";
 import { useCategories } from "@/lib/categories";
+import { useSubcategories } from "@/lib/subcategories";
 
 type Props = {
   fixedCategory?: Category;
@@ -35,6 +36,7 @@ export function CatalogView({
 }: Props) {
   const { products, isLoading } = useProducts();
   const { categories: allCategories } = useCategories();
+  const { all: allSubcategories } = useSubcategories();
   const base = useMemo(
     () => (fixedCategory ? products.filter((p) => p.category === fixedCategory) : products),
     [fixedCategory, products],
@@ -49,6 +51,7 @@ export function CatalogView({
   }
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
   const [priceCap, setPriceCap] = useState(maxPrice);
   const [sort, setSort] = useState("relevancia");
 
@@ -62,14 +65,26 @@ export function CatalogView({
         p.subtitle.toLowerCase().includes(q);
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(p.brand);
       const matchesCat = categories.length === 0 || categories.includes(p.category);
-      return matchesQuery && matchesBrand && matchesCat && p.price <= priceCap;
+      const matchesSub = subcategories.length === 0 || subcategories.includes(p.subcategory);
+      return matchesQuery && matchesBrand && matchesCat && matchesSub && p.price <= priceCap;
     });
 
     if (sort === "menor") return [...list].sort((a, b) => a.price - b.price);
     if (sort === "maior") return [...list].sort((a, b) => b.price - a.price);
     if (sort === "nome") return [...list].sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [base, query, selectedBrands, categories, priceCap, sort]);
+  }, [base, query, selectedBrands, categories, subcategories, priceCap, sort]);
+
+  // Subcategorias exibidas: da categoria fixa da página ou das categorias marcadas.
+  const scopeCategories = fixedCategory ? [fixedCategory] : categories;
+  const visibleSubcategories = useMemo(() => {
+    const inScope =
+      scopeCategories.length === 0
+        ? allSubcategories
+        : allSubcategories.filter((s) => scopeCategories.includes(s.category_slug));
+    const used = new Set(base.map((p) => p.subcategory).filter(Boolean));
+    return inScope.filter((s) => used.has(s.slug));
+  }, [allSubcategories, base, scopeCategories.join(",")]);
 
   const availableBrands = brandsOf(base);
 
@@ -81,6 +96,7 @@ export function CatalogView({
     setQuery("");
     setSelectedBrands([]);
     setCategories([]);
+    setSubcategories([]);
     setPriceCap(maxPrice);
     setSort("relevancia");
   };
@@ -136,6 +152,26 @@ export function CatalogView({
                         onCheckedChange={() => toggle(cat.slug, categories, setCategories)}
                       />
                       {cat.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {visibleSubcategories.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide">Subcategoria</p>
+                <div className="mt-3 space-y-2.5">
+                  {visibleSubcategories.map((sub) => (
+                    <label
+                      key={sub.id}
+                      className="flex cursor-pointer items-center gap-2.5 text-sm"
+                    >
+                      <Checkbox
+                        checked={subcategories.includes(sub.slug)}
+                        onCheckedChange={() => toggle(sub.slug, subcategories, setSubcategories)}
+                      />
+                      {sub.name}
                     </label>
                   ))}
                 </div>
