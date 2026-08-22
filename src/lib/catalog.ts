@@ -51,6 +51,7 @@ export type Product = {
   name: string;
   brand: string;
   category: Category;
+  subcategory: string;
   subtitle: string;
   price: number;
   oldPrice?: number;
@@ -94,6 +95,7 @@ export type ProductRow = {
   name: string;
   brand: string;
   category: string;
+  subcategory?: string | null;
   subtitle: string;
   description: string;
   price: number | string;
@@ -127,6 +129,7 @@ export function mapProduct(row: ProductRow): Product {
     name: row.name,
     brand: row.brand,
     category: (row.category as Category) ?? "acessorios",
+    subcategory: row.subcategory ?? "",
     subtitle: row.subtitle ?? "",
     description: row.description ?? "",
     price: Number(row.price),

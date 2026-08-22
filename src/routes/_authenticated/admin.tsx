@@ -27,6 +27,7 @@ import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
 import { CategoriesAdmin } from "@/components/admin/CategoriesAdmin";
 import { PricingAdmin } from "@/components/admin/PricingAdmin";
 import { useCategories } from "@/lib/categories";
+import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
@@ -66,6 +67,7 @@ type FormState = {
   name: string;
   brand: string;
   category: string;
+  subcategory: string;
   subtitle: string;
   description: string;
   price: string;
@@ -86,6 +88,7 @@ const emptyForm: FormState = {
   name: "",
   brand: "",
   category: "impressoras",
+  subcategory: "",
   subtitle: "",
   description: "",
   price: "0",
@@ -132,6 +135,7 @@ function AdminPage() {
     text: "",
     brand: "all",
     category: "all",
+    subcategory: "all",
     status: "all",
     priceMin: "",
     priceMax: "",
@@ -140,6 +144,7 @@ function AdminPage() {
   });
 
   const { categories: categoryList } = useCategories();
+  const { all: subcategoryList } = useSubcategories();
 
   const overview = useQuery({
     queryKey: ["admin-overview"],
@@ -241,6 +246,10 @@ function AdminPage() {
     return allProducts.filter((p) => {
       if (filters.brand !== "all" && p.brand !== filters.brand) return false;
       if (filters.category !== "all" && p.category !== filters.category) return false;
+      if (filters.subcategory !== "all") {
+        const wanted = filters.subcategory === "none" ? "" : filters.subcategory;
+        if ((p.subcategory ?? "") !== wanted) return false;
+      }
       if (filters.status === "active" && !p.active) return false;
       if (filters.status === "inactive" && p.active) return false;
       if (text) {
@@ -285,6 +294,7 @@ function AdminPage() {
       name: p.name,
       brand: p.brand,
       category: p.category as FormState["category"],
+      subcategory: p.subcategory ?? "",
       subtitle: p.subtitle ?? "",
       description: p.description ?? "",
       price: String(p.price),
@@ -317,6 +327,7 @@ function AdminPage() {
         name: form.name.trim(),
         brand: form.brand.trim(),
         category: form.category,
+        subcategory: form.subcategory,
         subtitle: form.subtitle.trim(),
         description: form.description.trim(),
         price: Number(form.price) || 0,
@@ -439,6 +450,30 @@ function AdminPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label className="text-xs">Subcategoria</Label>
+                <Select
+                  value={filters.subcategory}
+                  onValueChange={(subcategory) => setFilters((f) => ({ ...f, subcategory }))}
+                >
+                  <SelectTrigger className="mt-1 h-9">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as subcategorias</SelectItem>
+                    <SelectItem value="none">Sem subcategoria</SelectItem>
+                    {subcategoryList
+                      .filter(
+                        (s) => filters.category === "all" || s.category_slug === filters.category,
+                      )
+                      .map((s) => (
+                        <SelectItem key={s.id} value={s.slug}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs">Preço mín.</Label>
@@ -514,6 +549,7 @@ function AdminPage() {
                       text: "",
                       brand: "all",
                       category: "all",
+                      subcategory: "all",
                       status: "all",
                       priceMin: "",
                       priceMax: "",
@@ -760,7 +796,9 @@ function AdminPage() {
                 <Label>Categoria</Label>
                 <Select
                   value={form.category}
-                  onValueChange={(v) => setForm({ ...form, category: v as FormState["category"] })}
+                  onValueChange={(v) =>
+                    setForm({ ...form, category: v as FormState["category"], subcategory: "" })
+                  }
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue />
@@ -771,6 +809,27 @@ function AdminPage() {
                         {c.name}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Subcategoria</Label>
+                <Select
+                  value={form.subcategory === "" ? "none" : form.subcategory}
+                  onValueChange={(v) => setForm({ ...form, subcategory: v === "none" ? "" : v })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Sem subcategoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem subcategoria</SelectItem>
+                    {subcategoryList
+                      .filter((s) => s.category_slug === form.category)
+                      .map((s) => (
+                        <SelectItem key={s.id} value={s.slug}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

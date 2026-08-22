@@ -12,8 +12,16 @@ import {
   saveCategory,
   type CategoryRow,
 } from "@/lib/categories.functions";
+import {
+  adminListSubcategories,
+  deleteSubcategory,
+  saveSubcategory,
+  type SubcategoryRow,
+} from "@/lib/subcategories.functions";
 
 type Row = CategoryRow & { product_count: number };
+type SubRow = SubcategoryRow & { product_count: number };
+
 
 function slugify(value: string) {
   return value
@@ -35,8 +43,16 @@ export function CategoriesAdmin() {
     retry: false,
   });
 
+  const subs = useQuery({
+    queryKey: ["admin-subcategories"],
+    queryFn: () => adminListSubcategories(),
+    retry: false,
+  });
+
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin-subcategories"] });
+    void queryClient.invalidateQueries({ queryKey: ["subcategories"] });
     void queryClient.invalidateQueries({ queryKey: ["categories"] });
     void queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
     void queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -61,7 +77,41 @@ export function CategoriesAdmin() {
     onError: (e: Error) => toast.error("Erro ao remover", { description: e.message }),
   });
 
+  const saveSub = useMutation({
+    mutationFn: (input: { id: string | null; values: unknown }) =>
+      saveSubcategory({ data: input } as never),
+    onSuccess: () => {
+      toast.success("Subcategoria salva");
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Erro ao salvar", { description: e.message }),
+  });
+
+  const removeSub = useMutation({
+    mutationFn: (input: { id: string }) => deleteSubcategory({ data: input } as never),
+    onSuccess: () => {
+      toast.success("Subcategoria removida");
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Erro ao remover", { description: e.message }),
+  });
+
   const rows = (list.data ?? []) as Row[];
+  const subRows = (subs.data ?? []) as SubRow[];
+
+  function updateSub(sub: SubRow, patch: Partial<SubcategoryRow>) {
+    saveSub.mutate({
+      id: sub.id,
+      values: {
+        category_slug: sub.category_slug,
+        slug: patch.slug ?? sub.slug,
+        name: patch.name ?? sub.name,
+        description: patch.description ?? sub.description,
+        sort_order: patch.sort_order ?? sub.sort_order,
+        active: patch.active ?? sub.active,
+      },
+    });
+  }
 
   function update(c: Row, patch: Partial<CategoryRow>) {
     save.mutate({
@@ -196,8 +246,138 @@ export function CategoriesAdmin() {
               </Button>
             </div>
           </div>
+
+          <SubcategoryList
+            category={c}
+            rows={subRows.filter((s) => s.category_slug === c.slug)}
+            onCreate={(name) =>
+              saveSub.mutate({
+                id: null,
+                values: {
+                  category_slug: c.slug,
+                  slug: slugify(name),
+                  name,
+                  description: "",
+                  sort_order: subRows.filter((s) => s.category_slug === c.slug).length + 1,
+                  active: true,
+                },
+              })
+            }
+            onUpdate={updateSub}
+            onRemove={(id) => removeSub.mutate({ id })}
+            busy={saveSub.isPending || removeSub.isPending}
+          />
         </div>
       ))}
+    </div>
+  );
+}
+
+function SubcategoryList({
+  category,
+  rows,
+  onCreate,
+  onUpdate,
+  onRemove,
+  busy,
+}: {
+  category: CategoryRow;
+  rows: SubRow[];
+  onCreate: (name: string) => void;
+  onUpdate: (sub: SubRow, patch: Partial<SubcategoryRow>) => void;
+  onRemove: (id: string) => void;
+  busy: boolean;
+}) {
+  const [name, setName] = useState("");
+
+  return (
+    <div className="rounded-lg border border-dashed border-border bg-background/40 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Subcategorias de {category.name}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <Input
+          className="h-9 min-w-48 flex-1"
+          maxLength={120}
+          placeholder="Ex.: Matte, Silk, Sólido"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!name.trim() || busy}
+          onClick={() => {
+            const value = name.trim();
+            if (slugify(value).length < 2) {
+              toast.error("Nome inválido para gerar o identificador");
+              return;
+            }
+            onCreate(value);
+            setName("");
+          }}
+        >
+          <Plus /> Adicionar
+        </Button>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">Nenhuma subcategoria cadastrada.</p>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {rows.map((s) => (
+            <div
+              key={s.id}
+              className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-card px-3 py-2"
+            >
+              <Input
+                className="h-8 min-w-40 flex-1"
+                maxLength={120}
+                defaultValue={s.name}
+                onBlur={(e) => {
+                  const value = e.target.value.trim();
+                  if (value && value !== s.name) onUpdate(s, { name: value });
+                }}
+              />
+              <Input
+                className="h-8 w-40"
+                maxLength={60}
+                defaultValue={s.slug}
+                onBlur={(e) => {
+                  const slug = slugify(e.target.value);
+                  if (slug && slug !== s.slug) onUpdate(s, { slug });
+                }}
+              />
+              <Input
+                type="number"
+                min={0}
+                className="h-8 w-20"
+                defaultValue={String(s.sort_order)}
+                onBlur={(e) => {
+                  const sort_order = Number(e.target.value) || 0;
+                  if (sort_order !== s.sort_order) onUpdate(s, { sort_order });
+                }}
+              />
+              <span className="text-xs text-muted-foreground">{s.product_count} produto(s)</span>
+              <div className="flex items-center gap-2">
+                <Switch checked={s.active} onCheckedChange={(active) => onUpdate(s, { active })} />
+                <span className="text-xs text-muted-foreground">Visível</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() => {
+                  if (window.confirm(`Remover ${s.name}?`)) onRemove(s.id);
+                }}
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
