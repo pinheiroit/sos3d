@@ -59,6 +59,7 @@ const TEMPLATE_ROWS = [
     "Impressora Exemplo X1",
     "Bambu Lab",
     "impressoras",
+    "",
     "Alta velocidade com AMS",
     "Impressora core XY com câmara fechada e nivelamento automático.",
     6499.9,
@@ -75,6 +76,7 @@ const TEMPLATE_ROWS = [
     "Filamento PLA Exemplo 1kg",
     "SOS.3D",
     "filamentos",
+    "matte",
     "PLA premium 1,75mm",
     "Rolo de 1kg com tolerância de ±0,02mm.",
     119.9,
@@ -248,12 +250,21 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
         error = "Slug inválido (use apenas letras minúsculas, números e hífen)";
       else if (!categorySlugs.includes((v["category"] ?? "").trim()))
         error = `Categoria deve ser uma destas: ${categorySlugs.join(", ")}`;
+      else if (
+        (v["subcategory"] ?? "").trim() &&
+        !subcategoryList.some(
+          (sub) =>
+            sub.slug === (v["subcategory"] ?? "").trim() &&
+            sub.category_slug === (v["category"] ?? "").trim(),
+        )
+      )
+        error = "Subcategoria não pertence à categoria informada";
       else if (toNumber(v["price"] ?? "") === null) error = "Preço inválido";
       const dup = bySlug.get(slug);
       const duplicateOf = dup && dup.length > 1 ? dup.filter((l) => l !== r.line) : undefined;
       return { ...r, error, duplicateOf };
     });
-  }, [rows, categorySlugs.join(",")]);
+  }, [rows, categorySlugs.join(","), subcategoryList]);
 
   const valid = checked.filter((r) => !r.error);
   const invalid = checked.filter((r) => r.error);
@@ -755,7 +766,22 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
                     <td className="px-3 py-1 text-muted-foreground">{r.line}</td>
                     {COLUMNS.map((c) => (
                       <td key={c} className="px-1 py-1">
-                        {c === "category" ? (
+                        {c === "subcategory" ? (
+                          <select
+                            className="min-w-[9rem] rounded-md border border-border bg-background px-2 py-1 text-xs"
+                            value={r.values[c] ?? ""}
+                            onChange={(e) => updateCell(r.line, c, e.target.value)}
+                          >
+                            <option value="">—</option>
+                            {subcategoryList
+                              .filter((sub) => sub.category_slug === (r.values["category"] ?? ""))
+                              .map((sub) => (
+                                <option key={sub.id} value={sub.slug}>
+                                  {sub.slug}
+                                </option>
+                              ))}
+                          </select>
+                        ) : c === "category" ? (
                           <select
                             className="min-w-[9rem] rounded-md border border-border bg-background px-2 py-1 text-xs"
                             value={r.values[c] ?? ""}
