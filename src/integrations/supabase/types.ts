@@ -381,6 +381,7 @@ export type Database = {
           slug: string
           specs: Json
           stock: number
+          subcategory: string
           subtitle: string
           updated_at: string
           use_cases: string[]
@@ -402,6 +403,7 @@ export type Database = {
           slug: string
           specs?: Json
           stock?: number
+          subcategory?: string
           subtitle?: string
           updated_at?: string
           use_cases?: string[]
@@ -423,6 +425,7 @@ export type Database = {
           slug?: string
           specs?: Json
           stock?: number
+          subcategory?: string
           subtitle?: string
           updated_at?: string
           use_cases?: string[]
@@ -495,6 +498,42 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      subcategories: {
+        Row: {
+          active: boolean
+          category_slug: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category_slug: string
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category_slug?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
