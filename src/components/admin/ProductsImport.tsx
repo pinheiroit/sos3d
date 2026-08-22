@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/dialog";
 import { importProducts } from "@/lib/admin.functions";
 import { useCategories } from "@/lib/categories";
+import { useSubcategories } from "@/lib/subcategories";
 
 const COLUMNS = [
   "slug",
   "name",
   "brand",
   "category",
+  "subcategory",
   "subtitle",
   "description",
   "price",
@@ -38,6 +40,7 @@ type ProductRow = {
   name: string;
   brand: string | null;
   category: string;
+  subcategory: string | null;
   subtitle: string | null;
   description: string | null;
   price: number;
@@ -100,6 +103,7 @@ const COLUMN_LABELS: Record<string, string> = {
   name: "Nome",
   brand: "Marca",
   category: "Categoria",
+  subcategory: "Subcategoria",
   subtitle: "Subtítulo",
   description: "Descrição",
   price: "Preço",
@@ -213,6 +217,7 @@ function specsToText(specs: unknown) {
 export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
   const { categories: categoryList } = useCategories();
   const categorySlugs = categoryList.map((c) => c.slug);
+  const { all: subcategoryList } = useSubcategories();
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -363,6 +368,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
           name: v["name"]!.trim(),
           brand: (v["brand"] ?? "").trim() || "SOS.3D",
           category: v["category"]!,
+          subcategory: (v["subcategory"] ?? "").trim(),
           subtitle: (v["subtitle"] ?? "").trim().slice(0, 300),
           description: (v["description"] ?? "").trim().slice(0, 4000),
           price: toNumber(v["price"] ?? "") ?? 0,
@@ -441,6 +447,7 @@ export function ProductsImport({ products = [] }: { products?: ProductRow[] }) {
       p.name,
       p.brand ?? "",
       p.category,
+      p.subcategory ?? "",
       p.subtitle ?? "",
       p.description ?? "",
       p.price,
