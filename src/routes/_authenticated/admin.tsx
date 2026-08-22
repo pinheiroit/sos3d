@@ -28,6 +28,7 @@ import { CategoriesAdmin } from "@/components/admin/CategoriesAdmin";
 import { PricingAdmin } from "@/components/admin/PricingAdmin";
 import { useCategories } from "@/lib/categories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
+import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
   adminOverview,
   deleteProduct,
@@ -381,6 +382,7 @@ function AdminPage() {
           <TabsTrigger value="importar">Importar</TabsTrigger>
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
+          <TabsTrigger value="cursos">Cursos</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="marcas">Marcas</TabsTrigger>
           <TabsTrigger value="regras">Regras</TabsTrigger>
@@ -680,6 +682,10 @@ function AdminPage() {
               </div>
             );
           })}
+        </TabsContent>
+
+        <TabsContent value="cursos" className="mt-6">
+          <CoursesAdmin courses={(overview.data?.courses ?? []) as never} />
         </TabsContent>
 
         <TabsContent value="banners" className="mt-6 space-y-4">
