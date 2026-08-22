@@ -399,22 +399,33 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="produtos" className="mt-10">
-        <TabsList>
-          <TabsTrigger value="produtos">Produtos</TabsTrigger>
-          <TabsTrigger value="categorias">Categorias</TabsTrigger>
-          <TabsTrigger value="importar">Importar</TabsTrigger>
-          <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
-          <TabsTrigger value="membros">Membros</TabsTrigger>
-          <TabsTrigger value="cursos">Cursos</TabsTrigger>
-          <TabsTrigger value="modelos">Modelos</TabsTrigger>
-          <TabsTrigger value="banners">Banners</TabsTrigger>
-          <TabsTrigger value="marcas">Marcas</TabsTrigger>
-          <TabsTrigger value="regras">Regras</TabsTrigger>
-          <TabsTrigger value="rodape">Rodapé</TabsTrigger>
-        </TabsList>
+        <div className="-mx-4 overflow-x-auto px-4 pb-1">
+          <TabsList className="w-max">
+            <TabsTrigger value="produtos">Produtos</TabsTrigger>
+            <TabsTrigger value="categorias">Categorias</TabsTrigger>
+            <TabsTrigger value="importar">Importar</TabsTrigger>
+            <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
+            <TabsTrigger value="membros">Membros</TabsTrigger>
+            <TabsTrigger value="cursos">Cursos</TabsTrigger>
+            <TabsTrigger value="modelos">Modelos</TabsTrigger>
+            <TabsTrigger value="banners">Banners</TabsTrigger>
+            <TabsTrigger value="marcas">Marcas</TabsTrigger>
+            <TabsTrigger value="regras">Regras</TabsTrigger>
+            <TabsTrigger value="rodape">Rodapé</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="produtos" className="mt-6 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Cadastre, edite e ajuste preço e estoque dos produtos.
+            </p>
+            <Button variant="cta" onClick={() => setForm({ ...emptyForm })}>
+              <Plus /> Adicionar produto
+            </Button>
+          </div>
           <div className="rounded-xl border border-border bg-card p-4">
+
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="xl:col-span-2">
                 <Label className="text-xs">Buscar (nome, slug, descrição)</Label>
