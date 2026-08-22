@@ -9,6 +9,7 @@ export type PortalCourse = {
   level: string;
   cover_key: string;
   sort_order: number;
+  printer_model_id?: string | null;
   lessons: {
     id: string;
     title: string;

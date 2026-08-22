@@ -55,16 +55,22 @@ export const adminOverview = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
 
-    const [products, orders, memberships, profiles, courses] = await Promise.all([
+    const [products, orders, memberships, profiles, courses, memberModels] = await Promise.all([
       db.from("products").select("*").order("created_at", { ascending: true }),
       db.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200),
       db.from("memberships").select("*").order("granted_at", { ascending: false }),
       db.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
       db.from("courses").select("*, lessons(*)").order("sort_order", { ascending: true }),
+      db.from("membership_printer_models").select("user_id, printer_model_id"),
     ]);
 
     const firstError =
-      products.error ?? orders.error ?? memberships.error ?? profiles.error ?? courses.error;
+      products.error ??
+      orders.error ??
+      memberships.error ??
+      profiles.error ??
+      courses.error ??
+      memberModels.error;
     if (firstError) throw new Error(firstError.message);
 
     return {
@@ -73,6 +79,7 @@ export const adminOverview = createServerFn({ method: "GET" })
       memberships: memberships.data ?? [],
       profiles: profiles.data ?? [],
       courses: courses.data ?? [],
+      memberModels: memberModels.data ?? [],
     };
   });
 
@@ -189,6 +196,7 @@ export const setMembership = createServerFn({ method: "POST" })
         active: z.boolean(),
         printerModel: z.string().trim().max(120).nullable().optional(),
         printerModelId: z.string().uuid().nullable().optional(),
+        printerModelIds: z.array(z.string().uuid()).max(50).optional(),
         notes: z.string().trim().max(600).nullable().optional(),
       })
       .parse(input),
@@ -210,6 +218,24 @@ export const setMembership = createServerFn({ method: "POST" })
       { onConflict: "user_id" },
     );
     if (error) throw new Error(error.message);
+
+    if (data.printerModelIds) {
+      const del = await db
+        .from("membership_printer_models")
+        .delete()
+        .eq("user_id", data.userId);
+      if (del.error) throw new Error(del.error.message);
+      if (data.printerModelIds.length) {
+        const ins = await db.from("membership_printer_models").insert(
+          data.printerModelIds.map((printer_model_id) => ({
+            user_id: data.userId,
+            printer_model_id,
+          })),
+        );
+        if (ins.error) throw new Error(ins.error.message);
+      }
+    }
+
     return { ok: true };
   });
 
