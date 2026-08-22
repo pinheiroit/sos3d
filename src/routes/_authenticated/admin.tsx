@@ -207,6 +207,11 @@ function AdminPage() {
   });
 
   const siteImages = useQuery(siteImagesQueryOptions);
+  const printerModels = useQuery({
+    queryKey: ["printer-models"],
+    queryFn: () => listPrinterModels(),
+    retry: false,
+  });
 
   const banner = useMutation({
     mutationFn: (input: { key: string; url: string | null }) =>
@@ -396,6 +401,7 @@ function AdminPage() {
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
           <TabsTrigger value="cursos">Cursos</TabsTrigger>
+          <TabsTrigger value="modelos">Modelos</TabsTrigger>
           <TabsTrigger value="banners">Banners</TabsTrigger>
           <TabsTrigger value="marcas">Marcas</TabsTrigger>
           <TabsTrigger value="regras">Regras</TabsTrigger>
@@ -707,12 +713,41 @@ function AdminPage() {
                   <p className="font-semibold">{profile.full_name || "Sem nome"}</p>
                   <p className="text-xs text-muted-foreground">{profile.email}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   {m?.active && <Badge className="bg-success text-white">Membro ativo</Badge>}
+                  <div>
+                    <Label className="text-xs">Impressora comprada</Label>
+                    <Select
+                      value={m?.printer_model_id ?? "none"}
+                      onValueChange={(v) =>
+                        membership.mutate({
+                          userId: profile.id,
+                          active: Boolean(m?.active),
+                          printerModelId: v === "none" ? null : v,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="mt-1 h-9 w-56">
+                        <SelectValue placeholder="Sem modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sem modelo definido</SelectItem>
+                        {(printerModels.data ?? []).map((pm) => (
+                          <SelectItem key={pm.id} value={pm.id}>
+                            {pm.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Switch
                     checked={Boolean(m?.active)}
                     onCheckedChange={(active) =>
-                      membership.mutate({ userId: profile.id, active })
+                      membership.mutate({
+                        userId: profile.id,
+                        active,
+                        printerModelId: m?.printer_model_id ?? null,
+                      })
                     }
                   />
                   <span className="text-xs text-muted-foreground">Acesso ao portal</span>
@@ -720,6 +755,10 @@ function AdminPage() {
               </div>
             );
           })}
+        </TabsContent>
+
+        <TabsContent value="modelos" className="mt-6">
+          <PrinterModelsAdmin />
         </TabsContent>
 
         <TabsContent value="cursos" className="mt-6">
