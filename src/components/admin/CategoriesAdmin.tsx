@@ -12,8 +12,16 @@ import {
   saveCategory,
   type CategoryRow,
 } from "@/lib/categories.functions";
+import {
+  adminListSubcategories,
+  deleteSubcategory,
+  saveSubcategory,
+  type SubcategoryRow,
+} from "@/lib/subcategories.functions";
 
 type Row = CategoryRow & { product_count: number };
+type SubRow = SubcategoryRow & { product_count: number };
+
 
 function slugify(value: string) {
   return value
