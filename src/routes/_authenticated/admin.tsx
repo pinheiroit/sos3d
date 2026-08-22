@@ -197,7 +197,12 @@ function AdminPage() {
   });
 
   const membership = useMutation({
-    mutationFn: (input: { userId: string; active: boolean; printerModelId?: string | null }) =>
+    mutationFn: (input: {
+      userId: string;
+      active: boolean;
+      printerModelId?: string | null;
+      printerModelIds?: string[];
+    }) =>
       setMembership({ data: input } as never),
     onSuccess: () => {
       toast.success("Acesso atualizado");
