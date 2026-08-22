@@ -188,6 +188,7 @@ export const setMembership = createServerFn({ method: "POST" })
         userId: z.string().uuid(),
         active: z.boolean(),
         printerModel: z.string().trim().max(120).nullable().optional(),
+        printerModelId: z.string().uuid().nullable().optional(),
         notes: z.string().trim().max(600).nullable().optional(),
       })
       .parse(input),
@@ -202,6 +203,7 @@ export const setMembership = createServerFn({ method: "POST" })
         user_id: data.userId,
         active: data.active,
         printer_model: data.printerModel ?? null,
+        ...(data.printerModelId !== undefined ? { printer_model_id: data.printerModelId } : {}),
         notes: data.notes ?? null,
         updated_at: new Date().toISOString(),
       },
