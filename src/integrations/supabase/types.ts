@@ -203,6 +203,35 @@ export type Database = {
           },
         ]
       }
+      membership_printer_models: {
+        Row: {
+          created_at: string
+          id: string
+          printer_model_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          printer_model_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          printer_model_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_printer_models_printer_model_id_fkey"
+            columns: ["printer_model_id"]
+            isOneToOne: false
+            referencedRelation: "printer_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           active: boolean
@@ -626,6 +655,10 @@ export type Database = {
         Returns: boolean
       }
       is_active_member: { Args: { _user_id: string }; Returns: boolean }
+      member_has_printer_model: {
+        Args: { _model_id: string; _user_id: string }
+        Returns: boolean
+      }
       member_printer_model: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
