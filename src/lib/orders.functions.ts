@@ -131,6 +131,27 @@ export const createOrder = createServerFn({ method: "POST" })
         .eq("id", l.product_id);
     }
 
+    const { notifyOrderWhatsApp } = await import("@/lib/whatsapp.server");
+    await notifyOrderWhatsApp({
+      reference: order.reference,
+      total: Number(order.total),
+      subtotal,
+      shipping,
+      discount,
+      paymentMethod: data.paymentMethod,
+      installmentMonths: data.paymentMethod === "cartao" ? (data.installmentMonths ?? null) : null,
+      customer: {
+        name: data.customer.name,
+        email: data.customer.email,
+        phone: data.customer.phone,
+        document: data.customer.document,
+      },
+      address: data.address,
+      items: lines.map((l) => ({ name: l.product_name, qty: l.qty, unitPrice: l.unit_price })),
+    });
+
+
+
     return {
       reference: order.reference,
       total: Number(order.total),
