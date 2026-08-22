@@ -25,6 +25,8 @@ import { setSiteImage } from "@/lib/uploads.functions";
 import { FooterAdmin } from "@/components/admin/FooterAdmin";
 import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
 import { CategoriesAdmin } from "@/components/admin/CategoriesAdmin";
+import { PrinterModelsAdmin } from "@/components/admin/PrinterModelsAdmin";
+import { listPrinterModels } from "@/lib/printer-models.functions";
 import { PricingAdmin } from "@/components/admin/PricingAdmin";
 import { useCategories } from "@/lib/categories";
 import { useSubcategories } from "@/lib/subcategories";

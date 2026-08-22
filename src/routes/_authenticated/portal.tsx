@@ -9,6 +9,7 @@ import {
   GraduationCap,
   LogOut,
   Package,
+  Printer,
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
