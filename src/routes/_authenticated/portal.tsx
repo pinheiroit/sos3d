@@ -147,22 +147,7 @@ function PortalPage() {
                           </AccordionTrigger>
                           <AccordionContent>
                             <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {lesson.video_url && (
-                                <Button asChild size="sm" variant="tech">
-                                  <a href={lesson.video_url} target="_blank" rel="noreferrer">
-                                    Assistir <ExternalLink />
-                                  </a>
-                                </Button>
-                              )}
-                              {lesson.resource_url && (
-                                <Button asChild size="sm" variant="outline">
-                                  <a href={lesson.resource_url} target="_blank" rel="noreferrer">
-                                    Material de apoio
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
+                            <LessonMedia lesson={lesson} />
                           </AccordionContent>
                         </AccordionItem>
                       ))}
