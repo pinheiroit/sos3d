@@ -246,8 +246,10 @@ function AdminPage() {
     return allProducts.filter((p) => {
       if (filters.brand !== "all" && p.brand !== filters.brand) return false;
       if (filters.category !== "all" && p.category !== filters.category) return false;
-      if (filters.subcategory !== "all" && (p.subcategory ?? "") !== filters.subcategory)
-        return false;
+      if (filters.subcategory !== "all") {
+        const wanted = filters.subcategory === "none" ? "" : filters.subcategory;
+        if ((p.subcategory ?? "") !== wanted) return false;
+      }
       if (filters.status === "active" && !p.active) return false;
       if (filters.status === "inactive" && p.active) return false;
       if (text) {
@@ -459,7 +461,7 @@ function AdminPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas as subcategorias</SelectItem>
-                    <SelectItem value="">Sem subcategoria</SelectItem>
+                    <SelectItem value="none">Sem subcategoria</SelectItem>
                     {subcategoryList
                       .filter(
                         (s) => filters.category === "all" || s.category_slug === filters.category,
