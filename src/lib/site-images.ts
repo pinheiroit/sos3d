@@ -42,3 +42,24 @@ export function useBanner(key: BannerKey): string {
   const fallback = bannerDefinitions.find((b) => b.key === key)?.fallback ?? heroWorkshop;
   return data?.find((i) => i.key === key)?.url ?? fallback;
 }
+
+export type LogoKey = "logo-principal" | "logo-clara";
+
+export const logoDefinitions: { key: LogoKey; label: string; hint: string }[] = [
+  {
+    key: "logo-principal",
+    label: "Logomarca — fundo claro",
+    hint: "Usada no cabeçalho e em áreas com fundo claro.",
+  },
+  {
+    key: "logo-clara",
+    label: "Logomarca — fundo escuro",
+    hint: "Versão clara usada no rodapé e faixas escuras. Se vazia, usa a principal.",
+  },
+];
+
+/** URL de uma imagem do site cadastrada no painel (ou null). */
+export function useSiteImage(key: string): string | null {
+  const { data } = useQuery(siteImagesQueryOptions);
+  return data?.find((i) => i.key === key)?.url ?? null;
+}
