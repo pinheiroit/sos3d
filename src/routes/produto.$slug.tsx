@@ -18,19 +18,55 @@ export const Route = createFileRoute("/produto/$slug")({
     if (!product) throw notFound();
     return { product, all };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     const product = loaderData?.product;
     if (!product) {
       return {
         meta: [{ title: "Produto indisponível | SOS.3D" }, { name: "robots", content: "noindex" }],
       };
     }
+    const url = `https://sos3d.lovable.app/produto/${params.slug}`;
+    const image = product.imageUrl?.startsWith("http") ? product.imageUrl : undefined;
     return {
       meta: [
         { title: `${product.name} — ${product.brand} | SOS.3D` },
         { name: "description", content: product.subtitle },
         { property: "og:title", content: `${product.name} | SOS.3D` },
         { property: "og:description", content: product.subtitle },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            description: product.description || product.subtitle,
+            sku: product.slug,
+            ...(image ? { image: [image] } : {}),
+            brand: { "@type": "Brand", name: product.brand },
+            offers: {
+              "@type": "Offer",
+              url,
+              price: product.price,
+              priceCurrency: "BRL",
+              availability:
+                product.stock > 0
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+              seller: { "@type": "Organization", name: "SOS.3D" },
+            },
+          }),
+        },
       ],
     };
   },
