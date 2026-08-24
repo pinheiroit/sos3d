@@ -13,20 +13,20 @@ export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
         <img
           src={custom}
           alt="SOS.3D"
-          className="h-11 w-auto max-w-[220px] object-contain transition-transform group-hover:scale-105"
+          className="h-16 w-auto max-w-[320px] object-contain transition-transform duration-200 group-hover:scale-[1.04] sm:h-20"
         />
       </Link>
     );
   }
 
   return (
-    <Link to="/" className="group flex items-center gap-3" aria-label="SOS.3D — página inicial">
+    <Link to="/" className="group flex items-center gap-3.5" aria-label="SOS.3D — página inicial">
       <span
-        className={`grid h-10 w-10 place-items-center rounded-lg transition-transform group-hover:scale-105 ${
+        className={`grid h-14 w-14 place-items-center rounded-xl transition-transform duration-200 group-hover:scale-[1.04] ${
           isLight ? "bg-white/10 ring-1 ring-white/25" : "bg-brand"
         }`}
       >
-        <svg viewBox="0 0 32 32" className="h-6 w-6" aria-hidden="true">
+        <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true">
           <path
             d="M16 3l11 6.5v13L16 29 5 22.5v-13L16 3z"
             fill="none"
@@ -45,12 +45,12 @@ export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
       </span>
       <span className="leading-none">
         <span
-          className={`block text-lg font-bold tracking-tight ${isLight ? "text-white" : "text-brand"}`}
+          className={`block text-2xl font-extrabold tracking-tight ${isLight ? "text-white" : "text-brand"}`}
         >
           SOS<span className="text-accent">.</span>3D
         </span>
         <span
-          className={`mt-1 block text-[10px] font-medium uppercase tracking-[0.16em] ${
+          className={`mt-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] ${
             isLight ? "text-white/70" : "text-muted-foreground"
           }`}
         >
