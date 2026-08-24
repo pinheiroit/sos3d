@@ -105,6 +105,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://sos3d.lovable.app/#organization",
+              name: "SOS.3D",
+              url: "https://sos3d.lovable.app/",
+              logo: "https://sos3d.lovable.app/favicon.svg",
+              description:
+                "Impressoras 3D, filamentos, acessórios, impressão sob demanda e suporte técnico especializado.",
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://sos3d.lovable.app/#website",
+              name: "SOS.3D",
+              url: "https://sos3d.lovable.app/",
+              inLanguage: "pt-BR",
+              publisher: { "@id": "https://sos3d.lovable.app/#organization" },
+            },
+          ],
+        }),
+      },
+    ],
   }),
   loader: async ({ context }) => {
     // allSettled: uma falha pontual de um destes prefetches não pode derrubar o site inteiro.
