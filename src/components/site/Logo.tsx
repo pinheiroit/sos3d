@@ -13,7 +13,7 @@ export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
         <img
           src={custom}
           alt="SOS.3D"
-          className="h-11 w-auto max-w-[220px] object-contain transition-transform group-hover:scale-105"
+          className="h-16 w-auto max-w-[320px] object-contain transition-transform duration-200 group-hover:scale-[1.04] sm:h-20"
         />
       </Link>
     );
