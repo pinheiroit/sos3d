@@ -808,6 +808,20 @@ function AdminPage() {
             Troque as fotos das páginas do site. A alteração aparece imediatamente para os
             visitantes.
           </p>
+
+          {logoDefinitions.map((l) => (
+            <div key={l.key} className="rounded-xl border border-border bg-card p-4">
+              <p className="font-semibold">{l.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{l.hint}</p>
+              <div className="mt-3">
+                <ImageUploader
+                  label="Enviar logomarca"
+                  value={siteImages.data?.find((i) => i.key === l.key)?.url ?? null}
+                  onChange={(url) => banner.mutate({ key: l.key, url })}
+                />
+              </div>
+            </div>
+          ))}
           {bannerDefinitions.map((b) => (
             <div key={b.key} className="rounded-xl border border-border bg-card p-4">
               <p className="font-semibold">{b.label}</p>
