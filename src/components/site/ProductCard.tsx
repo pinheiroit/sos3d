@@ -67,9 +67,13 @@ export function ProductCard({ product }: { product: Product }) {
             </p>
           )}
           <p className="text-xl font-bold text-brand">{formatBRL(product.price)}</p>
-          <p className="text-xs font-medium text-success">
-            {formatBRL(pix)} à vista no Pix ({rules.pixDiscountPercent}% off)
-          </p>
+          {rules.pixDiscountPercent > 0 ? (
+            <p className="text-xs font-medium text-success">
+              {formatBRL(pix)} à vista no Pix ({rules.pixDiscountPercent}% off)
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">{formatBRL(pix)} à vista no Pix</p>
+          )}
           <p className="mt-0.5 text-xs text-muted-foreground">
             ou até {months}x de {formatBRL(installment)}
             {plan ? ` (total ${formatBRL(plan.total)})` : " sem juros"}
