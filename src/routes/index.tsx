@@ -32,11 +32,11 @@ export const Route = createFileRoute("/")({
 const atalhos = [
   { icon: Printer, label: "Impressoras 3D", to: "/impressoras" as const },
   { icon: Layers, label: "Filamentos", to: "/filamentos" as const },
-  { icon: Wrench, label: "Peças e acessórios", to: "/loja" as const },
+  { icon: Wrench, label: "Peças e acessórios", to: "/acessorios" as const },
   { icon: Scan, label: "Impressão sob demanda", to: "/impressao-3d" as const },
-  { icon: Boxes, label: "Área Maker", to: "/portal" as const },
   { icon: Tag, label: "Ofertas", to: "/loja" as const },
 ];
+
 
 function Index() {
   const hero = useBanner("home-hero");
