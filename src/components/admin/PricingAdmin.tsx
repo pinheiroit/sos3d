@@ -109,7 +109,7 @@ export function PricingAdmin() {
           />
         </div>
         <div>
-          <Label>Parcelas padrão (sem juros)</Label>
+          <Label>Parcelas padrão (com juros)</Label>
           <Input
             className="mt-1"
             inputMode="numeric"

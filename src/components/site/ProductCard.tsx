@@ -68,7 +68,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
           <p className="mt-0.5 text-xs text-muted-foreground">
             ou até {months}x de {formatBRL(installment)}
-            {plan ? ` (total ${formatBRL(plan.total)})` : " sem juros"}
+            {plan ? ` (total ${formatBRL(plan.total)})` : " com juros"}
           </p>
 
           <div className="mt-4 flex gap-2">

@@ -251,7 +251,7 @@ function CheckoutPage() {
                       ? `${rules.pixDiscountPercent}% de desconto, aprovação imediata`
                       : "Aprovação imediata",
                 },
-                { v: "cartao", t: "Cartão de crédito", d: `Até ${rules.defaultInstallments}x sem juros` },
+                { v: "cartao", t: "Cartão de crédito", d: `Até ${rules.defaultInstallments}x com juros` },
                 { v: "boleto", t: "Boleto / faturamento", d: "Para empresas e instituições" },
               ].map((o) => (
                 <label
