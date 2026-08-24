@@ -121,7 +121,11 @@ function ProductPage() {
                     <tr className="border-t border-border">
                       <td className="px-3 py-2 font-medium">À vista (Pix)</td>
                       <td className="px-3 py-2 text-right text-muted-foreground">—</td>
-                      <td className="px-3 py-2 text-right font-semibold text-success">
+                      <td
+                        className={`px-3 py-2 text-right font-semibold ${
+                          rules.pixDiscountPercent > 0 ? "text-success" : "text-brand"
+                        }`}
+                      >
                         {formatBRL(product.price * (1 - rules.pixDiscountPercent / 100))}
                       </td>
                     </tr>
