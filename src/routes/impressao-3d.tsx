@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock, FileUp, Gauge, Layers3, Ruler, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,13 @@ const capacidades = [
 
 function PrintingPage() {
   const serviceParts = useBanner("impressao-3d");
+  const [modelFiles, setModelFiles] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const imagePreviews = useMemo(
+    () => imageFiles.map((f) => URL.createObjectURL(f)),
+    [imageFiles],
+  );
+  useEffect(() => () => imagePreviews.forEach((u) => URL.revokeObjectURL(u)), [imagePreviews]);
   return (
     <>
       <section className="surface-brand grid-tech">
@@ -179,6 +187,8 @@ function PrintingPage() {
             onSubmit={(e) => {
               e.preventDefault();
               (e.currentTarget as HTMLFormElement).reset();
+              setModelFiles([]);
+              setImageFiles([]);
               toast.success("Solicitação enviada", {
                 description: "Nossa equipe responde em até 1 dia útil.",
               });
