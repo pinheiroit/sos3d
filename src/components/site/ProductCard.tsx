@@ -14,9 +14,6 @@ export function ProductCard({ product }: { product: Product }) {
   const plan = bestPlan(product.installments);
   const installment = plan ? plan.installment : product.price / rules.defaultInstallments;
   const months = plan ? plan.months : rules.defaultInstallments;
-  const off = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
 
   return (
     <article className="card-lift group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
