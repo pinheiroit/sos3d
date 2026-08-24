@@ -116,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@id": "https://sos3d.lovable.app/#organization",
               name: "SOS.3D",
               url: "https://sos3d.lovable.app/",
-              logo: "https://sos3d.lovable.app/favicon.svg",
+              logo: "https://sos3d.lovable.app/favicon.png",
               description:
                 "Impressoras 3D, filamentos, acessórios, impressão sob demanda e suporte técnico especializado.",
             },
