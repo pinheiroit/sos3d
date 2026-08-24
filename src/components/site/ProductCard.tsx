@@ -34,9 +34,6 @@ export function ProductCard({ product }: { product: Product }) {
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
         <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          {off > 0 && (
-            <Badge className="bg-accent text-accent-foreground">-{off}%</Badge>
-          )}
           {product.badge && (
             <Badge className="bg-brand text-brand-foreground">{product.badge}</Badge>
           )}
