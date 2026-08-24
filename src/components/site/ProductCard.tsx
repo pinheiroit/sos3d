@@ -14,9 +14,6 @@ export function ProductCard({ product }: { product: Product }) {
   const plan = bestPlan(product.installments);
   const installment = plan ? plan.installment : product.price / rules.defaultInstallments;
   const months = plan ? plan.months : rules.defaultInstallments;
-  const off = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : 0;
 
   return (
     <article className="card-lift group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -34,9 +31,6 @@ export function ProductCard({ product }: { product: Product }) {
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
         <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          {off > 0 && (
-            <Badge className="bg-accent text-accent-foreground">-{off}%</Badge>
-          )}
           {product.badge && (
             <Badge className="bg-brand text-brand-foreground">{product.badge}</Badge>
           )}
@@ -67,12 +61,10 @@ export function ProductCard({ product }: { product: Product }) {
             </p>
           )}
           <p className="text-xl font-bold text-brand">{formatBRL(product.price)}</p>
-          {rules.pixDiscountPercent > 0 ? (
+          {rules.pixDiscountPercent > 0 && (
             <p className="text-xs font-medium text-success">
               {formatBRL(pix)} à vista no Pix ({rules.pixDiscountPercent}% off)
             </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">{formatBRL(pix)} à vista no Pix</p>
           )}
           <p className="mt-0.5 text-xs text-muted-foreground">
             ou até {months}x de {formatBRL(installment)}
