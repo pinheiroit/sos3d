@@ -64,7 +64,7 @@ export function Header() {
       </div>
 
       <div className="border-b border-border bg-background/95 backdrop-blur">
-        <div className="container-page flex h-[124px] items-center gap-4">
+        <div className="container-page flex h-[168px] items-center gap-4">
           <Logo />
 
           <form
