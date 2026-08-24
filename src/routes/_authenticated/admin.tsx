@@ -1033,7 +1033,7 @@ function AdminPage() {
                   onChange={(e) => setForm({ ...form, installments: e.target.value })}
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Deixe em branco para usar o padrão de 12x sem juros. Se o total não for informado,
+                  Deixe em branco para usar o padrão de 12x com juros. Se o total não for informado,
                   calculamos parcelas x valor.
                 </p>
               </div>

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Compre impressoras 3D, filamentos técnicos e acessórios com 12x sem juros, 5% off no Pix, garantia e suporte técnico especializado.",
+          "Compre impressoras 3D, filamentos técnicos e acessórios com 12x com juros, 5% off no Pix, garantia e suporte técnico especializado.",
       },
       { property: "og:title", content: "SOS.3D — Loja de impressão 3D" },
       {
@@ -80,7 +80,7 @@ function Index() {
                 Impressoras 3D e filamentos com pronta entrega
               </h2>
               <p className="mt-4 max-w-md text-white/80">
-                Até 12x sem juros, 5% de desconto no Pix e suporte técnico de quem usa impressão 3D
+                Até 12x com juros, 5% de desconto no Pix e suporte técnico de quem usa impressão 3D
                 todos os dias. Indicamos o equipamento certo e acompanhamos a operação depois da venda.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
