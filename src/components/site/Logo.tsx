@@ -1,7 +1,24 @@
 import { Link } from "@tanstack/react-router";
+import { useSiteImage } from "@/lib/site-images";
 
 export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
   const isLight = variant === "light";
+  const main = useSiteImage("logo-principal");
+  const light = useSiteImage("logo-clara");
+  const custom = isLight ? (light ?? main) : (main ?? light);
+
+  if (custom) {
+    return (
+      <Link to="/" className="group flex items-center" aria-label="SOS.3D — página inicial">
+        <img
+          src={custom}
+          alt="SOS.3D"
+          className="h-11 w-auto max-w-[220px] object-contain transition-transform group-hover:scale-105"
+        />
+      </Link>
+    );
+  }
+
   return (
     <Link to="/" className="group flex items-center gap-3" aria-label="SOS.3D — página inicial">
       <span
