@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock, FileUp, Gauge, Layers3, Ruler, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,13 @@ const capacidades = [
 
 function PrintingPage() {
   const serviceParts = useBanner("impressao-3d");
+  const [modelFiles, setModelFiles] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const imagePreviews = useMemo(
+    () => imageFiles.map((f) => URL.createObjectURL(f)),
+    [imageFiles],
+  );
+  useEffect(() => () => imagePreviews.forEach((u) => URL.revokeObjectURL(u)), [imagePreviews]);
   return (
     <>
       <section className="surface-brand grid-tech">
@@ -179,6 +187,8 @@ function PrintingPage() {
             onSubmit={(e) => {
               e.preventDefault();
               (e.currentTarget as HTMLFormElement).reset();
+              setModelFiles([]);
+              setImageFiles([]);
               toast.success("Solicitação enviada", {
                 description: "Nossa equipe responde em até 1 dia útil.",
               });
@@ -227,9 +237,53 @@ function PrintingPage() {
             </div>
 
             <div className="mt-4">
-              <Label htmlFor="p-arquivo">Arquivo 3D (STL, STEP, 3MF)</Label>
-              <Input id="p-arquivo" type="file" className="mt-2" accept=".stl,.step,.stp,.3mf,.obj,.pdf" />
+              <Label htmlFor="p-arquivo">Arquivo 3D (STL, STEP, 3MF, OBJ)</Label>
+              <Input
+                id="p-arquivo"
+                type="file"
+                multiple
+                className="mt-2"
+                accept=".stl,.step,.stp,.3mf,.obj,.pdf"
+                onChange={(e) => setModelFiles(Array.from(e.target.files ?? []))}
+              />
+              {modelFiles.length > 0 && (
+                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  {modelFiles.map((f) => (
+                    <li key={f.name} className="flex items-center gap-1.5">
+                      <FileUp className="size-3.5 text-tech" /> {f.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
+
+            <div className="mt-4">
+              <Label htmlFor="p-imagens">Imagens de referência (opcional)</Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Fotos da peça, croquis ou prints ajudam na análise. JPG, PNG ou WEBP.
+              </p>
+              <Input
+                id="p-imagens"
+                type="file"
+                multiple
+                className="mt-2"
+                accept="image/*"
+                onChange={(e) => setImageFiles(Array.from(e.target.files ?? []))}
+              />
+              {imagePreviews.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {imagePreviews.map((src, i) => (
+                    <img
+                      key={src}
+                      src={src}
+                      alt={`Imagem de referência ${i + 1}`}
+                      className="size-20 rounded-lg border border-border object-cover"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
 
             <div className="mt-4">
               <Label htmlFor="p-desc">Descreva a aplicação</Label>

@@ -22,11 +22,12 @@ const departments = [
   { to: "/loja", label: "Todos os produtos" },
   { to: "/impressoras", label: "Impressoras 3D" },
   { to: "/filamentos", label: "Filamentos" },
+  { to: "/acessorios", label: "Peças e acessórios" },
   { to: "/impressao-3d", label: "Impressão sob demanda" },
-  { to: "/portal", label: "Área Maker" },
   { to: "/suporte", label: "Suporte" },
   { to: "/empresa", label: "Empresa" },
 ] as const;
+
 
 export function Header() {
   const [open, setOpen] = useState(false);

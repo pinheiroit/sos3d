@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Boxes, Layers, Printer, Scan, Tag, Wrench } from "lucide-react";
+import { ArrowRight, Layers, Printer, Scan, Tag, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BenefitsStrip } from "@/components/site/BenefitsStrip";
 import { CatalogView } from "@/components/site/CatalogView";
@@ -32,11 +32,11 @@ export const Route = createFileRoute("/")({
 const atalhos = [
   { icon: Printer, label: "Impressoras 3D", to: "/impressoras" as const },
   { icon: Layers, label: "Filamentos", to: "/filamentos" as const },
-  { icon: Wrench, label: "Peças e acessórios", to: "/loja" as const },
+  { icon: Wrench, label: "Peças e acessórios", to: "/acessorios" as const },
   { icon: Scan, label: "Impressão sob demanda", to: "/impressao-3d" as const },
-  { icon: Boxes, label: "Área Maker", to: "/portal" as const },
   { icon: Tag, label: "Ofertas", to: "/loja" as const },
 ];
+
 
 function Index() {
   const hero = useBanner("home-hero");
@@ -47,7 +47,7 @@ function Index() {
     <>
       {/* Atalhos de categoria */}
       <section className="container-page pt-6">
-        <div className="grid grid-cols-3 gap-4 md:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {atalhos.map((a) => (
             <Link
               key={a.label}
