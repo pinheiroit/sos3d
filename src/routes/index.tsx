@@ -9,11 +9,11 @@ import { useBanner } from "@/lib/site-images";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SOS.3D — Loja de impressoras 3D, filamentos e acessórios" },
+      { title: "SOS.3D — Impressoras 3D, filamentos e acessórios" },
       {
         name: "description",
         content:
-          "Compre impressoras 3D, filamentos técnicos e acessórios com 12x com juros, 5% off no Pix, garantia e suporte técnico especializado.",
+          "Compre impressoras 3D, filamentos técnicos e acessórios com parcelamento, garantia e suporte técnico especializado em todo o Brasil.",
       },
       { property: "og:title", content: "SOS.3D — Loja de impressão 3D" },
       {
@@ -21,7 +21,10 @@ export const Route = createFileRoute("/")({
         content:
           "Impressoras 3D, filamentos e acessórios com envio para todo o Brasil, parcelamento e suporte técnico real.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://sos3d.lovable.app/" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.lovable.app/" }],
   }),
   component: Index,
 });
