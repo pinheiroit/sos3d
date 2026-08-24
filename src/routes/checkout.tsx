@@ -243,7 +243,14 @@ function CheckoutPage() {
             <legend className="px-2 text-sm font-semibold uppercase tracking-wide">Pagamento</legend>
             <RadioGroup value={pagamento} onValueChange={setPagamento} className="gap-3">
               {[
-                { v: "pix", t: "Pix", d: `${rules.pixDiscountPercent}% de desconto, aprovação imediata` },
+                {
+                  v: "pix",
+                  t: "Pix",
+                  d:
+                    rules.pixDiscountPercent > 0
+                      ? `${rules.pixDiscountPercent}% de desconto, aprovação imediata`
+                      : "Aprovação imediata",
+                },
                 { v: "cartao", t: "Cartão de crédito", d: `Até ${rules.defaultInstallments}x sem juros` },
                 { v: "boleto", t: "Boleto / faturamento", d: "Para empresas e instituições" },
               ].map((o) => (
