@@ -20,7 +20,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatBRL, imageFor } from "@/lib/catalog";
 import { ImageUploader } from "@/components/site/ImageUploader";
-import { bannerDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
+import { bannerDefinitions, logoDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
 import { setSiteImage } from "@/lib/uploads.functions";
 import { FooterAdmin } from "@/components/admin/FooterAdmin";
 import { BrandsAdmin } from "@/components/admin/BrandsAdmin";
