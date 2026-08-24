@@ -100,8 +100,10 @@ function ProductPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {best
                 ? `ou até ${best.months}x de ${formatBRL(best.installment)}`
-                : `ou ${rules.defaultInstallments}x de ${formatBRL(product.price / rules.defaultInstallments)} sem juros`}{" "}
-              • à vista com {rules.pixDiscountPercent}% de desconto
+                : `ou ${rules.defaultInstallments}x de ${formatBRL(product.price / rules.defaultInstallments)} sem juros`}
+              {rules.pixDiscountPercent > 0
+                ? ` • à vista com ${rules.pixDiscountPercent}% de desconto`
+                : " • à vista no Pix"}
             </p>
 
             {plans.length > 0 && (
