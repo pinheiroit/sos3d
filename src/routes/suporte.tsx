@@ -34,6 +34,23 @@ export const Route = createFileRoute("/suporte")({
         property: "og:description",
         content: "Chamado técnico, base de conhecimento, garantia e treinamento.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://sos3d.lovable.app/suporte" },
+    ],
+    links: [{ rel: "canonical", href: "https://sos3d.lovable.app/suporte" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
     ],
   }),
   component: SupportPage,

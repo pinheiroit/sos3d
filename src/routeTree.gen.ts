@@ -21,6 +21,7 @@ import { Route as Impressao3dRouteImport } from './routes/impressao-3d'
 import { Route as ImpressorasRouteImport } from './routes/impressoras'
 import { Route as LojaRouteImport } from './routes/loja'
 import { Route as MakersRouteImport } from './routes/makers'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
@@ -86,6 +87,11 @@ const MakersRoute = MakersRouteImport.update({
   path: '/makers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/impressoras': typeof ImpressorasRoute
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/impressoras'
     | '/loja'
     | '/makers'
+    | '/sitemap.xml'
     | '/suporte'
     | '/admin'
     | '/portal'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/impressoras'
     | '/loja'
     | '/makers'
+    | '/sitemap.xml'
     | '/suporte'
     | '/admin'
     | '/portal'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/impressoras'
     | '/loja'
     | '/makers'
+    | '/sitemap.xml'
     | '/suporte'
     | '/_authenticated/admin'
     | '/_authenticated/portal'
@@ -239,6 +251,7 @@ export interface RootRouteChildren {
   ImpressorasRoute: typeof ImpressorasRoute
   LojaRoute: typeof LojaRoute
   MakersRoute: typeof MakersRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuporteRoute: typeof SuporteRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
   ApiPublicImgSplatRoute: typeof ApiPublicImgSplatRoute
@@ -330,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MakersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/suporte': {
       id: '/suporte'
       path: '/suporte'
@@ -394,6 +414,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpressorasRoute: ImpressorasRoute,
   LojaRoute: LojaRoute,
   MakersRoute: MakersRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuporteRoute: SuporteRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
   ApiPublicImgSplatRoute: ApiPublicImgSplatRoute,
