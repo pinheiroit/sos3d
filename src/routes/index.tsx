@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Boxes, Layers, Printer, Scan, Tag, Wrench } from "lucide-react";
+import { ArrowRight, Layers, Printer, Scan, Tag, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BenefitsStrip } from "@/components/site/BenefitsStrip";
 import { CatalogView } from "@/components/site/CatalogView";
@@ -47,7 +47,7 @@ function Index() {
     <>
       {/* Atalhos de categoria */}
       <section className="container-page pt-6">
-        <div className="grid grid-cols-3 gap-4 md:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {atalhos.map((a) => (
             <Link
               key={a.label}
