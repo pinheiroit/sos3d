@@ -103,7 +103,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap",
       },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
     ],
     scripts: [
       {
@@ -116,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@id": "https://sos3d.lovable.app/#organization",
               name: "SOS.3D",
               url: "https://sos3d.lovable.app/",
-              logo: "https://sos3d.lovable.app/favicon.svg",
+              logo: "https://sos3d.lovable.app/favicon.png",
               description:
                 "Impressoras 3D, filamentos, acessórios, impressão sob demanda e suporte técnico especializado.",
             },
