@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ExternalLink, ImageIcon, Loader2, Search, SearchCheck } from "lucide-react";
+import { ImageIcon, Loader2, Search, SearchCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
