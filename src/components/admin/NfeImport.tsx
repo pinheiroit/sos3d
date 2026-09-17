@@ -18,7 +18,7 @@ import { normalizeProductName, parseNfeXml, productSlug, type ParsedNfe } from "
 
 type Product = { id: string; name: string; slug: string; brand: string; category: string; subcategory: string; price: number; stock: number };
 type Action = "linked" | "created" | "ignored";
-type ItemDecision = { action: Action; productId?: string; name: string; slug: string; brand: string; category: string; subcategory: string; price: number };
+type ItemDecision = { action: Action; productId: string | undefined; name: string; slug: string; brand: string; category: string; subcategory: string; price: number };
 type Draft = { id: string; fileName: string; invoice: ParsedNfe; decisions: ItemDecision[] };
 
 type Props = { products: Product[]; onImported?: () => void };
@@ -60,7 +60,7 @@ export function NfeImport({ products, onImported }: Props) {
       const exactName = products.find((product) => normalizeProductName(product.name) === normalizeProductName(item.description));
       const product = (saved && productById.get(saved.product_id)) || exactName;
       if (product) return { action: "linked", productId: product.id, name: item.description, slug: productSlug(item.description), brand: product.brand, category: product.category, subcategory: product.subcategory, price: item.unitCost };
-      return { action: "created", name: item.description, slug: productSlug(item.description), brand: "SOS.3D", category: categories[0]?.slug ?? "filamentos", subcategory: "", price: item.unitCost };
+      return { action: "created", productId: undefined, name: item.description, slug: productSlug(item.description), brand: "SOS.3D", category: categories[0]?.slug ?? "filamentos", subcategory: "", price: item.unitCost };
     });
   }
 
@@ -82,7 +82,7 @@ export function NfeImport({ products, onImported }: Props) {
     }
     if (loaded.length) {
       setDrafts((current) => [...current, ...loaded]);
-      setActiveId((current) => current || loaded[0].id);
+      setActiveId((current) => current || loaded[0]!.id);
       toast.success(`${loaded.length} NF-e(s) carregada(s) para conferência.`);
     }
     setReading(false);
@@ -98,7 +98,7 @@ export function NfeImport({ products, onImported }: Props) {
     mutationFn: async (draft: Draft) => processNfeStockEntry({ data: {
       invoice: draft.invoice,
       items: draft.invoice.items.map((item, index) => {
-        const decision = draft.decisions[index];
+        const decision = draft.decisions[index]!;
         return {
           supplierCode: item.supplierCode,
           ean: item.ean,
@@ -166,7 +166,7 @@ export function NfeImport({ products, onImported }: Props) {
               <TableHeader><TableRow><TableHead className="min-w-64">Item da nota</TableHead><TableHead>Qtd.</TableHead><TableHead>Custo</TableHead><TableHead className="min-w-72">Destino</TableHead><TableHead>Estoque</TableHead></TableRow></TableHeader>
               <TableBody>
                 {active.invoice.items.map((item, index) => {
-                  const decision = active.decisions[index];
+                  const decision = active.decisions[index]!;
                   const linked = decision.productId ? productById.get(decision.productId) : undefined;
                   return <TableRow key={`${item.line}-${item.supplierCode}`}>
                     <TableCell><p className="font-medium">{item.description}</p><p className="mt-1 text-xs text-muted-foreground">Cód. {item.supplierCode}{item.ean ? ` · EAN ${item.ean}` : " · Sem GTIN"}</p></TableCell>
