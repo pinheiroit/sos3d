@@ -7,3 +7,6 @@
 - [x] Verificar a nova pesquisa em computador e celular
 - [x] Adicionar aba para vincular fotos aos produtos sem imagem
 - [x] Verificar a gestão de fotos em computador e celular
+- [ ] Identificar cores disponíveis nos produtos
+- [ ] Adicionar filtro visual de cores ao catálogo
+- [ ] Verificar o filtro na página de filamentos
