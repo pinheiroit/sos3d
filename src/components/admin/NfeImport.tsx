@@ -64,12 +64,17 @@ export function NfeImport({ products, onImported }: Props) {
   const filteredProducts = useMemo(() => {
     if (!productSearch) return [];
     const description = normalizeSearch(productSearch.description);
-    return products.filter((product) => {
-      const matchesDescription = !description || normalizeSearch(`${product.name} ${product.slug}`).includes(description);
-      const matchesBrand = !productSearch.brand || product.brand === productSearch.brand;
-      const matchesType = !productSearch.type || product.subcategory === productSearch.type;
-      return matchesDescription && matchesBrand && matchesType;
-    });
+    const terms = description.split(/[^a-z0-9]+/).filter((term) => term.length >= 2);
+    return products
+      .filter((product) => (!productSearch.brand || product.brand === productSearch.brand) && (!productSearch.type || product.subcategory === productSearch.type))
+      .map((product) => {
+        const searchable = normalizeSearch(`${product.name} ${product.slug} ${product.brand} ${product.subcategory}`);
+        const score = terms.reduce((total, term) => total + (searchable.includes(term) ? 1 : 0), 0);
+        return { product, score };
+      })
+      .filter(({ score }) => terms.length === 0 || score > 0)
+      .sort((a, b) => b.score - a.score || a.product.name.localeCompare(b.product.name))
+      .map(({ product }) => product);
   }, [productSearch, products]);
 
   function suggest(invoice: ParsedNfe): ItemDecision[] {
