@@ -31,6 +31,7 @@ import { PricingAdmin } from "@/components/admin/PricingAdmin";
 import { useCategories } from "@/lib/categories";
 import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
+import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
@@ -403,6 +404,7 @@ function AdminPage() {
         <div className="-mx-4 overflow-x-auto px-4 pb-1">
           <TabsList className="w-max">
             <TabsTrigger value="produtos">Produtos</TabsTrigger>
+            <TabsTrigger value="fotos">Fotos</TabsTrigger>
             <TabsTrigger value="categorias">Categorias</TabsTrigger>
             <TabsTrigger value="importar">Importar</TabsTrigger>
             <TabsTrigger value="entrada-nfe">Entrada NF-e</TabsTrigger>
@@ -659,6 +661,13 @@ function AdminPage() {
               </div>
             </div>
           ))}
+        </TabsContent>
+
+        <TabsContent value="fotos" className="mt-6">
+          <ProductPhotosAdmin
+            products={(data?.products ?? []) as never}
+            onUpdated={refresh}
+          />
         </TabsContent>
 
         <TabsContent value="categorias" className="mt-6">
