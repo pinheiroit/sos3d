@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ImageIcon, Search } from "lucide-react";
+import { ExternalLink, ImageIcon, Loader2, Search, SearchCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ImageUploader } from "@/components/site/ImageUploader";
-import { updateProductImage } from "@/lib/admin.functions";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { findProductImages, importProductImage, updateProductImage } from "@/lib/admin.functions";
 
 type PhotoProduct = {
   id: string;
@@ -30,6 +38,13 @@ type Props = {
   onUpdated: () => void;
 };
 
+type WebImage = {
+  title: string;
+  imageUrl: string;
+  thumbnailUrl: string;
+  sourceUrl: string;
+};
+
 function normalize(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
 }
@@ -39,6 +54,11 @@ export function ProductPhotosAdmin({ products, onUpdated }: Props) {
   const [view, setView] = useState("missing");
   const [brand, setBrand] = useState("all");
   const [savingIds, setSavingIds] = useState<string[]>([]);
+  const [webProduct, setWebProduct] = useState<PhotoProduct | null>(null);
+  const [webQuery, setWebQuery] = useState("");
+  const [webResults, setWebResults] = useState<WebImage[]>([]);
+  const [searchingWeb, setSearchingWeb] = useState(false);
+  const [importingUrl, setImportingUrl] = useState<string | null>(null);
 
   const missingCount = products.filter((product) => !product.image_url).length;
   const brands = useMemo(
@@ -68,6 +88,46 @@ export function ProductPhotosAdmin({ products, onUpdated }: Props) {
       toast.error("Não foi possível atualizar a foto", { description: (error as Error).message });
     } finally {
       setSavingIds((current) => current.filter((id) => id !== product.id));
+    }
+  }
+
+  function openWebSearch(product: PhotoProduct) {
+    const suggestedQuery = `${product.name} ${product.brand}`.trim();
+    setWebProduct(product);
+    setWebQuery(suggestedQuery);
+    setWebResults([]);
+  }
+
+  async function searchWeb() {
+    if (!webQuery.trim()) return;
+    setSearchingWeb(true);
+    try {
+      const response = await findProductImages({ data: { query: webQuery.trim() } } as never);
+      const results = (response as { results: WebImage[] }).results;
+      setWebResults(results);
+      if (results.length === 0) toast.info("Nenhuma imagem encontrada. Tente ajustar o nome.");
+    } catch (error) {
+      toast.error("Não foi possível pesquisar as imagens", { description: (error as Error).message });
+    } finally {
+      setSearchingWeb(false);
+    }
+  }
+
+  async function useWebImage(image: WebImage) {
+    if (!webProduct) return;
+    setImportingUrl(image.imageUrl);
+    try {
+      await importProductImage({
+        data: { id: webProduct.id, query: webQuery.trim(), imageUrl: image.imageUrl },
+      } as never);
+      toast.success("Foto da internet vinculada ao produto");
+      setWebProduct(null);
+      setWebResults([]);
+      onUpdated();
+    } catch (error) {
+      toast.error("Não foi possível usar esta foto", { description: (error as Error).message });
+    } finally {
+      setImportingUrl(null);
     }
   }
 
@@ -149,16 +209,85 @@ export function ProductPhotosAdmin({ products, onUpdated }: Props) {
                   <p className="mt-1 truncate text-xs text-muted-foreground">Código: {product.slug}</p>
                   {saving && <p className="mt-2 text-xs font-medium text-tech">Salvando no produto...</p>}
                 </div>
-                <ImageUploader
-                  value={product.image_url}
-                  label={product.image_url ? "Trocar foto" : "Adicionar foto"}
-                  onChange={(url) => void saveImage(product, url)}
-                />
+                <div className="flex flex-col items-start gap-2 sm:items-end">
+                  <ImageUploader
+                    value={product.image_url}
+                    label={product.image_url ? "Trocar foto" : "Do computador"}
+                    onChange={(url) => void saveImage(product, url)}
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => openWebSearch(product)}>
+                    <SearchCheck /> Buscar na internet
+                  </Button>
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <Dialog open={Boolean(webProduct)} onOpenChange={(open) => !open && setWebProduct(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Buscar foto do produto</DialogTitle>
+            <DialogDescription>
+              Confira se a foto corresponde exatamente ao produto antes de selecionar.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="flex flex-col gap-2 sm:flex-row"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void searchWeb();
+            }}
+          >
+            <Input
+              value={webQuery}
+              onChange={(event) => setWebQuery(event.target.value)}
+              aria-label="Nome para pesquisar na internet"
+              placeholder="Nome e marca do produto"
+            />
+            <Button type="submit" disabled={searchingWeb || !webQuery.trim()}>
+              {searchingWeb ? <Loader2 className="animate-spin" /> : <Search />} Pesquisar
+            </Button>
+          </form>
+
+          {webResults.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+              {webResults.map((image) => (
+                <div key={image.imageUrl} className="overflow-hidden rounded-lg border border-border bg-card">
+                  <div className="aspect-square bg-secondary p-2">
+                    <img
+                      src={image.thumbnailUrl}
+                      alt={image.title}
+                      className="size-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="space-y-2 p-3">
+                    <p className="line-clamp-2 min-h-10 text-xs font-medium">{image.title}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <Button asChild type="button" variant="ghost" size="icon" title="Abrir fonte da imagem">
+                        <a href={image.sourceUrl} target="_blank" rel="noreferrer">
+                          <ExternalLink />
+                        </a>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={Boolean(importingUrl)}
+                        onClick={() => void useWebImage(image)}
+                      >
+                        {importingUrl === image.imageUrl && <Loader2 className="animate-spin" />}
+                        Usar foto
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
