@@ -57,6 +57,7 @@ export function NfeImport({ products, onImported }: Props) {
   });
 
   const active = drafts.find((draft) => draft.id === activeId) ?? drafts[0];
+  const searchedInvoiceItem = productSearch && active ? active.invoice.items[productSearch.itemIndex] : undefined;
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
   const brands = useMemo(() => Array.from(new Set(products.map((product) => product.brand).filter(Boolean))).sort((a, b) => a.localeCompare(b)), [products]);
   const productTypes = useMemo(() => Array.from(new Set(products.map((product) => product.subcategory).filter(Boolean))).sort((a, b) => a.localeCompare(b)), [products]);
@@ -237,7 +238,7 @@ export function NfeImport({ products, onImported }: Props) {
           <DialogHeader className="border-b border-border px-5 py-5 pr-12 sm:px-6">
             <DialogTitle>Pesquisar produto para vincular</DialogTitle>
             <DialogDescription>
-              {productSearch && active?.invoice.items[productSearch.itemIndex] ? `${active.invoice.items[productSearch.itemIndex].description} · Cód. ${active.invoice.items[productSearch.itemIndex].supplierCode} · +${active.invoice.items[productSearch.itemIndex].quantity} unidades` : "Filtre o catálogo e escolha o produto correto."}
+              {searchedInvoiceItem ? `${searchedInvoiceItem.description} · Cód. ${searchedInvoiceItem.supplierCode} · +${searchedInvoiceItem.quantity} unidades` : "Filtre o catálogo e escolha o produto correto."}
             </DialogDescription>
           </DialogHeader>
 
