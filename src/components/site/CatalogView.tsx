@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ProductCard } from "@/components/site/ProductCard";
 import { brandsOf, formatBRL, type Category } from "@/lib/catalog";
+import { colorsOfProduct, colorsOfProducts } from "@/lib/product-colors";
 import { useProducts } from "@/lib/products";
 import { useCategories } from "@/lib/categories";
 import { useSubcategories } from "@/lib/subcategories";
@@ -52,6 +53,7 @@ export function CatalogView({
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [priceCap, setPriceCap] = useState(maxPrice);
   const [sort, setSort] = useState("relevancia");
 
@@ -66,14 +68,16 @@ export function CatalogView({
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(p.brand);
       const matchesCat = categories.length === 0 || categories.includes(p.category);
       const matchesSub = subcategories.length === 0 || subcategories.includes(p.subcategory);
-      return matchesQuery && matchesBrand && matchesCat && matchesSub && p.price <= priceCap;
+      const matchesColor =
+        selectedColors.length === 0 || colorsOfProduct(p).some((color) => selectedColors.includes(color));
+      return matchesQuery && matchesBrand && matchesCat && matchesSub && matchesColor && p.price <= priceCap;
     });
 
     if (sort === "menor") return [...list].sort((a, b) => a.price - b.price);
     if (sort === "maior") return [...list].sort((a, b) => b.price - a.price);
     if (sort === "nome") return [...list].sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [base, query, selectedBrands, categories, subcategories, priceCap, sort]);
+  }, [base, query, selectedBrands, categories, subcategories, selectedColors, priceCap, sort]);
 
   // Subcategorias exibidas: da categoria fixa da página ou das categorias marcadas.
   const scopeCategories = fixedCategory ? [fixedCategory] : categories;
@@ -87,6 +91,7 @@ export function CatalogView({
   }, [allSubcategories, base, scopeCategories.join(",")]);
 
   const availableBrands = brandsOf(base);
+  const availableColors = useMemo(() => colorsOfProducts(base), [base]);
 
   function toggle<T>(value: T, list: T[], set: (v: T[]) => void) {
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -97,6 +102,7 @@ export function CatalogView({
     setSelectedBrands([]);
     setCategories([]);
     setSubcategories([]);
+    setSelectedColors([]);
     setPriceCap(maxPrice);
     setSort("relevancia");
   };
@@ -192,6 +198,33 @@ export function CatalogView({
                 ))}
               </div>
             </div>
+
+            {availableColors.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide">Cor</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {availableColors.map((color) => {
+                    const selected = selectedColors.includes(color.key);
+                    return (
+                      <Button
+                        key={color.key}
+                        type="button"
+                        variant={selected ? "secondary" : "ghost"}
+                        className="h-9 justify-start gap-2 px-2 text-xs"
+                        aria-pressed={selected}
+                        onClick={() => toggle(color.key, selectedColors, setSelectedColors)}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`size-4 shrink-0 rounded-full border border-border shadow-sm ${color.swatchClass}`}
+                        />
+                        {color.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide">Investimento até</p>
