@@ -12,3 +12,4 @@
 - [x] Verificar o filtro na página de filamentos
 - [x] Adicionar pesquisa de fotos pelo nome do produto
 - [x] Verificar pesquisa e seleção de fotos no painel
+- [x] Substituir o indexador impreciso por pesquisa direta no Google Imagens

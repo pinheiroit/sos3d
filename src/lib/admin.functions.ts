@@ -185,93 +185,39 @@ export const updateProductImage = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const imageSearchSchema = z.object({
-  query: z.string().trim().min(2).max(180),
-});
-
-type ImageSearchResult = {
-  title: string;
-  imageUrl: string;
-  thumbnailUrl: string;
-  sourceUrl: string;
-};
-
-function decodeHtmlAttribute(value: string) {
-  return value
-    .replaceAll("&quot;", '"')
-    .replaceAll("&amp;", "&")
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-}
-
-async function searchProductImages(query: string): Promise<ImageSearchResult[]> {
-  const searchUrl = new URL("https://www.bing.com/images/search");
-  searchUrl.searchParams.set("q", `\"${query}\" produto`);
-  searchUrl.searchParams.set("form", "HDRSC2");
-  searchUrl.searchParams.set("first", "1");
-  const response = await fetch(searchUrl, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; SOS3DProductImageSearch/1.0)" },
-  });
-  if (!response.ok) throw new Error("A pesquisa de imagens não está disponível agora.");
-  const html = await response.text();
-  const matches = html.matchAll(/\bm="([^"]+)"/g);
-  const results: ImageSearchResult[] = [];
-  for (const match of matches) {
-    try {
-      const item = JSON.parse(decodeHtmlAttribute(match[1] ?? "")) as {
-        t?: string;
-        murl?: string;
-        turl?: string;
-        purl?: string;
-      };
-      if (!item.murl || !item.turl || !item.purl) continue;
-      if (!item.murl.startsWith("https://") || !item.turl.startsWith("https://")) continue;
-      results.push({
-        title: item.t?.trim() || query,
-        imageUrl: item.murl,
-        thumbnailUrl: item.turl,
-        sourceUrl: item.purl,
-      });
-      if (results.length === 12) break;
-    } catch {
-      // Alguns resultados do provedor não contêm metadados válidos.
-    }
-  }
-  return results;
-}
-
-export const findProductImages = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => imageSearchSchema.parse(input))
-  .handler(async ({ data, context }) => {
-    const { assertAdmin } = await import("@/lib/admin-guard.server");
-    await assertAdmin(context.supabase, context.userId);
-    return { results: await searchProductImages(data.query) };
-  });
-
 export const importProductImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    imageSearchSchema.extend({
+    z.object({
       id: z.string().uuid(),
-      imageUrl: z.string().url().max(3000),
+      imageUrl: z.string().trim().url().max(3000),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
 
-    const searchResults = await searchProductImages(data.query);
-    if (!searchResults.some((result) => result.imageUrl === data.imageUrl)) {
-      throw new Error("A imagem selecionada não pertence aos resultados desta pesquisa.");
-    }
-
     const source = new URL(data.imageUrl);
-    if (source.protocol !== "https:" || source.hostname === "localhost" || source.hostname.endsWith(".local")) {
+    const blockedHostname =
+      source.hostname === "localhost" ||
+      source.hostname.endsWith(".local") ||
+      source.hostname === "0.0.0.0" ||
+      source.hostname === "127.0.0.1" ||
+      source.hostname === "::1" ||
+      /^10\./.test(source.hostname) ||
+      /^192\.168\./.test(source.hostname) ||
+      /^169\.254\./.test(source.hostname) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(source.hostname);
+    if (source.protocol !== "https:" || source.username || source.password || source.port || blockedHostname) {
       throw new Error("Endereço de imagem não permitido.");
     }
-    const response = await fetch(source, { redirect: "error" });
+    const response = await fetch(source, {
+      redirect: "error",
+      headers: {
+        Accept: "image/avif,image/webp,image/png,image/jpeg,image/gif",
+        "User-Agent": "Mozilla/5.0 (compatible; SOS3DProductImageImport/1.0)",
+      },
+    });
     if (!response.ok) throw new Error("O site de origem não permitiu copiar esta imagem.");
     const contentType = (response.headers.get("content-type") ?? "").split(";")[0]?.trim();
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
