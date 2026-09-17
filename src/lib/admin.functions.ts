@@ -165,6 +165,26 @@ export const quickUpdateProduct = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateProductImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      imageUrl: z.string().trim().max(2000).startsWith("/api/public/img/").nullable(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const { error } = await db
+      .from("products")
+      .update({ image_url: data.imageUrl, updated_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
