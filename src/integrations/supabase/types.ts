@@ -585,6 +585,111 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_entries: {
+        Row: {
+          access_key: string
+          created_at: string
+          created_by: string
+          id: string
+          invoice_number: string
+          invoice_series: string
+          issued_at: string | null
+          item_count: number
+          supplier_document: string
+          supplier_name: string
+          total_amount: number
+        }
+        Insert: {
+          access_key: string
+          created_at?: string
+          created_by: string
+          id?: string
+          invoice_number: string
+          invoice_series?: string
+          issued_at?: string | null
+          item_count?: number
+          supplier_document: string
+          supplier_name: string
+          total_amount?: number
+        }
+        Update: {
+          access_key?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          invoice_number?: string
+          invoice_series?: string
+          issued_at?: string | null
+          item_count?: number
+          supplier_document?: string
+          supplier_name?: string
+          total_amount?: number
+        }
+        Relationships: []
+      }
+      stock_entry_items: {
+        Row: {
+          action: string
+          created_at: string
+          description: string
+          ean: string | null
+          entry_id: string
+          id: string
+          previous_stock: number | null
+          product_id: string | null
+          quantity: number
+          resulting_stock: number | null
+          supplier_code: string
+          total_cost: number
+          unit_cost: number
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          description: string
+          ean?: string | null
+          entry_id: string
+          id?: string
+          previous_stock?: number | null
+          product_id?: string | null
+          quantity: number
+          resulting_stock?: number | null
+          supplier_code: string
+          total_cost?: number
+          unit_cost?: number
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string
+          ean?: string | null
+          entry_id?: string
+          id?: string
+          previous_stock?: number | null
+          product_id?: string | null
+          quantity?: number
+          resulting_stock?: number | null
+          supplier_code?: string
+          total_cost?: number
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_entry_items_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "stock_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_entry_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subcategories: {
         Row: {
           active: boolean
@@ -620,6 +725,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      supplier_product_links: {
+        Row: {
+          created_at: string
+          ean: string | null
+          id: string
+          product_id: string
+          supplier_code: string
+          supplier_document: string
+          supplier_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ean?: string | null
+          id?: string
+          product_id: string
+          supplier_code: string
+          supplier_document: string
+          supplier_name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ean?: string | null
+          id?: string
+          product_id?: string
+          supplier_code?: string
+          supplier_document?: string
+          supplier_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_product_links_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -660,6 +806,10 @@ export type Database = {
         Returns: boolean
       }
       member_printer_model: { Args: { _user_id: string }; Returns: string }
+      process_nfe_stock_entry: {
+        Args: { _invoice: Json; _items: Json }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "member"

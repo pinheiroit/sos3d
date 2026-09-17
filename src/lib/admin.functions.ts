@@ -324,3 +324,49 @@ export const importProducts = createServerFn({ method: "POST" })
     return { created, updated, errors };
 
   });
+
+const nfeInvoiceSchema = z.object({
+  accessKey: z.string().regex(/^\d{44}$/),
+  number: z.string().trim().min(1).max(30),
+  series: z.string().trim().max(10),
+  issuedAt: z.string().max(40),
+  supplierDocument: z.string().regex(/^\d{11,14}$/),
+  supplierName: z.string().trim().min(2).max(200),
+  totalAmount: z.number().min(0).max(100_000_000),
+});
+
+const nfeItemSchema = z.object({
+  supplierCode: z.string().trim().min(1).max(120),
+  ean: z.string().trim().max(30),
+  description: z.string().trim().min(1).max(500),
+  quantity: z.number().positive().max(1_000_000),
+  unitCost: z.number().min(0).max(10_000_000),
+  totalCost: z.number().min(0).max(100_000_000),
+  action: z.enum(["linked", "created", "ignored"]),
+  productId: z.string().uuid().optional(),
+  newProduct: z.object({
+    slug: z.string().trim().min(2).max(120).regex(/^[a-z0-9-]+$/),
+    name: z.string().trim().min(2).max(180),
+    brand: z.string().trim().max(80),
+    category: z.string().trim().min(2).max(60).regex(/^[a-z0-9-]+$/),
+    subcategory: z.string().trim().max(60).regex(/^[a-z0-9-]*$/),
+    price: z.number().min(0).max(10_000_000),
+  }).optional(),
+}).superRefine((item, ctx) => {
+  if (item.action === "linked" && !item.productId) ctx.addIssue({ code: "custom", message: "Selecione o produto vinculado." });
+  if (item.action === "created" && !item.newProduct) ctx.addIssue({ code: "custom", message: "Preencha o novo produto." });
+});
+
+export const processNfeStockEntry = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ invoice: nfeInvoiceSchema, items: z.array(nfeItemSchema).min(1).max(1000) }))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { data: entryId, error } = await context.supabase.rpc("process_nfe_stock_entry", {
+      _invoice: data.invoice,
+      _items: data.items,
+    });
+    if (error) throw new Error(error.message);
+    return { entryId };
+  });
