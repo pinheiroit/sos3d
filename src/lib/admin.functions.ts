@@ -185,6 +185,60 @@ export const updateProductImage = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const findProductImages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ query: z.string().trim().min(3).max(220) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+
+    const apiKey = process.env["GOOGLE_SEARCH_API_KEY"];
+    const searchEngineId = process.env["GOOGLE_SEARCH_ENGINE_ID"];
+    if (!apiKey || !searchEngineId) {
+      throw new Error("A pesquisa de imagens do Google ainda não foi configurada.");
+    }
+
+    const endpoint = new URL("https://customsearch.googleapis.com/customsearch/v1");
+    endpoint.searchParams.set("key", apiKey);
+    endpoint.searchParams.set("cx", searchEngineId);
+    endpoint.searchParams.set("q", data.query);
+    endpoint.searchParams.set("searchType", "image");
+    endpoint.searchParams.set("num", "10");
+    endpoint.searchParams.set("safe", "active");
+    endpoint.searchParams.set("gl", "br");
+    endpoint.searchParams.set("lr", "lang_pt");
+    endpoint.searchParams.set("imgType", "photo");
+
+    const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
+    const payload = await response.json() as {
+      error?: { message?: string };
+      items?: Array<{
+        link?: string;
+        title?: string;
+        displayLink?: string;
+        image?: { thumbnailLink?: string; contextLink?: string; width?: number; height?: number };
+      }>;
+    };
+    if (!response.ok) {
+      throw new Error(payload.error?.message ?? "Não foi possível pesquisar as imagens no Google.");
+    }
+
+    return (payload.items ?? []).flatMap((item) => {
+      if (!item.link?.startsWith("https://") || !item.image?.thumbnailLink?.startsWith("https://")) return [];
+      return [{
+        imageUrl: item.link,
+        thumbnailUrl: item.image.thumbnailLink,
+        title: item.title?.trim() || data.query,
+        source: item.displayLink?.trim() || new URL(item.link).hostname,
+        sourceUrl: item.image.contextLink?.startsWith("https://") ? item.image.contextLink : null,
+        width: item.image.width ?? null,
+        height: item.image.height ?? null,
+      }];
+    });
+  });
+
 export const importProductImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
