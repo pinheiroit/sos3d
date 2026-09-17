@@ -9,4 +9,4 @@
 - [x] Verificar a gestão de fotos em computador e celular
 - [x] Identificar cores disponíveis nos produtos
 - [x] Adicionar filtro visual de cores ao catálogo
-- [ ] Verificar o filtro na página de filamentos
+- [x] Verificar o filtro na página de filamentos
