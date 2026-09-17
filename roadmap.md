@@ -13,3 +13,5 @@
 - [x] Adicionar pesquisa de fotos pelo nome do produto
 - [x] Verificar pesquisa e seleção de fotos no painel
 - [x] Substituir o indexador impreciso por pesquisa direta no Google Imagens
+- [x] Corrigir a importação de imagens com redirecionamento seguro
+- [x] Preparar seleção de resultados do Google dentro da janela de fotos
