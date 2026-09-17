@@ -197,27 +197,42 @@ export const importProductImage = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
 
-    const source = new URL(data.imageUrl);
-    const blockedHostname =
-      source.hostname === "localhost" ||
-      source.hostname.endsWith(".local") ||
-      source.hostname === "0.0.0.0" ||
-      source.hostname === "127.0.0.1" ||
-      source.hostname === "::1" ||
-      /^10\./.test(source.hostname) ||
-      /^192\.168\./.test(source.hostname) ||
-      /^169\.254\./.test(source.hostname) ||
-      /^172\.(1[6-9]|2\d|3[01])\./.test(source.hostname);
-    if (source.protocol !== "https:" || source.username || source.password || source.port || blockedHostname) {
-      throw new Error("Endereço de imagem não permitido.");
+    function validateExternalImageUrl(value: string) {
+      const url = new URL(value);
+      const blockedHostname =
+        url.hostname === "localhost" ||
+        url.hostname.endsWith(".local") ||
+        url.hostname === "0.0.0.0" ||
+        url.hostname === "127.0.0.1" ||
+        url.hostname === "::1" ||
+        /^10\./.test(url.hostname) ||
+        /^192\.168\./.test(url.hostname) ||
+        /^169\.254\./.test(url.hostname) ||
+        /^172\.(1[6-9]|2\d|3[01])\./.test(url.hostname);
+      if (url.protocol !== "https:" || url.username || url.password || url.port || blockedHostname) {
+        throw new Error("Endereço de imagem não permitido.");
+      }
+      return url;
     }
-    const response = await fetch(source, {
-      redirect: "error",
-      headers: {
-        Accept: "image/avif,image/webp,image/png,image/jpeg,image/gif",
-        "User-Agent": "Mozilla/5.0 (compatible; SOS3DProductImageImport/1.0)",
-      },
-    });
+
+    let source = validateExternalImageUrl(data.imageUrl);
+    let response: Response | null = null;
+    for (let redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
+      response = await fetch(source, {
+        redirect: "manual",
+        headers: {
+          Accept: "image/avif,image/webp,image/png,image/jpeg,image/gif",
+          "User-Agent": "Mozilla/5.0 (compatible; SOS3DProductImageImport/1.0)",
+        },
+      });
+      if (response.status < 300 || response.status >= 400) break;
+      const location = response.headers.get("location");
+      if (!location || redirectCount === 3) {
+        throw new Error("A imagem possui redirecionamentos demais.");
+      }
+      source = validateExternalImageUrl(new URL(location, source).toString());
+    }
+    if (!response) throw new Error("Não foi possível acessar esta imagem.");
     if (!response.ok) throw new Error("O site de origem não permitiu copiar esta imagem.");
     const contentType = (response.headers.get("content-type") ?? "").split(";")[0]?.trim();
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
