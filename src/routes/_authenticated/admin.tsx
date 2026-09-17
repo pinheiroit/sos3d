@@ -31,6 +31,7 @@ import { PricingAdmin } from "@/components/admin/PricingAdmin";
 import { useCategories } from "@/lib/categories";
 import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
+import { NfeImport } from "@/components/admin/NfeImport";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
   adminOverview,
@@ -404,6 +405,7 @@ function AdminPage() {
             <TabsTrigger value="produtos">Produtos</TabsTrigger>
             <TabsTrigger value="categorias">Categorias</TabsTrigger>
             <TabsTrigger value="importar">Importar</TabsTrigger>
+            <TabsTrigger value="entrada-nfe">Entrada NF-e</TabsTrigger>
             <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
             <TabsTrigger value="membros">Membros</TabsTrigger>
             <TabsTrigger value="cursos">Cursos</TabsTrigger>
@@ -665,6 +667,16 @@ function AdminPage() {
 
         <TabsContent value="importar" className="mt-6">
           <ProductsImport products={(data?.products ?? []) as never} />
+        </TabsContent>
+
+        <TabsContent value="entrada-nfe" className="mt-6">
+          <NfeImport
+            products={(data?.products ?? []) as never}
+            onImported={() => {
+              queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
+              queryClient.invalidateQueries({ queryKey: ["products"] });
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6 space-y-3">
