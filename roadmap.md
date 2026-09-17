@@ -11,4 +11,4 @@
 - [x] Adicionar filtro visual de cores ao catálogo
 - [x] Verificar o filtro na página de filamentos
 - [x] Adicionar pesquisa de fotos pelo nome do produto
-- [ ] Verificar pesquisa e seleção de fotos no painel
+- [x] Verificar pesquisa e seleção de fotos no painel
