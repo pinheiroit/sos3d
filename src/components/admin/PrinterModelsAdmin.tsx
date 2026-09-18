@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Download, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import {
   adminListPrinterModels,
   deletePrinterModel,
   savePrinterModel,
+  syncPrinterModelsFromProducts,
   type PrinterModelRow,
 } from "@/lib/printer-models.functions";
 
