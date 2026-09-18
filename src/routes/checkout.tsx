@@ -9,8 +9,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
-import { paymentDiscountPercent, shippingFor, usePricing } from "@/lib/pricing";
-import { cardUnitPrice } from "@/lib/catalog";
+import {
+  normalizeFees,
+  paymentDiscountPercent,
+  quoteFor,
+  shippingFor,
+  usePricing,
+} from "@/lib/pricing";
 import { createOrder } from "@/lib/orders.functions";
 import { useSiteContent } from "@/lib/site-content";
 
