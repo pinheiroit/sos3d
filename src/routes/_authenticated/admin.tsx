@@ -317,6 +317,7 @@ function AdminPage() {
   }
 
   function openEdit(p: NonNullable<typeof data>["products"][number]) {
+    setSlugTouched(true);
     setForm({
       id: p.id,
       slug: p.slug,
@@ -352,7 +353,7 @@ function AdminPage() {
     save.mutate({
       id: form.id,
       values: {
-        slug: form.slug.trim(),
+        slug: form.slug.trim() || buildAutoSlug(form.name, form.brand),
         name: form.name.trim(),
         brand: form.brand.trim(),
         category: form.category,
