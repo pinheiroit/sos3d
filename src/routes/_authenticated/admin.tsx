@@ -28,6 +28,7 @@ import { CategoriesAdmin } from "@/components/admin/CategoriesAdmin";
 import { PrinterModelsAdmin } from "@/components/admin/PrinterModelsAdmin";
 import { listPrinterModels } from "@/lib/printer-models.functions";
 import { PricingAdmin } from "@/components/admin/PricingAdmin";
+import { FeesAdmin } from "@/components/admin/FeesAdmin";
 import { useCategories } from "@/lib/categories";
 import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
