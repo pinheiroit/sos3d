@@ -416,6 +416,7 @@ function AdminPage() {
             <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="marcas">Marcas</TabsTrigger>
             <TabsTrigger value="regras">Regras</TabsTrigger>
+            <TabsTrigger value="taxas">Taxas</TabsTrigger>
             <TabsTrigger value="rodape">Rodapé</TabsTrigger>
           </TabsList>
         </div>
