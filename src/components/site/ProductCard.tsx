@@ -16,7 +16,7 @@ export function ProductCard({ product }: { product: Product }) {
   const months = plan ? plan.months : rules.defaultInstallments;
 
   return (
-    <article className="card-lift group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+    <article className="card-lift group flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card sm:rounded-xl">
       <Link
         to="/produto/$slug"
         params={{ slug: product.slug }}
@@ -30,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
           height={900}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
-        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1.5 sm:left-3 sm:top-3">
           {product.badge && (
             <Badge className="bg-brand text-brand-foreground">{product.badge}</Badge>
           )}
@@ -42,9 +42,9 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col p-4">
-        <span className="eyebrow">{product.brand}</span>
-        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug">
+      <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-4">
+        <span className="truncate text-[10px] font-semibold uppercase text-tech sm:text-xs">{product.brand}</span>
+        <h3 className="mt-1 line-clamp-2 min-h-10 text-xs font-semibold leading-5 sm:mt-1.5 sm:text-sm sm:leading-snug">
           <Link
             to="/produto/$slug"
             params={{ slug: product.slug }}
@@ -54,28 +54,28 @@ export function ProductCard({ product }: { product: Product }) {
           </Link>
         </h3>
 
-        <div className="mt-auto pt-4">
+        <div className="mt-auto min-w-0 pt-2.5 sm:pt-4">
           {product.oldPrice && (
             <p className="text-xs text-muted-foreground line-through">
               {formatBRL(product.oldPrice)}
             </p>
           )}
-          <p className="text-xl font-bold text-brand">{formatBRL(product.price)}</p>
+          <p className="truncate text-base font-bold text-brand sm:text-xl">{formatBRL(product.price)}</p>
           {rules.pixDiscountPercent > 0 && (
             <p className="text-xs font-medium text-success">
               {formatBRL(pix)} à vista no Pix ({rules.pixDiscountPercent}% off)
             </p>
           )}
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 line-clamp-2 min-h-8 text-[10px] leading-4 text-muted-foreground sm:text-xs">
             ou até {months}x de {formatBRL(installment)}
             {plan ? ` (total ${formatBRL(plan.total)})` : " com juros"}
           </p>
 
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-2.5 flex gap-2 sm:mt-4">
             <Button
               variant="cta"
-              className="flex-1"
+              className="h-9 min-w-0 flex-1 gap-1 px-2 text-xs sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
               onClick={() => {
                 add(product.slug);
                 toast.success("Adicionado ao carrinho", { description: product.name });
@@ -83,7 +83,7 @@ export function ProductCard({ product }: { product: Product }) {
             >
               <ShoppingCart /> Comprar
             </Button>
-            <Button asChild variant="outline" size="icon" aria-label="Ver detalhes">
+            <Button asChild variant="outline" size="icon" className="hidden sm:inline-flex" aria-label="Ver detalhes">
               <Link to="/produto/$slug" params={{ slug: product.slug }}>
                 +
               </Link>
