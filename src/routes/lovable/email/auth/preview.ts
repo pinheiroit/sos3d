@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Print Makers Hub"
+const SITE_NAME = "SOS.3D"
 const ROOT_DOMAIN = "sos3d.com.br"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
