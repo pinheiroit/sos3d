@@ -520,3 +520,209 @@ export const processNfeStockEntry = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { entryId };
   });
+
+// ============================ Televendas ============================
+
+const customerSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(2).max(120),
+  email: z.string().trim().max(180).default(""),
+  phone: z.string().trim().max(40).default(""),
+  document: z.string().trim().max(40).default(""),
+  zip: z.string().trim().max(20).default(""),
+  street: z.string().trim().max(180).default(""),
+  number: z.string().trim().max(20).default(""),
+  complement: z.string().trim().max(120).default(""),
+  city: z.string().trim().max(120).default(""),
+  state: z.string().trim().max(60).default(""),
+  notes: z.string().trim().max(1000).default(""),
+});
+
+export const listCustomers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const { data, error } = await db.from("customers").select("*").order("name", { ascending: true });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const saveCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => customerSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const { id, ...values } = data;
+    if (id) {
+      const { error } = await db
+        .from("customers")
+        .update({ ...values, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+      return { id };
+    }
+    const { data: row, error } = await db.from("customers").insert(values).select("id").single();
+    if (error) throw new Error(error.message);
+    return { id: row.id };
+  });
+
+export const deleteCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const { error } = await db.from("customers").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+const salesOrderSchema = z.object({
+  customerId: z.string().uuid().optional(),
+  customer: customerSchema.omit({ id: true, notes: true }),
+  paymentMethod: z.enum(["pix", "boleto", "cartao"]),
+  installmentMonths: z.number().int().min(1).max(48).optional(),
+  status: z.enum(["pendente", "pago", "em_producao", "enviado", "concluido"]).default("pendente"),
+  notes: z.string().trim().max(1000).default(""),
+  items: z
+    .array(z.object({ slug: z.string().trim().max(120), qty: z.number().int().min(1).max(999) }))
+    .min(1)
+    .max(60),
+});
+
+export const createSalesOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => salesOrderSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+
+    const slugs = data.items.map((i) => i.slug);
+    const [{ data: rows, error }, settings] = await Promise.all([
+      db
+        .from("products")
+        .select("id, slug, name, brand, category, price, stock, active, installments")
+        .in("slug", slugs),
+      db.from("site_settings").select("value").eq("key", "pricing").maybeSingle(),
+    ]);
+    if (error) throw new Error(error.message);
+
+    const {
+      normalizeRules,
+      effectivePrice,
+      paymentDiscountPercent,
+      shippingFor,
+      round2,
+      quoteFor,
+    } = await import("@/lib/pricing");
+    const rules = normalizeRules(settings.data?.value ?? null);
+
+    type Plan = { months: number; installment: number; total: number };
+    const lines = data.items.map((item) => {
+      const product = (rows ?? []).find((r) => r.slug === item.slug);
+      if (!product) throw new Error(`Produto não encontrado: ${item.slug}`);
+      const base = effectivePrice(
+        {
+          slug: product.slug,
+          brand: product.brand,
+          category: product.category,
+          price: Number(product.price),
+        },
+        rules,
+      );
+      const plans = Array.isArray(product.installments)
+        ? (product.installments as unknown as Plan[]).filter((p) => p && p.total > 0)
+        : [];
+      const unit =
+        data.paymentMethod === "cartao"
+          ? quoteFor(
+              { price: base, installments: plans },
+              data.installmentMonths ?? rules.defaultInstallments,
+              rules,
+            ).total
+          : base;
+      return {
+        product_id: product.id,
+        product_slug: product.slug,
+        product_name: product.name,
+        qty: item.qty,
+        unit_price: unit,
+        stock: product.stock,
+      };
+    });
+
+    const subtotal = round2(lines.reduce((s, l) => s + l.qty * l.unit_price, 0));
+    const shipping = shippingFor(subtotal, rules);
+    const discount = round2((subtotal * paymentDiscountPercent(data.paymentMethod, rules)) / 100);
+    const total = round2(subtotal + shipping - discount);
+
+    const address = {
+      zip: data.customer.zip,
+      street: data.customer.street,
+      number: data.customer.number,
+      complement: data.customer.complement,
+      city: data.customer.city,
+      state: data.customer.state,
+    };
+
+    const { data: order, error: orderError } = await db
+      .from("orders")
+      .insert({
+        user_id: null,
+        customer_name: data.customer.name,
+        customer_email: data.customer.email || "televendas@sos3d.com.br",
+        customer_phone: data.customer.phone || null,
+        customer_document: data.customer.document || null,
+        shipping_address: address,
+        payment_method: data.paymentMethod,
+        notes: [`Televendas`, data.notes].filter(Boolean).join(" - "),
+        subtotal,
+        shipping,
+        discount,
+        total,
+        status: data.status,
+      })
+      .select("id, reference, total")
+      .single();
+    if (orderError) throw new Error(orderError.message);
+
+    const { error: itemsError } = await db.from("order_items").insert(
+      lines.map((l) => ({
+        order_id: order.id,
+        product_id: l.product_id,
+        product_slug: l.product_slug,
+        product_name: l.product_name,
+        qty: l.qty,
+        unit_price: l.unit_price,
+      })),
+    );
+    if (itemsError) throw new Error(itemsError.message);
+
+    for (const l of lines) {
+      await db
+        .from("products")
+        .update({ stock: Math.max(0, l.stock - l.qty) })
+        .eq("id", l.product_id);
+    }
+
+    if (data.customerId) {
+      await db
+        .from("customers")
+        .update({ ...data.customer, updated_at: new Date().toISOString() })
+        .eq("id", data.customerId);
+    }
+
+    return {
+      reference: order.reference,
+      total: Number(order.total),
+      subtotal,
+      shipping,
+      discount,
+    };
+  });

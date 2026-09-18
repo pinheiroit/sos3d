@@ -112,6 +112,57 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          city: string
+          complement: string
+          created_at: string
+          document: string
+          email: string
+          id: string
+          name: string
+          notes: string
+          number: string
+          phone: string
+          state: string
+          street: string
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          city?: string
+          complement?: string
+          created_at?: string
+          document?: string
+          email?: string
+          id?: string
+          name: string
+          notes?: string
+          number?: string
+          phone?: string
+          state?: string
+          street?: string
+          updated_at?: string
+          zip?: string
+        }
+        Update: {
+          city?: string
+          complement?: string
+          created_at?: string
+          document?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string
+          number?: string
+          phone?: string
+          state?: string
+          street?: string
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean

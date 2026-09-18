@@ -34,6 +34,7 @@ import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
 import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
+import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
   adminOverview,
@@ -430,6 +431,7 @@ function AdminPage() {
             <TabsTrigger value="categorias">Categorias</TabsTrigger>
             <TabsTrigger value="importar">Importar</TabsTrigger>
             <TabsTrigger value="entrada-nfe">Entrada NF-e</TabsTrigger>
+            <TabsTrigger value="televendas">Televendas</TabsTrigger>
             <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
             <TabsTrigger value="membros">Membros</TabsTrigger>
             <TabsTrigger value="cursos">Cursos</TabsTrigger>
@@ -717,6 +719,19 @@ function AdminPage() {
           />
         </TabsContent>
 
+        <TabsContent value="televendas" className="mt-6">
+          <TeleSalesAdmin
+            products={(data?.products ?? []).map((p) => ({
+              slug: p.slug,
+              name: p.name,
+              brand: p.brand,
+              price: Number(p.price),
+              stock: p.stock,
+              active: p.active,
+            }))}
+          />
+        </TabsContent>
+
         <TabsContent value="pedidos" className="mt-6 space-y-3">
           {(data?.orders ?? []).length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhum pedido registrado ainda.</p>
@@ -939,19 +954,18 @@ function AdminPage() {
               <div>
                 <Label>Slug (URL)</Label>
                 <Input
-                  className="mt-1"
+                  className="mt-1 bg-muted text-muted-foreground"
                   maxLength={120}
                   value={form.slug}
-                  onChange={(e) => {
-                    setSlugTouched(true);
-                    setForm({ ...form, slug: e.target.value });
-                  }}
+                  readOnly
+                  aria-readonly="true"
+                  tabIndex={-1}
                 />
-                {!slugTouched && !form.id && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Gerado automaticamente a partir do nome e da marca.
-                  </p>
-                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {form.id
+                    ? "Bloqueado para preservar o link do produto."
+                    : "Gerado automaticamente a partir do nome e da marca."}
+                </p>
               </div>
               <div>
                 <Label>Marca</Label>
