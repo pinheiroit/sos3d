@@ -903,6 +903,67 @@ function AdminPage() {
               </div>
             </TabsContent>
 
+            <TabsContent value="estoque" className="mt-6 space-y-5">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <button type="button" onClick={() => setStockView("all")} className={cn("rounded-lg border p-4 text-left", stockView === "all" ? "border-primary bg-primary/5" : "border-border bg-card")}>
+                  <p className="text-sm text-muted-foreground">Todos os produtos</p>
+                  <p className="mt-1 text-2xl font-bold">{allProducts.length}</p>
+                </button>
+                <button type="button" onClick={() => setStockView("low")} className={cn("rounded-lg border p-4 text-left", stockView === "low" ? "border-warning bg-warning/5" : "border-border bg-card")}>
+                  <p className="text-sm text-muted-foreground">Estoque baixo</p>
+                  <p className="mt-1 text-2xl font-bold">{allProducts.filter((product) => product.stock > 0 && product.stock <= 3).length}</p>
+                </button>
+                <button type="button" onClick={() => setStockView("out")} className={cn("rounded-lg border p-4 text-left", stockView === "out" ? "border-destructive bg-destructive/5" : "border-border bg-card")}>
+                  <p className="text-sm text-muted-foreground">Sem estoque</p>
+                  <p className="mt-1 text-2xl font-bold">{allProducts.filter((product) => product.stock === 0).length}</p>
+                </button>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+                <div className="relative min-w-0">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Buscar produto ou marca" value={stockSearch} onChange={(event) => setStockSearch(event.target.value)} />
+                </div>
+                <Button variant="outline" onClick={() => selectSection("entrada-nfe")}><Truck /> Entrada NF-e</Button>
+                <Button variant="outline" onClick={() => selectSection("importar")}><FileSpreadsheet /> Planilha</Button>
+              </div>
+
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
+                <div className="hidden grid-cols-[minmax(260px,1fr)_120px_120px] gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground md:grid">
+                  <span>Produto</span><span>Situação</span><span>Quantidade</span>
+                </div>
+                {stockProducts.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Nenhum produto nesta situação.</p>}
+                {stockProducts.map((product) => (
+                  <div key={product.id} className="grid gap-3 border-b border-border p-4 last:border-b-0 md:grid-cols-[minmax(260px,1fr)_120px_120px] md:items-center">
+                    <div className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
+                      <img src={imageFor(product.image_key, product.image_url)} alt="" className="size-11 rounded-md border border-border bg-muted object-cover" />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{product.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{product.brand}</p>
+                      </div>
+                    </div>
+                    <div>
+                      {product.stock === 0 ? <Badge variant="destructive">Sem estoque</Badge> : product.stock <= 3 ? <Badge variant="secondary">Estoque baixo</Badge> : <Badge variant="outline">Disponível</Badge>}
+                    </div>
+                    <div>
+                      <Label className="text-xs md:sr-only">Quantidade</Label>
+                      <Input
+                        aria-label={`Quantidade em estoque de ${product.name}`}
+                        type="number"
+                        min={0}
+                        defaultValue={String(product.stock)}
+                        className={cn("mt-1 h-9 md:mt-0", product.stock === 0 && "border-destructive", product.stock > 0 && product.stock <= 3 && "border-warning")}
+                        onBlur={(event) => {
+                          const stock = Number(event.target.value);
+                          if (stock !== product.stock) quick.mutate({ id: product.id, stock });
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
         <TabsContent value="fotos" className="mt-6">
           <ProductPhotosAdmin
             products={(data?.products ?? []) as never}
