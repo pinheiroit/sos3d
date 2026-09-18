@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Print Makers Hub"
+const SITE_NAME = "SOS.3D"
 const SENDER_DOMAIN = "notify.sos3d.com.br"
 const ROOT_DOMAIN = "sos3d.com.br"
 const FROM_DOMAIN = "sos3d.com.br"
