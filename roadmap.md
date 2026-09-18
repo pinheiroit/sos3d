@@ -22,7 +22,7 @@
 - [x] Exibir dois produtos por linha no catálogo móvel
 - [x] Transformar os filtros móveis em painel compacto e acessível
 - [x] Verificar catálogo e filtros em largura de celular
-- [ ] Reorganizar o painel administrativo em um menu agrupado e responsivo
-- [ ] Tornar a listagem e o cadastro de produtos mais operacionais
-- [ ] Criar uma área dedicada para edição rápida de estoque
-- [ ] Verificar o novo painel em computador e celular
+- [x] Reorganizar o painel administrativo em um menu agrupado e responsivo
+- [x] Tornar a listagem e o cadastro de produtos mais operacionais
+- [x] Criar uma área dedicada para edição rápida de estoque
+- [x] Verificar o novo painel em computador e celular
