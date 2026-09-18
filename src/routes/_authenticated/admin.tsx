@@ -1,7 +1,29 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes, LayoutDashboard, Pencil, Plus, Trash2, Users } from "lucide-react";
+import {
+  Boxes,
+  ChevronDown,
+  CircleDollarSign,
+  FileSpreadsheet,
+  GraduationCap,
+  Image,
+  LayoutDashboard,
+  Menu,
+  Package,
+  Palette,
+  Pencil,
+  Plus,
+  ReceiptText,
+  Search,
+  Settings,
+  ShoppingCart,
+  Store,
+  Tags,
+  Trash2,
+  Truck,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +40,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
 import { formatBRL, imageFor } from "@/lib/catalog";
 import { ImageUploader } from "@/components/site/ImageUploader";
 import { bannerDefinitions, logoDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
@@ -66,6 +97,93 @@ const statusOptions = [
   "concluido",
   "cancelado",
 ] as const;
+
+type AdminSection =
+  | "overview"
+  | "televendas"
+  | "pedidos"
+  | "produtos"
+  | "estoque"
+  | "entrada-nfe"
+  | "importar"
+  | "fotos"
+  | "categorias"
+  | "membros"
+  | "cursos"
+  | "modelos"
+  | "banners"
+  | "marcas"
+  | "regras"
+  | "taxas"
+  | "rodape";
+
+const adminGroups = [
+  {
+    label: "Principal",
+    items: [{ value: "overview", label: "Visão geral", icon: LayoutDashboard }],
+  },
+  {
+    label: "Vendas",
+    items: [
+      { value: "televendas", label: "Nova venda", icon: ShoppingCart },
+      { value: "pedidos", label: "Pedidos", icon: ReceiptText },
+    ],
+  },
+  {
+    label: "Catálogo",
+    items: [
+      { value: "produtos", label: "Produtos", icon: Package },
+      { value: "fotos", label: "Fotos", icon: Image },
+      { value: "categorias", label: "Categorias", icon: Tags },
+    ],
+  },
+  {
+    label: "Estoque",
+    items: [
+      { value: "estoque", label: "Controle de estoque", icon: Boxes },
+      { value: "entrada-nfe", label: "Entrada por NF-e", icon: Truck },
+      { value: "importar", label: "Planilhas", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    label: "Clientes e membros",
+    items: [
+      { value: "membros", label: "Membros", icon: Users },
+      { value: "cursos", label: "Cursos", icon: GraduationCap },
+      { value: "modelos", label: "Modelos de impressora", icon: Store },
+    ],
+  },
+  {
+    label: "Site e configurações",
+    items: [
+      { value: "banners", label: "Imagens do site", icon: Palette },
+      { value: "marcas", label: "Marcas parceiras", icon: Tags },
+      { value: "regras", label: "Regras de preço", icon: CircleDollarSign },
+      { value: "taxas", label: "Taxas", icon: CircleDollarSign },
+      { value: "rodape", label: "Rodapé", icon: Settings },
+    ],
+  },
+] as const;
+
+const sectionCopy: Record<AdminSection, { title: string; description: string }> = {
+  overview: { title: "Visão geral", description: "Acompanhe os números e acesse as tarefas mais usadas." },
+  televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
+  pedidos: { title: "Pedidos", description: "Acompanhe pedidos e atualize o andamento de cada venda." },
+  produtos: { title: "Produtos", description: "Consulte, cadastre e edite os itens da loja." },
+  estoque: { title: "Controle de estoque", description: "Localize produtos e ajuste quantidades rapidamente." },
+  "entrada-nfe": { title: "Entrada por NF-e", description: "Importe notas e vincule os itens ao catálogo." },
+  importar: { title: "Planilhas", description: "Importe, exporte e atualize produtos em massa." },
+  fotos: { title: "Fotos dos produtos", description: "Encontre e vincule imagens aos itens do catálogo." },
+  categorias: { title: "Categorias", description: "Organize categorias e subcategorias da loja." },
+  membros: { title: "Membros", description: "Gerencie acessos e impressoras dos clientes." },
+  cursos: { title: "Cursos", description: "Publique cursos, aulas e materiais para membros." },
+  modelos: { title: "Modelos de impressora", description: "Cadastre os modelos disponíveis para membros." },
+  banners: { title: "Imagens do site", description: "Atualize logomarca, banners e fotos das páginas." },
+  marcas: { title: "Marcas parceiras", description: "Cadastre e organize as marcas exibidas no site." },
+  regras: { title: "Regras de preço", description: "Configure descontos e condições comerciais." },
+  taxas: { title: "Taxas", description: "Defina os acréscimos aplicados ao parcelamento." },
+  rodape: { title: "Rodapé", description: "Atualize contatos, links e dados institucionais." },
+};
 
 type FormState = {
   id: string | null;
