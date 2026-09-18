@@ -869,6 +869,10 @@ function AdminPage() {
           <PricingAdmin />
         </TabsContent>
 
+        <TabsContent value="taxas" className="mt-6">
+          <FeesAdmin />
+        </TabsContent>
+
         <TabsContent value="rodape" className="mt-6">
           <FooterAdmin />
         </TabsContent>
