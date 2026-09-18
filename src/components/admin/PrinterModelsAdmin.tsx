@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Download, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import {
   adminListPrinterModels,
   deletePrinterModel,
   savePrinterModel,
+  syncPrinterModelsFromProducts,
   type PrinterModelRow,
 } from "@/lib/printer-models.functions";
 
@@ -60,6 +61,19 @@ export function PrinterModelsAdmin() {
     onError: (e: Error) => toast.error("Erro ao remover", { description: e.message }),
   });
 
+  const importFromProducts = useMutation({
+    mutationFn: () => syncPrinterModelsFromProducts() as Promise<{ created: number }>,
+    onSuccess: (r) => {
+      toast.success(
+        r.created > 0
+          ? `${r.created} modelo(s) importado(s) do catálogo`
+          : "Nenhum modelo novo no catálogo",
+      );
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Erro ao importar", { description: e.message }),
+  });
+
   const rows = (list.data ?? []) as Row[];
 
   function update(m: Row, patch: Partial<PrinterModelRow>) {
@@ -77,10 +91,20 @@ export function PrinterModelsAdmin() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Cada modelo de impressora tem a própria trilha de estudos. Os cursos são vinculados a um
-        modelo e o membro vê apenas a trilha do modelo definido na aba <strong>Membros</strong>.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-3xl text-sm text-muted-foreground">
+          Cada modelo de impressora tem a própria trilha de estudos. Um curso pode ser vinculado a
+          vários modelos e o membro vê as trilhas dos modelos definidos na aba{" "}
+          <strong>Membros</strong>.
+        </p>
+        <Button
+          variant="outline"
+          disabled={importFromProducts.isPending}
+          onClick={() => importFromProducts.mutate()}
+        >
+          <Download /> Importar do catálogo de produtos
+        </Button>
+      </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
         <div className="min-w-56 flex-1">

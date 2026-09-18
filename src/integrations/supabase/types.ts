@@ -62,6 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      course_printer_models: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          printer_model_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          printer_model_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          printer_model_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_printer_models_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_printer_models_printer_model_id_fkey"
+            columns: ["printer_model_id"]
+            isOneToOne: false
+            referencedRelation: "printer_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           cover_key: string
@@ -472,6 +508,7 @@ export type Database = {
           description: string
           id: string
           name: string
+          product_id: string | null
           slug: string
           sort_order: number
           updated_at: string
@@ -482,6 +519,7 @@ export type Database = {
           description?: string
           id?: string
           name: string
+          product_id?: string | null
           slug: string
           sort_order?: number
           updated_at?: string
@@ -492,11 +530,20 @@ export type Database = {
           description?: string
           id?: string
           name?: string
+          product_id?: string | null
           slug?: string
           sort_order?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "printer_models_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -852,6 +899,10 @@ export type Database = {
         Returns: boolean
       }
       is_active_member: { Args: { _user_id: string }; Returns: boolean }
+      member_can_view_course: {
+        Args: { _course_id: string; _user_id: string }
+        Returns: boolean
+      }
       member_has_printer_model: {
         Args: { _model_id: string; _user_id: string }
         Returns: boolean

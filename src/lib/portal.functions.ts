@@ -51,14 +51,23 @@ export const myPortal = createServerFn({ method: "GET" })
 
     let courses: PortalCourse[] = [];
     if (isMember && modelIds.length) {
-      const { data, error } = await context.supabase
-        .from("courses")
-        .select("id, slug, title, description, level, cover_key, sort_order, printer_model_id, lessons(*)")
-        .eq("published", true)
-        .in("printer_model_id", modelIds)
-        .order("sort_order", { ascending: true });
-      if (error) throw new Error(error.message);
-      courses = (data ?? []) as PortalCourse[];
+      const links = await context.supabase
+        .from("course_printer_models")
+        .select("course_id")
+        .in("printer_model_id", modelIds);
+      const courseIds = Array.from(new Set((links.data ?? []).map((l) => l.course_id)));
+      if (courseIds.length) {
+        const { data, error } = await context.supabase
+          .from("courses")
+          .select(
+            "id, slug, title, description, level, cover_key, sort_order, printer_model_id, lessons(*)",
+          )
+          .eq("published", true)
+          .in("id", courseIds)
+          .order("sort_order", { ascending: true });
+        if (error) throw new Error(error.message);
+        courses = (data ?? []) as PortalCourse[];
+      }
     }
 
     return {

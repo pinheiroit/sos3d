@@ -60,7 +60,10 @@ export const adminOverview = createServerFn({ method: "GET" })
       db.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200),
       db.from("memberships").select("*").order("granted_at", { ascending: false }),
       db.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
-      db.from("courses").select("*, lessons(*)").order("sort_order", { ascending: true }),
+      db
+        .from("courses")
+        .select("*, lessons(*), course_printer_models(printer_model_id)")
+        .order("sort_order", { ascending: true }),
       db.from("membership_printer_models").select("user_id, printer_model_id"),
     ]);
 

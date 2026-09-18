@@ -17,13 +17,7 @@ import {
   saveCourse,
   saveLesson,
 } from "@/lib/courses.functions";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { listPrinterModels, type PrinterModelRow } from "@/lib/printer-models.functions";
 
 type Lesson = {
@@ -45,12 +39,15 @@ type Course = {
   level: string;
   cover_key: string;
   printer_model_id: string | null;
+  course_printer_models?: { printer_model_id: string }[];
   published: boolean;
   sort_order: number;
   lessons: Lesson[];
 };
 
-type CourseForm = Omit<Course, "id" | "lessons">;
+type CourseForm = Omit<Course, "id" | "lessons" | "course_printer_models"> & {
+  printer_model_ids: string[];
+};
 type LessonForm = Omit<Lesson, "id">;
 
 const emptyCourse: CourseForm = {
@@ -60,9 +57,17 @@ const emptyCourse: CourseForm = {
   level: "Iniciante",
   cover_key: "printer-1",
   printer_model_id: null,
+  printer_model_ids: [],
   published: true,
   sort_order: 0,
 };
+
+/** Modelos vinculados ao curso (novo N:N, com fallback para o vínculo antigo). */
+function courseModelIds(course: Course) {
+  const ids = (course.course_printer_models ?? []).map((l) => l.printer_model_id);
+  if (ids.length) return ids;
+  return course.printer_model_id ? [course.printer_model_id] : [];
+}
 
 function emptyLesson(courseId: string, sortOrder: number): LessonForm {
   return {
@@ -260,9 +265,15 @@ export function CoursesAdmin({ courses }: { courses: Course[] }) {
                     {course.published ? course.level : "Rascunho"}
                   </Badge>
                   <h3 className="text-lg font-bold">{course.title}</h3>
-                  <Badge variant={course.printer_model_id ? "outline" : "destructive"}>
-                    {modelName(course.printer_model_id)}
-                  </Badge>
+                  {courseModelIds(course).length === 0 ? (
+                    <Badge variant="destructive">Sem modelo</Badge>
+                  ) : (
+                    courseModelIds(course).map((id) => (
+                      <Badge key={id} variant="outline">
+                        {modelName(id)}
+                      </Badge>
+                    ))
+                  )}
                   <span className="text-xs text-muted-foreground">
                     {course.lessons.length} aula(s)
                   </span>
@@ -273,8 +284,13 @@ export function CoursesAdmin({ courses }: { courses: Course[] }) {
                     variant="outline"
                     onClick={() => {
                       setCourseId(course.id);
-                      const { id: _id, lessons: _lessons, ...rest } = course;
-                      setCourseForm(rest);
+                      const {
+                        id: _id,
+                        lessons: _lessons,
+                        course_printer_models: _links,
+                        ...rest
+                      } = course;
+                      setCourseForm({ ...rest, printer_model_ids: courseModelIds(course) });
                     }}
                   >
                     <Pencil /> Editar
@@ -392,26 +408,37 @@ export function CoursesAdmin({ courses }: { courses: Course[] }) {
                     onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Modelo de impressora</Label>
-                  <Select
-                    value={courseForm.printer_model_id ?? "none"}
-                    onValueChange={(v) =>
-                      setCourseForm({ ...courseForm, printer_model_id: v === "none" ? null : v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o modelo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sem modelo (não aparece no portal)</SelectItem>
-                      {modelList.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Modelos de impressora</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Marque um ou mais modelos. O curso aparece para quem tem qualquer um deles.
+                  </p>
+                  <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border border-border p-3">
+                    {modelList.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhum modelo disponível. Importe do catálogo na aba Modelos.
+                      </p>
+                    )}
+                    {modelList.map((m) => {
+                      const checked = courseForm.printer_model_ids.includes(m.id);
+                      return (
+                        <label key={m.id} className="flex items-center gap-2 text-sm">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) =>
+                              setCourseForm({
+                                ...courseForm,
+                                printer_model_ids: v
+                                  ? [...courseForm.printer_model_ids, m.id]
+                                  : courseForm.printer_model_ids.filter((x) => x !== m.id),
+                              })
+                            }
+                          />
                           {m.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Ordem</Label>
