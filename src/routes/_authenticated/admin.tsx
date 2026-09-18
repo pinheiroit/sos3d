@@ -717,6 +717,19 @@ function AdminPage() {
           />
         </TabsContent>
 
+        <TabsContent value="televendas" className="mt-6">
+          <TeleSalesAdmin
+            products={(data?.products ?? []).map((p) => ({
+              slug: p.slug,
+              name: p.name,
+              brand: p.brand,
+              price: Number(p.price),
+              stock: p.stock,
+              active: p.active,
+            }))}
+          />
+        </TabsContent>
+
         <TabsContent value="pedidos" className="mt-6 space-y-3">
           {(data?.orders ?? []).length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhum pedido registrado ainda.</p>
