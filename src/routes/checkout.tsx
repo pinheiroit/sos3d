@@ -84,14 +84,17 @@ function CheckoutPage() {
   const { footer } = useSiteContent();
 
   const monthOptions = Array.from(
-    new Set(items.flatMap(({ product }) => (product.installments ?? []).map((p) => p.months))),
+    new Set([
+      ...items.flatMap(({ product }) => (product.installments ?? []).map((p) => p.months)),
+      ...normalizeFees(rules.installmentFees).map((f) => f.months),
+    ]),
   ).sort((a, b) => a - b);
   const [parcelas, setParcelas] = useState<number | null>(null);
   const parcelasSel = parcelas ?? monthOptions[monthOptions.length - 1] ?? rules.defaultInstallments;
 
   const isCard = pagamento === "cartao";
   const baseSubtotal = isCard
-    ? items.reduce((s, { product, qty }) => s + cardUnitPrice(product, parcelasSel) * qty, 0)
+    ? items.reduce((s, { product, qty }) => s + quoteFor(product, parcelasSel, rules).total * qty, 0)
     : subtotal;
   const frete = shippingFor(baseSubtotal, rules);
   const desconto = (baseSubtotal * paymentDiscountPercent(pagamento, rules)) / 100;
