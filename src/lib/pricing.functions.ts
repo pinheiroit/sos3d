@@ -19,6 +19,15 @@ const rulesSchema = z.object({
   flatShipping: z.number().min(0).max(100_000).default(79),
   defaultInstallments: z.number().int().min(1).max(48).default(12),
   promos: z.array(promoSchema).max(50).default([]),
+  installmentFees: z
+    .array(
+      z.object({
+        months: z.number().int().min(1).max(48),
+        percent: z.number().min(0).max(100),
+      }),
+    )
+    .max(48)
+    .default([]),
 });
 
 /** Regras de negócio públicas (descontos, frete, parcelamento padrão). */

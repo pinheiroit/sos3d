@@ -44,20 +44,20 @@ export const createOrder = createServerFn({ method: "POST" })
     ]);
     if (error) throw new Error(error.message);
 
-    const { normalizeRules, effectivePrice, paymentDiscountPercent, shippingFor, round2 } =
-      await import("@/lib/pricing");
+    const {
+      normalizeRules,
+      effectivePrice,
+      paymentDiscountPercent,
+      shippingFor,
+      round2,
+      quoteFor,
+    } = await import("@/lib/pricing");
     const rules = normalizeRules(settings.data?.value ?? null);
 
     type Plan = { months: number; installment: number; total: number };
-    const cardTotal = (raw: unknown, months: number, fallback: number) => {
+    const cardTotal = (raw: unknown, months: number, base: number) => {
       const plans = Array.isArray(raw) ? (raw as Plan[]).filter((p) => p && p.total > 0) : [];
-      if (plans.length === 0) return fallback;
-      const exact = plans.find((p) => Number(p.months) === months);
-      const lower = plans
-        .filter((p) => Number(p.months) <= months)
-        .sort((a, b) => Number(b.months) - Number(a.months));
-      const plan = exact ?? lower[0] ?? [...plans].sort((a, b) => Number(a.months) - Number(b.months))[0];
-      return plan ? Number(plan.total) : fallback;
+      return quoteFor({ price: base, installments: plans }, months, rules).total;
     };
 
     const lines = data.items.map((item) => {

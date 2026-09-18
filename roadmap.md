@@ -16,3 +16,5 @@
 - [x] Corrigir a importação de imagens com redirecionamento seguro
 - [x] Preparar seleção de resultados do Google dentro da janela de fotos
 - [x] Conectar a pesquisa de fotos à SerpAPI dentro da janela
+- [x] Criar aba de taxas de parcelamento no painel
+- [x] Aplicar taxas no catálogo, produto e fechamento do pedido

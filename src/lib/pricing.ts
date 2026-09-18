@@ -11,6 +11,9 @@ export type PromoRule = {
   active: boolean;
 };
 
+/** Taxa da maquininha/gateway por número de parcelas. */
+export type InstallmentFee = { months: number; percent: number };
+
 export type PricingRules = {
   pixDiscountPercent: number;
   boletoDiscountPercent: number;
@@ -19,7 +22,23 @@ export type PricingRules = {
   flatShipping: number;
   defaultInstallments: number;
   promos: PromoRule[];
+  installmentFees: InstallmentFee[];
 };
+
+export const defaultInstallmentFees: InstallmentFee[] = [
+  { months: 1, percent: 4.2 },
+  { months: 2, percent: 6.09 },
+  { months: 3, percent: 7.01 },
+  { months: 4, percent: 7.91 },
+  { months: 5, percent: 8.8 },
+  { months: 6, percent: 9.67 },
+  { months: 7, percent: 12.59 },
+  { months: 8, percent: 13.42 },
+  { months: 9, percent: 14.25 },
+  { months: 10, percent: 15.06 },
+  { months: 11, percent: 15.87 },
+  { months: 12, percent: 16.66 },
+];
 
 export const defaultPricingRules: PricingRules = {
   pixDiscountPercent: 0,
@@ -29,6 +48,7 @@ export const defaultPricingRules: PricingRules = {
   flatShipping: 79,
   defaultInstallments: 12,
   promos: [],
+  installmentFees: defaultInstallmentFees,
 };
 
 export function normalizeRules(value: unknown): PricingRules {
@@ -43,11 +63,75 @@ export function normalizeRules(value: unknown): PricingRules {
     flatShipping: num(v.flatShipping, defaultPricingRules.flatShipping),
     defaultInstallments: num(v.defaultInstallments, 12),
     promos: Array.isArray(v.promos) ? (v.promos as PromoRule[]) : [],
+    installmentFees: normalizeFees(v.installmentFees),
   };
+}
+
+export function normalizeFees(value: unknown): InstallmentFee[] {
+  if (!Array.isArray(value)) return defaultInstallmentFees;
+  const list = value
+    .map((f) => ({
+      months: Math.round(Number((f as InstallmentFee)?.months) || 0),
+      percent: Number((f as InstallmentFee)?.percent) || 0,
+    }))
+    .filter((f) => f.months >= 1 && f.months <= 48 && f.percent >= 0)
+    .sort((a, b) => a.months - b.months);
+  return list.length ? list : defaultInstallmentFees;
 }
 
 export function round2(n: number) {
   return Math.round(n * 100) / 100;
+}
+
+/** Taxa (%) para o número de parcelas escolhido. */
+export function feePercentFor(months: number, rules: PricingRules) {
+  const fees = normalizeFees(rules.installmentFees);
+  const exact = fees.find((f) => f.months === months);
+  if (exact) return exact.percent;
+  const lower = fees.filter((f) => f.months <= months).pop();
+  return lower?.percent ?? 0;
+}
+
+export type Quote = { months: number; installment: number; total: number };
+
+/** Preço final no cartão para um produto, considerando tabela própria ou as taxas globais. */
+export function quoteFor(
+  product: { price: number; installments?: { months: number; installment: number; total: number }[] | null },
+  months: number,
+  rules: PricingRules,
+): Quote {
+  const own = (product.installments ?? []).filter((p) => p && p.total > 0);
+  if (own.length) {
+    const exact = own.find((p) => p.months === months);
+    const lower = own.filter((p) => p.months <= months).sort((a, b) => a.months - b.months).pop();
+    const plan = exact ?? lower ?? [...own].sort((a, b) => a.months - b.months)[0]!;
+    return { months: plan.months, installment: round2(plan.installment), total: round2(plan.total) };
+  }
+  const total = round2(product.price * (1 + feePercentFor(months, rules) / 100));
+  return { months, installment: round2(total / months), total };
+}
+
+/** Todas as opções de parcelamento disponíveis para um produto. */
+export function quotesFor(
+  product: { price: number; installments?: { months: number; installment: number; total: number }[] | null },
+  rules: PricingRules,
+): Quote[] {
+  const own = (product.installments ?? []).filter((p) => p && p.total > 0);
+  if (own.length) {
+    return [...own]
+      .sort((a, b) => a.months - b.months)
+      .map((p) => ({ months: p.months, installment: round2(p.installment), total: round2(p.total) }));
+  }
+  return normalizeFees(rules.installmentFees).map((f) => quoteFor(product, f.months, rules));
+}
+
+/** Parcelamento máximo disponível (usado nas vitrines). */
+export function maxQuote(
+  product: { price: number; installments?: { months: number; installment: number; total: number }[] | null },
+  rules: PricingRules,
+): Quote | null {
+  const list = quotesFor(product, rules);
+  return list.length ? list[list.length - 1]! : null;
 }
 
 /** Maior desconto promocional aplicável ao produto (%). */

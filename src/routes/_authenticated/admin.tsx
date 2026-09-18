@@ -28,6 +28,7 @@ import { CategoriesAdmin } from "@/components/admin/CategoriesAdmin";
 import { PrinterModelsAdmin } from "@/components/admin/PrinterModelsAdmin";
 import { listPrinterModels } from "@/lib/printer-models.functions";
 import { PricingAdmin } from "@/components/admin/PricingAdmin";
+import { FeesAdmin } from "@/components/admin/FeesAdmin";
 import { useCategories } from "@/lib/categories";
 import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
@@ -415,6 +416,7 @@ function AdminPage() {
             <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="marcas">Marcas</TabsTrigger>
             <TabsTrigger value="regras">Regras</TabsTrigger>
+            <TabsTrigger value="taxas">Taxas</TabsTrigger>
             <TabsTrigger value="rodape">Rodapé</TabsTrigger>
           </TabsList>
         </div>
@@ -865,6 +867,10 @@ function AdminPage() {
 
         <TabsContent value="regras" className="mt-6">
           <PricingAdmin />
+        </TabsContent>
+
+        <TabsContent value="taxas" className="mt-6">
+          <FeesAdmin />
         </TabsContent>
 
         <TabsContent value="rodape" className="mt-6">
