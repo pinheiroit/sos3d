@@ -319,7 +319,9 @@ function CheckoutPage() {
                   {qty}× {product.name}
                 </span>
                 <span className="shrink-0 font-medium">
-                  {formatBRL((isCard ? cardUnitPrice(product, parcelasSel) : product.price) * qty)}
+                  {formatBRL(
+                    (isCard ? quoteFor(product, parcelasSel, rules).total : product.price) * qty,
+                  )}
                 </span>
               </li>
             ))}
