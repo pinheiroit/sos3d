@@ -267,6 +267,11 @@ function parseInstallments(raw: string) {
 function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [activeSection, setActiveSection] = useState<AdminSection>("overview");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [stockSearch, setStockSearch] = useState("");
+  const [stockView, setStockView] = useState<"all" | "low" | "out">("all");
   const [form, setForm] = useState<FormState | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
@@ -416,6 +421,20 @@ function AdminPage() {
     });
   }, [allProducts, filters]);
 
+  const stockProducts = useMemo(() => {
+    const text = stockSearch.trim().toLowerCase();
+    return allProducts.filter((product) => {
+      if (stockView === "out" && product.stock !== 0) return false;
+      if (stockView === "low" && (product.stock === 0 || product.stock > 3)) return false;
+      if (!text) return true;
+      return [product.name, product.brand, product.slug]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(text);
+    });
+  }, [allProducts, stockSearch, stockView]);
+
 
   if (overview.isError) {
     return (
@@ -503,64 +522,133 @@ function AdminPage() {
     });
   }
 
-  return (
-    <div className="container-page py-12">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span className="eyebrow">Administração</span>
-          <h1 className="mt-2 text-3xl font-bold md:text-4xl">Painel SOS.3D</h1>
+  function selectSection(section: AdminSection) {
+    setActiveSection(section);
+    setMobileMenuOpen(false);
+  }
+
+  function newProduct() {
+    setSlugTouched(false);
+    setForm({ ...emptyForm });
+  }
+
+  const menu = (
+    <nav aria-label="Menu administrativo" className="space-y-5">
+      {adminGroups.map((group) => (
+        <div key={group.label}>
+          <p className="mb-1 px-3 text-xs font-semibold uppercase text-muted-foreground">
+            {group.label}
+          </p>
+          <div className="space-y-1">
+            {group.items.map((item) => (
+              <Button
+                key={item.value}
+                type="button"
+                variant="ghost"
+                onClick={() => selectSection(item.value)}
+                className={cn(
+                  "h-10 w-full justify-start gap-3 px-3 font-medium",
+                  activeSection === item.value && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                )}
+              >
+                <item.icon className="size-4 shrink-0" />
+                <span className="truncate">{item.label}</span>
+                {item.value === "pedidos" && totals.pending > 0 && (
+                  <Badge variant="secondary" className="ml-auto">{totals.pending}</Badge>
+                )}
+                {item.value === "estoque" && totals.lowStock > 0 && (
+                  <Badge variant="secondary" className="ml-auto">{totals.lowStock}</Badge>
+                )}
+              </Button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+      ))}
+    </nav>
+  );
+
+  return (
+    <div className="container-page py-6 md:py-10">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
+          <span className="eyebrow">Administração</span>
+          <h1 className="mt-1 truncate text-2xl font-bold md:text-3xl">Painel SOS.3D</h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button asChild variant="outline" className="hidden sm:inline-flex">
             <Link to="/portal">Portal de membros</Link>
           </Button>
-          <Button
-            variant="cta"
-            onClick={() => {
-              setSlugTouched(false);
-              setForm({ ...emptyForm });
-            }}
-          >
-            <Plus /> Novo produto
+          <Button variant="cta" size="sm" onClick={newProduct}>
+            <Plus /> <span className="hidden sm:inline">Novo produto</span>
           </Button>
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { icon: LayoutDashboard, t: "Receita registrada", v: formatBRL(totals.revenue) },
-          { icon: Boxes, t: "Pedidos pendentes", v: String(totals.pending) },
-          { icon: Boxes, t: "Produtos com estoque baixo", v: String(totals.lowStock) },
-          { icon: Users, t: "Membros ativos", v: String(totals.members) },
-        ].map((k) => (
-          <div key={k.t} className="rounded-xl border border-border bg-card p-5">
-            <k.icon className="size-5 text-tech" />
-            <p className="mt-3 text-xs uppercase tracking-wide text-muted-foreground">{k.t}</p>
-            <p className="mt-1 text-2xl font-bold">{k.v}</p>
-          </div>
-        ))}
-      </div>
+      <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSection)}>
+        <TabsList className="sr-only">
+          {Object.keys(sectionCopy).map((value) => (
+            <TabsTrigger key={value} value={value}>{sectionCopy[value as AdminSection].title}</TabsTrigger>
+          ))}
+        </TabsList>
 
-      <Tabs defaultValue="produtos" className="mt-10">
-        <div className="-mx-4 overflow-x-auto px-4 pb-1">
-          <TabsList className="w-max">
-            <TabsTrigger value="produtos">Produtos</TabsTrigger>
-            <TabsTrigger value="fotos">Fotos</TabsTrigger>
-            <TabsTrigger value="categorias">Categorias</TabsTrigger>
-            <TabsTrigger value="importar">Importar</TabsTrigger>
-            <TabsTrigger value="entrada-nfe">Entrada NF-e</TabsTrigger>
-            <TabsTrigger value="televendas">Televendas</TabsTrigger>
-            <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
-            <TabsTrigger value="membros">Membros</TabsTrigger>
-            <TabsTrigger value="cursos">Cursos</TabsTrigger>
-            <TabsTrigger value="modelos">Modelos</TabsTrigger>
-            <TabsTrigger value="banners">Banners</TabsTrigger>
-            <TabsTrigger value="marcas">Marcas</TabsTrigger>
-            <TabsTrigger value="regras">Regras</TabsTrigger>
-            <TabsTrigger value="taxas">Taxas</TabsTrigger>
-            <TabsTrigger value="rodape">Rodapé</TabsTrigger>
-          </TabsList>
-        </div>
+        <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="hidden self-start rounded-lg border border-border bg-card p-3 lg:sticky lg:top-6 lg:block">
+            {menu}
+          </aside>
+
+          <main className="min-w-0">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <div className="min-w-0">
+                <h2 className="truncate text-2xl font-bold">{sectionCopy[activeSection].title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{sectionCopy[activeSection].description}</p>
+              </div>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="lg:hidden" aria-label="Abrir menu administrativo">
+                    <Menu className="size-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="overflow-y-auto p-4">
+                  <SheetHeader className="mb-5 border-b border-border pb-4">
+                    <SheetTitle>Menu administrativo</SheetTitle>
+                  </SheetHeader>
+                  {menu}
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            <TabsContent value="overview" className="mt-6 space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { icon: CircleDollarSign, t: "Receita registrada", v: formatBRL(totals.revenue) },
+                  { icon: ReceiptText, t: "Pedidos pendentes", v: String(totals.pending) },
+                  { icon: Boxes, t: "Estoque baixo", v: String(totals.lowStock) },
+                  { icon: Users, t: "Membros ativos", v: String(totals.members) },
+                ].map((item) => (
+                  <div key={item.t} className="rounded-lg border border-border bg-card p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm text-muted-foreground">{item.t}</p>
+                      <item.icon className="size-5 shrink-0 text-tech" />
+                    </div>
+                    <p className="mt-3 text-2xl font-bold">{item.v}</p>
+                  </div>
+                ))}
+              </div>
+              <section>
+                <h3 className="text-lg font-semibold">Ações rápidas</h3>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("televendas")}>
+                    <ShoppingCart className="size-5 text-tech" /> Nova venda
+                  </Button>
+                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={newProduct}>
+                    <Plus className="size-5 text-tech" /> Novo produto
+                  </Button>
+                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("entrada-nfe")}>
+                    <Truck className="size-5 text-tech" /> Entrada por NF-e
+                  </Button>
+                </div>
+              </section>
+            </TabsContent>
 
         <TabsContent value="produtos" className="mt-6 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
