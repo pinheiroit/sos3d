@@ -194,47 +194,48 @@ export const findProductImages = createServerFn({ method: "GET" })
     const { assertAdmin } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
 
-    const apiKey = process.env["GOOGLE_SEARCH_API_KEY"];
-    const searchEngineId = process.env["GOOGLE_SEARCH_ENGINE_ID"];
-    if (!apiKey || !searchEngineId) {
-      throw new Error("A pesquisa de imagens do Google ainda não foi configurada.");
+    const apiKey = process.env["SERPAPI_API_KEY"];
+    if (!apiKey) {
+      throw new Error("A pesquisa de imagens ainda não foi configurada.");
     }
 
-    const endpoint = new URL("https://customsearch.googleapis.com/customsearch/v1");
-    endpoint.searchParams.set("key", apiKey);
-    endpoint.searchParams.set("cx", searchEngineId);
+    const endpoint = new URL("https://serpapi.com/search.json");
+    endpoint.searchParams.set("api_key", apiKey);
+    endpoint.searchParams.set("engine", "google_images");
     endpoint.searchParams.set("q", data.query);
-    endpoint.searchParams.set("searchType", "image");
-    endpoint.searchParams.set("num", "10");
-    endpoint.searchParams.set("safe", "active");
+    endpoint.searchParams.set("google_domain", "google.com.br");
+    endpoint.searchParams.set("hl", "pt-br");
     endpoint.searchParams.set("gl", "br");
-    endpoint.searchParams.set("lr", "lang_pt");
-    endpoint.searchParams.set("imgType", "photo");
+    endpoint.searchParams.set("safe", "active");
 
     const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
     const payload = await response.json() as {
-      error?: { message?: string };
-      items?: Array<{
-        link?: string;
+      error?: string;
+      images_results?: Array<{
+        original?: string;
+        thumbnail?: string;
         title?: string;
-        displayLink?: string;
-        image?: { thumbnailLink?: string; contextLink?: string; width?: number; height?: number };
+        source?: string;
+        link?: string;
+        original_width?: number;
+        original_height?: number;
       }>;
     };
     if (!response.ok) {
-      throw new Error(payload.error?.message ?? "Não foi possível pesquisar as imagens no Google.");
+      throw new Error(payload.error ?? "Não foi possível pesquisar as imagens no Google.");
     }
+    if (payload.error) throw new Error(payload.error);
 
-    return (payload.items ?? []).flatMap((item) => {
-      if (!item.link?.startsWith("https://") || !item.image?.thumbnailLink?.startsWith("https://")) return [];
+    return (payload.images_results ?? []).slice(0, 10).flatMap((item) => {
+      if (!item.original?.startsWith("https://") || !item.thumbnail?.startsWith("https://")) return [];
       return [{
-        imageUrl: item.link,
-        thumbnailUrl: item.image.thumbnailLink,
+        imageUrl: item.original,
+        thumbnailUrl: item.thumbnail,
         title: item.title?.trim() || data.query,
-        source: item.displayLink?.trim() || new URL(item.link).hostname,
-        sourceUrl: item.image.contextLink?.startsWith("https://") ? item.image.contextLink : null,
-        width: item.image.width ?? null,
-        height: item.image.height ?? null,
+        source: item.source?.trim() || new URL(item.original).hostname,
+        sourceUrl: item.link?.startsWith("https://") ? item.link : null,
+        width: item.original_width ?? null,
+        height: item.original_height ?? null,
       }];
     });
   });
