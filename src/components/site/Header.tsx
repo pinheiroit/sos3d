@@ -65,8 +65,21 @@ export function Header() {
       </div>
 
       <div className="border-b border-border bg-background/95 backdrop-blur">
-        <div className="container-page flex h-[168px] items-center gap-4">
-          <Logo />
+        <div className="container-page relative grid h-24 grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2 md:flex md:h-[168px] md:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X /> : <Menu />}
+          </Button>
+
+          <div className="flex min-w-0 justify-center md:block">
+            <Logo />
+          </div>
 
           <form
             onSubmit={submitSearch}
@@ -90,8 +103,8 @@ export function Header() {
             </Button>
           </form>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Button asChild variant="ghost" size="icon" aria-label="Minha conta">
+          <div className="flex items-center justify-end gap-2 md:ml-auto">
+            <Button asChild variant="ghost" size="icon" className="hidden md:inline-flex" aria-label="Minha conta">
               <Link to={session ? "/portal" : "/auth"}>
                 <UserRound />
               </Link>
@@ -99,7 +112,7 @@ export function Header() {
 
             <Link
               to="/carrinho"
-              className="relative flex items-center gap-2.5 rounded-full border border-border px-3 py-2 transition-colors hover:bg-secondary"
+              className="relative flex size-10 shrink-0 items-center justify-center rounded-full border border-border transition-colors hover:bg-secondary md:w-auto md:gap-2.5 md:px-3 md:py-2"
             >
               <span className="relative">
                 <ShoppingCart className="size-5 text-tech" />
@@ -118,7 +131,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="hidden md:inline-flex lg:hidden"
               aria-label={open ? "Fechar menu" : "Abrir menu"}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
