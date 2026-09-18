@@ -83,6 +83,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "description", content: "Gestão de produtos, preços, estoque e pedidos SOS.3D." },
       { property: "og:title", content: "Painel administrativo | SOS.3D" },
       { property: "og:description", content: "Gestão interna da loja SOS.3D." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -1092,18 +1094,20 @@ function AdminPage() {
                       {(printerModels.data ?? []).map((pm) => {
                         const checked = selectedIds.includes(pm.id);
                         return (
-                          <button
+                          <Button
                             key={pm.id}
                             type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => toggleModel(pm.id, !checked)}
-                            className={`rounded-full border px-3 py-1 text-xs transition ${
+                            className={cn("rounded-full text-xs", 
                               checked
-                                ? "border-tech bg-tech text-white"
-                                : "border-border bg-background text-muted-foreground"
-                            }`}
+                                ? "border-tech bg-tech text-primary-foreground hover:bg-tech/90"
+                                : "text-muted-foreground",
+                            )}
                           >
                             {pm.name}
-                          </button>
+                          </Button>
                         );
                       })}
                       {!(printerModels.data ?? []).length && (
