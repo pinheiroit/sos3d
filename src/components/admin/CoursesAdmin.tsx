@@ -45,12 +45,15 @@ type Course = {
   level: string;
   cover_key: string;
   printer_model_id: string | null;
+  course_printer_models?: { printer_model_id: string }[];
   published: boolean;
   sort_order: number;
   lessons: Lesson[];
 };
 
-type CourseForm = Omit<Course, "id" | "lessons">;
+type CourseForm = Omit<Course, "id" | "lessons" | "course_printer_models"> & {
+  printer_model_ids: string[];
+};
 type LessonForm = Omit<Lesson, "id">;
 
 const emptyCourse: CourseForm = {
@@ -60,9 +63,17 @@ const emptyCourse: CourseForm = {
   level: "Iniciante",
   cover_key: "printer-1",
   printer_model_id: null,
+  printer_model_ids: [],
   published: true,
   sort_order: 0,
 };
+
+/** Modelos vinculados ao curso (novo N:N, com fallback para o vínculo antigo). */
+function courseModelIds(course: Course) {
+  const ids = (course.course_printer_models ?? []).map((l) => l.printer_model_id);
+  if (ids.length) return ids;
+  return course.printer_model_id ? [course.printer_model_id] : [];
+}
 
 function emptyLesson(courseId: string, sortOrder: number): LessonForm {
   return {
