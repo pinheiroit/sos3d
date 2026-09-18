@@ -108,6 +108,19 @@ const emptyForm: FormState = {
   installments: "",
 };
 
+function slugifyPart(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildAutoSlug(name: string, brand: string) {
+  return [slugifyPart(name), slugifyPart(brand)].filter(Boolean).join("-").slice(0, 120);
+}
+
 function toNumberBR(raw: string) {
   const cleaned = raw.replace(/[^\d,.-]/g, "").trim();
   if (!cleaned) return 0;
@@ -136,6 +149,7 @@ function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormState | null>(null);
+  const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
     brand: "all",
