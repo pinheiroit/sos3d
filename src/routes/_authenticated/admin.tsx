@@ -34,6 +34,7 @@ import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
 import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
+import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
   adminOverview,
