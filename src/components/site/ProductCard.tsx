@@ -3,15 +3,15 @@ import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { bestPlan, formatBRL, type Product } from "@/lib/catalog";
+import { formatBRL, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
-import { usePricing } from "@/lib/pricing";
+import { maxQuote, usePricing } from "@/lib/pricing";
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
   const rules = usePricing();
   const pix = product.price * (1 - rules.pixDiscountPercent / 100);
-  const plan = bestPlan(product.installments);
+  const plan = maxQuote(product, rules);
   const installment = plan ? plan.installment : product.price / rules.defaultInstallments;
   const months = plan ? plan.months : rules.defaultInstallments;
 
@@ -70,6 +70,7 @@ export function ProductCard({ product }: { product: Product }) {
             ou até {months}x de {formatBRL(installment)}
             {plan ? ` (total ${formatBRL(plan.total)})` : " com juros"}
           </p>
+
 
           <div className="mt-4 flex gap-2">
             <Button
