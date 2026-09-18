@@ -8,6 +8,13 @@
       "when": 1789680766889,
       "tag": "0000_create_nfe_stock_intake",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789766541798,
+      "tag": "0001_create_customers",
+      "breakpoints": true
     }
   ]
 }
