@@ -650,33 +650,26 @@ function AdminPage() {
               </section>
             </TabsContent>
 
-        <TabsContent value="produtos" className="mt-6 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              Cadastre, edite e ajuste preço e estoque dos produtos.
-            </p>
-            <Button
-              variant="cta"
-              onClick={() => {
-                setSlugTouched(false);
-                setForm({ ...emptyForm });
-              }}
-            >
-              <Plus /> Adicionar produto
-            </Button>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <div className="xl:col-span-2">
-                <Label className="text-xs">Buscar (nome, slug, descrição)</Label>
-                <Input
-                  className="mt-1 h-9"
-                  placeholder="Ex.: PLA preto, impressora..."
-                  value={filters.text}
-                  onChange={(e) => setFilters((f) => ({ ...f, text: e.target.value }))}
-                />
+            <TabsContent value="produtos" className="mt-6 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+                <div className="relative min-w-0">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-9"
+                    placeholder="Buscar por nome, marca ou descrição"
+                    value={filters.text}
+                    onChange={(e) => setFilters((current) => ({ ...current, text: e.target.value }))}
+                  />
+                </div>
+                <Button variant="outline" onClick={() => setFiltersOpen((open) => !open)}>
+                  Filtros <ChevronDown className={cn("size-4 transition-transform", filtersOpen && "rotate-180")} />
+                </Button>
+                <Button variant="cta" onClick={newProduct}><Plus /> Adicionar produto</Button>
               </div>
+
+              {filtersOpen && (
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div>
                 <Label className="text-xs">Marca</Label>
                 <Select
@@ -801,10 +794,10 @@ function AdminPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end justify-between gap-3">
-                <p className="pb-2 text-xs text-muted-foreground">
-                  {filteredProducts.length} de {allProducts.length} produtos
-                </p>
+                    <div className="flex items-end justify-between gap-3">
+                      <p className="pb-2 text-xs text-muted-foreground">
+                        {filteredProducts.length} de {allProducts.length} produtos
+                      </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -825,80 +818,90 @@ function AdminPage() {
                 >
                   Limpar filtros
                 </Button>
-              </div>
-            </div>
-          </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {filteredProducts.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum produto encontrado com os filtros atuais.
-            </p>
-          )}
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
+                <div className="hidden grid-cols-[minmax(260px,1fr)_140px_110px_100px_108px] gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground xl:grid">
+                  <span>Produto</span><span>Preço</span><span>Estoque</span><span>Situação</span><span className="text-right">Ações</span>
+                </div>
 
-          {filteredProducts.map((p) => (
-            <div
-              key={p.id}
-              className="grid gap-4 rounded-xl border border-border bg-card p-4 lg:grid-cols-[1fr_auto]"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold">{p.name}</p>
-                  <Badge variant="secondary">{p.brand}</Badge>
-                  {!p.active && <Badge variant="destructive">Inativo</Badge>}
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">/{p.slug}</p>
+                {filteredProducts.length === 0 && (
+                  <p className="p-6 text-center text-sm text-muted-foreground">Nenhum produto encontrado com os filtros atuais.</p>
+                )}
+
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="grid gap-4 border-b border-border p-4 last:border-b-0 xl:grid-cols-[minmax(260px,1fr)_140px_110px_100px_108px] xl:items-center"
+                  >
+                    <div className="grid min-w-0 grid-cols-[48px_minmax(0,1fr)] items-center gap-3">
+                      <img
+                        src={imageFor(product.image_key, product.image_url)}
+                        alt=""
+                        className="size-12 rounded-md border border-border bg-muted object-cover"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{product.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {[product.brand, categoryList.find((category) => category.slug === product.category)?.name].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs xl:sr-only">Preço</Label>
+                      <Input
+                        aria-label={`Preço de ${product.name}`}
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        defaultValue={String(product.price)}
+                        className="mt-1 h-9 xl:mt-0"
+                        onBlur={(event) => {
+                          const price = Number(event.target.value);
+                          if (price !== Number(product.price)) quick.mutate({ id: product.id, price });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs xl:sr-only">Estoque</Label>
+                      <Input
+                        aria-label={`Estoque de ${product.name}`}
+                        type="number"
+                        min={0}
+                        defaultValue={String(product.stock)}
+                        className={cn(
+                          "mt-1 h-9 xl:mt-0",
+                          product.stock === 0 && "border-destructive text-destructive",
+                          product.stock > 0 && product.stock <= 3 && "border-warning text-warning",
+                        )}
+                        onBlur={(event) => {
+                          const stock = Number(event.target.value);
+                          if (stock !== product.stock) quick.mutate({ id: product.id, stock });
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={product.active} onCheckedChange={(active) => quick.mutate({ id: product.id, active })} />
+                      <span className="text-xs text-muted-foreground">{product.active ? "Ativo" : "Inativo"}</span>
+                    </div>
+                    <div className="flex justify-end gap-1">
+                      <Button variant="outline" size="icon" aria-label={`Editar ${product.name}`} onClick={() => openEdit(product)}><Pencil /></Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remover ${product.name}`}
+                        onClick={() => {
+                          if (window.confirm(`Remover ${product.name}?`)) removeProduct.mutate({ id: product.id });
+                        }}
+                      ><Trash2 /></Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex flex-wrap items-end gap-3">
-                <div>
-                  <Label className="text-xs">Preço</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min={0}
-                    defaultValue={String(p.price)}
-                    className="mt-1 h-9 w-32"
-                    onBlur={(e) => {
-                      const price = Number(e.target.value);
-                      if (price !== Number(p.price)) quick.mutate({ id: p.id, price });
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Estoque</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    defaultValue={String(p.stock)}
-                    className="mt-1 h-9 w-24"
-                    onBlur={(e) => {
-                      const stock = Number(e.target.value);
-                      if (stock !== p.stock) quick.mutate({ id: p.id, stock });
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 pb-2">
-                  <Switch
-                    checked={p.active}
-                    onCheckedChange={(active) => quick.mutate({ id: p.id, active })}
-                  />
-                  <span className="text-xs text-muted-foreground">Ativo</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
-                  <Pencil /> Editar
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (window.confirm(`Remover ${p.name}?`)) removeProduct.mutate({ id: p.id });
-                  }}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </TabsContent>
+            </TabsContent>
 
         <TabsContent value="fotos" className="mt-6">
           <ProductPhotosAdmin
