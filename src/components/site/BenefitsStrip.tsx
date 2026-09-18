@@ -2,7 +2,7 @@ import { CreditCard, Headset, ShieldCheck, Truck } from "lucide-react";
 
 const items = [
   { icon: Truck, title: "Envio para todo o Brasil", text: "Embalagem reforçada e rastreio" },
-  { icon: CreditCard, title: "Até 12x com juros", text: "5% de desconto no Pix" },
+  { icon: CreditCard, title: "Até 12x com juros", text: "Consulte as condições de pagamento" },
   { icon: ShieldCheck, title: "Garantia e nota fiscal", text: "Produtos originais e homologados" },
   { icon: Headset, title: "Suporte técnico real", text: "Ajuda na instalação e no uso" },
 ];

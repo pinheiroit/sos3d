@@ -12,7 +12,7 @@ const promoSchema = z.object({
 });
 
 const rulesSchema = z.object({
-  pixDiscountPercent: z.number().min(0).max(90).default(5),
+  pixDiscountPercent: z.number().min(0).max(90).default(0),
   boletoDiscountPercent: z.number().min(0).max(90).default(0),
   cardDiscountPercent: z.number().min(0).max(90).default(0),
   freeShippingFrom: z.number().min(0).max(1_000_000).default(500),

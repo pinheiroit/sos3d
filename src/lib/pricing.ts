@@ -22,7 +22,7 @@ export type PricingRules = {
 };
 
 export const defaultPricingRules: PricingRules = {
-  pixDiscountPercent: 5,
+  pixDiscountPercent: 0,
   boletoDiscountPercent: 0,
   cardDiscountPercent: 0,
   freeShippingFrom: 500,
