@@ -1,7 +1,29 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes, LayoutDashboard, Pencil, Plus, Trash2, Users } from "lucide-react";
+import {
+  Boxes,
+  ChevronDown,
+  CircleDollarSign,
+  FileSpreadsheet,
+  GraduationCap,
+  Image,
+  LayoutDashboard,
+  Menu,
+  Package,
+  Palette,
+  Pencil,
+  Plus,
+  ReceiptText,
+  Search,
+  Settings,
+  ShoppingCart,
+  Store,
+  Tags,
+  Trash2,
+  Truck,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +40,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
 import { formatBRL, imageFor } from "@/lib/catalog";
 import { ImageUploader } from "@/components/site/ImageUploader";
 import { bannerDefinitions, logoDefinitions, siteImagesQueryOptions } from "@/lib/site-images";
@@ -52,6 +83,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "description", content: "Gestão de produtos, preços, estoque e pedidos SOS.3D." },
       { property: "og:title", content: "Painel administrativo | SOS.3D" },
       { property: "og:description", content: "Gestão interna da loja SOS.3D." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -66,6 +99,93 @@ const statusOptions = [
   "concluido",
   "cancelado",
 ] as const;
+
+type AdminSection =
+  | "overview"
+  | "televendas"
+  | "pedidos"
+  | "produtos"
+  | "estoque"
+  | "entrada-nfe"
+  | "importar"
+  | "fotos"
+  | "categorias"
+  | "membros"
+  | "cursos"
+  | "modelos"
+  | "banners"
+  | "marcas"
+  | "regras"
+  | "taxas"
+  | "rodape";
+
+const adminGroups = [
+  {
+    label: "Principal",
+    items: [{ value: "overview", label: "Visão geral", icon: LayoutDashboard }],
+  },
+  {
+    label: "Vendas",
+    items: [
+      { value: "televendas", label: "Nova venda", icon: ShoppingCart },
+      { value: "pedidos", label: "Pedidos", icon: ReceiptText },
+    ],
+  },
+  {
+    label: "Catálogo",
+    items: [
+      { value: "produtos", label: "Produtos", icon: Package },
+      { value: "fotos", label: "Fotos", icon: Image },
+      { value: "categorias", label: "Categorias", icon: Tags },
+    ],
+  },
+  {
+    label: "Estoque",
+    items: [
+      { value: "estoque", label: "Controle de estoque", icon: Boxes },
+      { value: "entrada-nfe", label: "Entrada por NF-e", icon: Truck },
+      { value: "importar", label: "Planilhas", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    label: "Clientes e membros",
+    items: [
+      { value: "membros", label: "Membros", icon: Users },
+      { value: "cursos", label: "Cursos", icon: GraduationCap },
+      { value: "modelos", label: "Modelos de impressora", icon: Store },
+    ],
+  },
+  {
+    label: "Site e configurações",
+    items: [
+      { value: "banners", label: "Imagens do site", icon: Palette },
+      { value: "marcas", label: "Marcas parceiras", icon: Tags },
+      { value: "regras", label: "Regras de preço", icon: CircleDollarSign },
+      { value: "taxas", label: "Taxas", icon: CircleDollarSign },
+      { value: "rodape", label: "Rodapé", icon: Settings },
+    ],
+  },
+] as const;
+
+const sectionCopy: Record<AdminSection, { title: string; description: string }> = {
+  overview: { title: "Visão geral", description: "Acompanhe os números e acesse as tarefas mais usadas." },
+  televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
+  pedidos: { title: "Pedidos", description: "Acompanhe pedidos e atualize o andamento de cada venda." },
+  produtos: { title: "Produtos", description: "Consulte, cadastre e edite os itens da loja." },
+  estoque: { title: "Controle de estoque", description: "Localize produtos e ajuste quantidades rapidamente." },
+  "entrada-nfe": { title: "Entrada por NF-e", description: "Importe notas e vincule os itens ao catálogo." },
+  importar: { title: "Planilhas", description: "Importe, exporte e atualize produtos em massa." },
+  fotos: { title: "Fotos dos produtos", description: "Encontre e vincule imagens aos itens do catálogo." },
+  categorias: { title: "Categorias", description: "Organize categorias e subcategorias da loja." },
+  membros: { title: "Membros", description: "Gerencie acessos e impressoras dos clientes." },
+  cursos: { title: "Cursos", description: "Publique cursos, aulas e materiais para membros." },
+  modelos: { title: "Modelos de impressora", description: "Cadastre os modelos disponíveis para membros." },
+  banners: { title: "Imagens do site", description: "Atualize logomarca, banners e fotos das páginas." },
+  marcas: { title: "Marcas parceiras", description: "Cadastre e organize as marcas exibidas no site." },
+  regras: { title: "Regras de preço", description: "Configure descontos e condições comerciais." },
+  taxas: { title: "Taxas", description: "Defina os acréscimos aplicados ao parcelamento." },
+  rodape: { title: "Rodapé", description: "Atualize contatos, links e dados institucionais." },
+};
 
 type FormState = {
   id: string | null;
@@ -149,6 +269,11 @@ function parseInstallments(raw: string) {
 function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [activeSection, setActiveSection] = useState<AdminSection>("overview");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [stockSearch, setStockSearch] = useState("");
+  const [stockView, setStockView] = useState<"all" | "low" | "out">("all");
   const [form, setForm] = useState<FormState | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
@@ -298,6 +423,20 @@ function AdminPage() {
     });
   }, [allProducts, filters]);
 
+  const stockProducts = useMemo(() => {
+    const text = stockSearch.trim().toLowerCase();
+    return allProducts.filter((product) => {
+      if (stockView === "out" && product.stock !== 0) return false;
+      if (stockView === "low" && (product.stock === 0 || product.stock > 3)) return false;
+      if (!text) return true;
+      return [product.name, product.brand, product.slug]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(text);
+    });
+  }, [allProducts, stockSearch, stockView]);
+
 
   if (overview.isError) {
     return (
@@ -385,92 +524,154 @@ function AdminPage() {
     });
   }
 
-  return (
-    <div className="container-page py-12">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span className="eyebrow">Administração</span>
-          <h1 className="mt-2 text-3xl font-bold md:text-4xl">Painel SOS.3D</h1>
+  function selectSection(section: AdminSection) {
+    setActiveSection(section);
+    setMobileMenuOpen(false);
+  }
+
+  function newProduct() {
+    setSlugTouched(false);
+    setForm({ ...emptyForm });
+  }
+
+  const menu = (
+    <nav aria-label="Menu administrativo" className="space-y-5">
+      {adminGroups.map((group) => (
+        <div key={group.label}>
+          <p className="mb-1 px-3 text-xs font-semibold uppercase text-muted-foreground">
+            {group.label}
+          </p>
+          <div className="space-y-1">
+            {group.items.map((item) => (
+              <Button
+                key={item.value}
+                type="button"
+                variant="ghost"
+                onClick={() => selectSection(item.value)}
+                className={cn(
+                  "h-10 w-full justify-start gap-3 px-3 font-medium",
+                  activeSection === item.value && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                )}
+              >
+                <item.icon className="size-4 shrink-0" />
+                <span className="truncate">{item.label}</span>
+                {item.value === "pedidos" && totals.pending > 0 && (
+                  <Badge variant="secondary" className="ml-auto">{totals.pending}</Badge>
+                )}
+                {item.value === "estoque" && totals.lowStock > 0 && (
+                  <Badge variant="secondary" className="ml-auto">{totals.lowStock}</Badge>
+                )}
+              </Button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+      ))}
+    </nav>
+  );
+
+  return (
+    <div className="container-page py-6 md:py-10">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
+          <span className="eyebrow">Administração</span>
+          <h1 className="mt-1 truncate text-2xl font-bold md:text-3xl">Painel SOS.3D</h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button asChild variant="outline" className="hidden sm:inline-flex">
             <Link to="/portal">Portal de membros</Link>
           </Button>
-          <Button
-            variant="cta"
-            onClick={() => {
-              setSlugTouched(false);
-              setForm({ ...emptyForm });
-            }}
-          >
-            <Plus /> Novo produto
+          <Button variant="cta" size="sm" onClick={newProduct}>
+            <Plus /> <span className="hidden sm:inline">Novo produto</span>
           </Button>
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { icon: LayoutDashboard, t: "Receita registrada", v: formatBRL(totals.revenue) },
-          { icon: Boxes, t: "Pedidos pendentes", v: String(totals.pending) },
-          { icon: Boxes, t: "Produtos com estoque baixo", v: String(totals.lowStock) },
-          { icon: Users, t: "Membros ativos", v: String(totals.members) },
-        ].map((k) => (
-          <div key={k.t} className="rounded-xl border border-border bg-card p-5">
-            <k.icon className="size-5 text-tech" />
-            <p className="mt-3 text-xs uppercase tracking-wide text-muted-foreground">{k.t}</p>
-            <p className="mt-1 text-2xl font-bold">{k.v}</p>
-          </div>
-        ))}
-      </div>
+      <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSection)}>
+        <TabsList className="sr-only">
+          {Object.keys(sectionCopy).map((value) => (
+            <TabsTrigger key={value} value={value}>{sectionCopy[value as AdminSection].title}</TabsTrigger>
+          ))}
+        </TabsList>
 
-      <Tabs defaultValue="produtos" className="mt-10">
-        <div className="-mx-4 overflow-x-auto px-4 pb-1">
-          <TabsList className="w-max">
-            <TabsTrigger value="produtos">Produtos</TabsTrigger>
-            <TabsTrigger value="fotos">Fotos</TabsTrigger>
-            <TabsTrigger value="categorias">Categorias</TabsTrigger>
-            <TabsTrigger value="importar">Importar</TabsTrigger>
-            <TabsTrigger value="entrada-nfe">Entrada NF-e</TabsTrigger>
-            <TabsTrigger value="televendas">Televendas</TabsTrigger>
-            <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
-            <TabsTrigger value="membros">Membros</TabsTrigger>
-            <TabsTrigger value="cursos">Cursos</TabsTrigger>
-            <TabsTrigger value="modelos">Modelos</TabsTrigger>
-            <TabsTrigger value="banners">Banners</TabsTrigger>
-            <TabsTrigger value="marcas">Marcas</TabsTrigger>
-            <TabsTrigger value="regras">Regras</TabsTrigger>
-            <TabsTrigger value="taxas">Taxas</TabsTrigger>
-            <TabsTrigger value="rodape">Rodapé</TabsTrigger>
-          </TabsList>
-        </div>
+        <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="hidden self-start rounded-lg border border-border bg-card p-3 lg:sticky lg:top-6 lg:block">
+            {menu}
+          </aside>
 
-        <TabsContent value="produtos" className="mt-6 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              Cadastre, edite e ajuste preço e estoque dos produtos.
-            </p>
-            <Button
-              variant="cta"
-              onClick={() => {
-                setSlugTouched(false);
-                setForm({ ...emptyForm });
-              }}
-            >
-              <Plus /> Adicionar produto
-            </Button>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <div className="xl:col-span-2">
-                <Label className="text-xs">Buscar (nome, slug, descrição)</Label>
-                <Input
-                  className="mt-1 h-9"
-                  placeholder="Ex.: PLA preto, impressora..."
-                  value={filters.text}
-                  onChange={(e) => setFilters((f) => ({ ...f, text: e.target.value }))}
-                />
+          <main className="min-w-0">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <div className="min-w-0">
+                <h2 className="truncate text-2xl font-bold">{sectionCopy[activeSection].title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{sectionCopy[activeSection].description}</p>
               </div>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="lg:hidden" aria-label="Abrir menu administrativo">
+                    <Menu className="size-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="overflow-y-auto p-4">
+                  <SheetHeader className="mb-5 border-b border-border pb-4">
+                    <SheetTitle>Menu administrativo</SheetTitle>
+                  </SheetHeader>
+                  {menu}
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            <TabsContent value="overview" className="mt-6 space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { icon: CircleDollarSign, t: "Receita registrada", v: formatBRL(totals.revenue) },
+                  { icon: ReceiptText, t: "Pedidos pendentes", v: String(totals.pending) },
+                  { icon: Boxes, t: "Estoque baixo", v: String(totals.lowStock) },
+                  { icon: Users, t: "Membros ativos", v: String(totals.members) },
+                ].map((item) => (
+                  <div key={item.t} className="rounded-lg border border-border bg-card p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm text-muted-foreground">{item.t}</p>
+                      <item.icon className="size-5 shrink-0 text-tech" />
+                    </div>
+                    <p className="mt-3 text-2xl font-bold">{item.v}</p>
+                  </div>
+                ))}
+              </div>
+              <section>
+                <h3 className="text-lg font-semibold">Ações rápidas</h3>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("televendas")}>
+                    <ShoppingCart className="size-5 text-tech" /> Nova venda
+                  </Button>
+                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={newProduct}>
+                    <Plus className="size-5 text-tech" /> Novo produto
+                  </Button>
+                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("entrada-nfe")}>
+                    <Truck className="size-5 text-tech" /> Entrada por NF-e
+                  </Button>
+                </div>
+              </section>
+            </TabsContent>
+
+            <TabsContent value="produtos" className="mt-6 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+                <div className="relative min-w-0">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-9"
+                    placeholder="Buscar por nome, marca ou descrição"
+                    value={filters.text}
+                    onChange={(e) => setFilters((current) => ({ ...current, text: e.target.value }))}
+                  />
+                </div>
+                <Button variant="outline" onClick={() => setFiltersOpen((open) => !open)}>
+                  Filtros <ChevronDown className={cn("size-4 transition-transform", filtersOpen && "rotate-180")} />
+                </Button>
+                <Button variant="cta" onClick={newProduct}><Plus /> Adicionar produto</Button>
+              </div>
+
+              {filtersOpen && (
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div>
                 <Label className="text-xs">Marca</Label>
                 <Select
@@ -595,10 +796,10 @@ function AdminPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end justify-between gap-3">
-                <p className="pb-2 text-xs text-muted-foreground">
-                  {filteredProducts.length} de {allProducts.length} produtos
-                </p>
+                    <div className="flex items-end justify-between gap-3">
+                      <p className="pb-2 text-xs text-muted-foreground">
+                        {filteredProducts.length} de {allProducts.length} produtos
+                      </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -619,80 +820,157 @@ function AdminPage() {
                 >
                   Limpar filtros
                 </Button>
-              </div>
-            </div>
-          </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {filteredProducts.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum produto encontrado com os filtros atuais.
-            </p>
-          )}
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
+                <div className="hidden grid-cols-[minmax(260px,1fr)_140px_110px_100px_108px] gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground xl:grid">
+                  <span>Produto</span><span>Preço</span><span>Estoque</span><span>Situação</span><span className="text-right">Ações</span>
+                </div>
 
-          {filteredProducts.map((p) => (
-            <div
-              key={p.id}
-              className="grid gap-4 rounded-xl border border-border bg-card p-4 lg:grid-cols-[1fr_auto]"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold">{p.name}</p>
-                  <Badge variant="secondary">{p.brand}</Badge>
-                  {!p.active && <Badge variant="destructive">Inativo</Badge>}
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">/{p.slug}</p>
+                {filteredProducts.length === 0 && (
+                  <p className="p-6 text-center text-sm text-muted-foreground">Nenhum produto encontrado com os filtros atuais.</p>
+                )}
+
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="grid gap-4 border-b border-border p-4 last:border-b-0 xl:grid-cols-[minmax(260px,1fr)_140px_110px_100px_108px] xl:items-center"
+                  >
+                    <div className="grid min-w-0 grid-cols-[48px_minmax(0,1fr)] items-center gap-3">
+                      <img
+                        src={imageFor(product.image_key, product.image_url)}
+                        alt=""
+                        className="size-12 rounded-md border border-border bg-muted object-cover"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{product.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {[product.brand, categoryList.find((category) => category.slug === product.category)?.name].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs xl:sr-only">Preço</Label>
+                      <Input
+                        aria-label={`Preço de ${product.name}`}
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        defaultValue={String(product.price)}
+                        className="mt-1 h-9 xl:mt-0"
+                        onBlur={(event) => {
+                          const price = Number(event.target.value);
+                          if (price !== Number(product.price)) quick.mutate({ id: product.id, price });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs xl:sr-only">Estoque</Label>
+                      <Input
+                        aria-label={`Estoque de ${product.name}`}
+                        type="number"
+                        min={0}
+                        defaultValue={String(product.stock)}
+                        className={cn(
+                          "mt-1 h-9 xl:mt-0",
+                          product.stock === 0 && "border-destructive text-destructive",
+                          product.stock > 0 && product.stock <= 3 && "border-warning text-warning",
+                        )}
+                        onBlur={(event) => {
+                          const stock = Number(event.target.value);
+                          if (stock !== product.stock) quick.mutate({ id: product.id, stock });
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={product.active} onCheckedChange={(active) => quick.mutate({ id: product.id, active })} />
+                      <span className="text-xs text-muted-foreground">{product.active ? "Ativo" : "Inativo"}</span>
+                    </div>
+                    <div className="flex justify-end gap-1">
+                      <Button variant="outline" size="icon" aria-label={`Editar ${product.name}`} onClick={() => openEdit(product)}><Pencil /></Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remover ${product.name}`}
+                        onClick={() => {
+                          if (window.confirm(`Remover ${product.name}?`)) removeProduct.mutate({ id: product.id });
+                        }}
+                      ><Trash2 /></Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex flex-wrap items-end gap-3">
-                <div>
-                  <Label className="text-xs">Preço</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min={0}
-                    defaultValue={String(p.price)}
-                    className="mt-1 h-9 w-32"
-                    onBlur={(e) => {
-                      const price = Number(e.target.value);
-                      if (price !== Number(p.price)) quick.mutate({ id: p.id, price });
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Estoque</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    defaultValue={String(p.stock)}
-                    className="mt-1 h-9 w-24"
-                    onBlur={(e) => {
-                      const stock = Number(e.target.value);
-                      if (stock !== p.stock) quick.mutate({ id: p.id, stock });
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 pb-2">
-                  <Switch
-                    checked={p.active}
-                    onCheckedChange={(active) => quick.mutate({ id: p.id, active })}
-                  />
-                  <span className="text-xs text-muted-foreground">Ativo</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
-                  <Pencil /> Editar
+            </TabsContent>
+
+            <TabsContent value="estoque" className="mt-6 space-y-5">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Button type="button" variant="outline" onClick={() => setStockView("all")} className={cn("h-auto justify-start rounded-lg p-4 text-left", stockView === "all" && "border-primary bg-primary/5")}>
+                  <span>
+                  <p className="text-sm text-muted-foreground">Todos os produtos</p>
+                  <p className="mt-1 text-2xl font-bold">{allProducts.length}</p>
+                  </span>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (window.confirm(`Remover ${p.name}?`)) removeProduct.mutate({ id: p.id });
-                  }}
-                >
-                  <Trash2 />
+                <Button type="button" variant="outline" onClick={() => setStockView("low")} className={cn("h-auto justify-start rounded-lg p-4 text-left", stockView === "low" && "border-warning bg-warning/5")}>
+                  <span>
+                  <p className="text-sm text-muted-foreground">Estoque baixo</p>
+                  <p className="mt-1 text-2xl font-bold">{allProducts.filter((product) => product.stock > 0 && product.stock <= 3).length}</p>
+                  </span>
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setStockView("out")} className={cn("h-auto justify-start rounded-lg p-4 text-left", stockView === "out" && "border-destructive bg-destructive/5")}>
+                  <span>
+                  <p className="text-sm text-muted-foreground">Sem estoque</p>
+                  <p className="mt-1 text-2xl font-bold">{allProducts.filter((product) => product.stock === 0).length}</p>
+                  </span>
                 </Button>
               </div>
-            </div>
-          ))}
-        </TabsContent>
+
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+                <div className="relative min-w-0">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Buscar produto ou marca" value={stockSearch} onChange={(event) => setStockSearch(event.target.value)} />
+                </div>
+                <Button variant="outline" onClick={() => selectSection("entrada-nfe")}><Truck /> Entrada NF-e</Button>
+                <Button variant="outline" onClick={() => selectSection("importar")}><FileSpreadsheet /> Planilha</Button>
+              </div>
+
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
+                <div className="hidden grid-cols-[minmax(260px,1fr)_120px_120px] gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground md:grid">
+                  <span>Produto</span><span>Situação</span><span>Quantidade</span>
+                </div>
+                {stockProducts.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Nenhum produto nesta situação.</p>}
+                {stockProducts.map((product) => (
+                  <div key={product.id} className="grid gap-3 border-b border-border p-4 last:border-b-0 md:grid-cols-[minmax(260px,1fr)_120px_120px] md:items-center">
+                    <div className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
+                      <img src={imageFor(product.image_key, product.image_url)} alt="" className="size-11 rounded-md border border-border bg-muted object-cover" />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{product.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{product.brand}</p>
+                      </div>
+                    </div>
+                    <div>
+                      {product.stock === 0 ? <Badge variant="destructive">Sem estoque</Badge> : product.stock <= 3 ? <Badge variant="secondary">Estoque baixo</Badge> : <Badge variant="outline">Disponível</Badge>}
+                    </div>
+                    <div>
+                      <Label className="text-xs md:sr-only">Quantidade</Label>
+                      <Input
+                        aria-label={`Quantidade em estoque de ${product.name}`}
+                        type="number"
+                        min={0}
+                        defaultValue={String(product.stock)}
+                        className={cn("mt-1 h-9 md:mt-0", product.stock === 0 && "border-destructive", product.stock > 0 && product.stock <= 3 && "border-warning")}
+                        onBlur={(event) => {
+                          const stock = Number(event.target.value);
+                          if (stock !== product.stock) quick.mutate({ id: product.id, stock });
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
 
         <TabsContent value="fotos" className="mt-6">
           <ProductPhotosAdmin
@@ -816,18 +1094,20 @@ function AdminPage() {
                       {(printerModels.data ?? []).map((pm) => {
                         const checked = selectedIds.includes(pm.id);
                         return (
-                          <button
+                          <Button
                             key={pm.id}
                             type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => toggleModel(pm.id, !checked)}
-                            className={`rounded-full border px-3 py-1 text-xs transition ${
+                            className={cn("rounded-full text-xs", 
                               checked
-                                ? "border-tech bg-tech text-white"
-                                : "border-border bg-background text-muted-foreground"
-                            }`}
+                                ? "border-tech bg-tech text-primary-foreground hover:bg-tech/90"
+                                : "text-muted-foreground",
+                            )}
                           >
                             {pm.name}
-                          </button>
+                          </Button>
                         );
                       })}
                       {!(printerModels.data ?? []).length && (
@@ -918,6 +1198,8 @@ function AdminPage() {
         <TabsContent value="rodape" className="mt-6">
           <FooterAdmin />
         </TabsContent>
+          </main>
+        </div>
       </Tabs>
 
       <Dialog
@@ -929,12 +1211,17 @@ function AdminPage() {
           }
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
+          <DialogHeader className="border-b border-border px-5 py-4 pr-12">
             <DialogTitle>{form?.id ? "Editar produto" : "Novo produto"}</DialogTitle>
+            <p className="text-sm text-muted-foreground">Preencha as informações principais e salve quando terminar.</p>
           </DialogHeader>
           {form && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <h3 className="font-semibold">Informações do produto</h3>
+                <p className="text-xs text-muted-foreground">Identificação e organização no catálogo.</p>
+              </div>
               <div>
                 <Label>Nome</Label>
                 <Input
@@ -1024,6 +1311,10 @@ function AdminPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
+                <h3 className="font-semibold">Preço e estoque</h3>
+                <p className="text-xs text-muted-foreground">Valores de venda e quantidade disponível.</p>
+              </div>
               <div>
                 <Label>Preço (R$)</Label>
                 <Input
@@ -1065,6 +1356,10 @@ function AdminPage() {
                   onChange={(e) => setForm({ ...form, badge: e.target.value })}
                 />
               </div>
+              <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
+                <h3 className="font-semibold">Imagem e publicação</h3>
+                <p className="text-xs text-muted-foreground">Foto principal e visibilidade do item na loja.</p>
+              </div>
               <div className="sm:col-span-2">
                 <Label>Imagem do produto</Label>
                 <div className="mt-2">
@@ -1085,6 +1380,10 @@ function AdminPage() {
                 />
                 <span className="text-sm">Publicado na loja</span>
               </div>
+              <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
+                <h3 className="font-semibold">Descrição para o cliente</h3>
+                <p className="text-xs text-muted-foreground">Textos exibidos na página do produto.</p>
+              </div>
               <div className="sm:col-span-2">
                 <Label>Resumo</Label>
                 <Input
@@ -1104,38 +1403,33 @@ function AdminPage() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
               </div>
-              <div className="sm:col-span-2">
-                <Label>Aplicações (separadas por vírgula)</Label>
-                <Input
-                  className="mt-1"
-                  value={form.use_cases}
-                  onChange={(e) => setForm({ ...form, use_cases: e.target.value })}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Especificações (uma por linha: rótulo | valor)</Label>
-                <Textarea
-                  className="mt-1"
-                  rows={5}
-                  value={form.specs}
-                  onChange={(e) => setForm({ ...form, specs: e.target.value })}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Parcelamento (uma por linha: parcelas | valor da parcela | valor total)</Label>
-                <Textarea
-                  className="mt-1 font-mono text-xs"
-                  rows={5}
-                  placeholder={"6 | 403,64 | 2421,84\n12 | 214,68 | 2576,16\n18 | 152,61 | 2746,98"}
-                  value={form.installments}
-                  onChange={(e) => setForm({ ...form, installments: e.target.value })}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Deixe em branco para usar o padrão de 12x com juros. Se o total não for informado,
-                  calculamos parcelas x valor.
-                </p>
-              </div>
-              <div className="sm:col-span-2 flex justify-end gap-2">
+              <Accordion type="single" collapsible className="sm:col-span-2 rounded-lg border border-border px-4">
+                <AccordionItem value="advanced" className="border-0">
+                  <AccordionTrigger>Detalhes avançados</AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <div>
+                      <Label>Aplicações (separadas por vírgula)</Label>
+                      <Input className="mt-1" value={form.use_cases} onChange={(e) => setForm({ ...form, use_cases: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Especificações (uma por linha: rótulo | valor)</Label>
+                      <Textarea className="mt-1" rows={5} value={form.specs} onChange={(e) => setForm({ ...form, specs: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Parcelamento próprio (opcional)</Label>
+                      <Textarea
+                        className="mt-1 font-mono text-xs"
+                        rows={5}
+                        placeholder={"6 | 403,64 | 2421,84\n12 | 214,68 | 2576,16"}
+                        value={form.installments}
+                        onChange={(e) => setForm({ ...form, installments: e.target.value })}
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">Deixe em branco para usar as taxas gerais da loja.</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              <div className="sticky bottom-0 -mx-5 -mb-5 flex justify-end gap-2 border-t border-border bg-background px-5 py-4 sm:col-span-2">
                 <Button variant="outline" onClick={() => setForm(null)}>
                   Cancelar
                 </Button>
