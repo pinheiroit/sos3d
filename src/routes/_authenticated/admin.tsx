@@ -905,18 +905,24 @@ function AdminPage() {
 
             <TabsContent value="estoque" className="mt-6 space-y-5">
               <div className="grid gap-3 sm:grid-cols-3">
-                <button type="button" onClick={() => setStockView("all")} className={cn("rounded-lg border p-4 text-left", stockView === "all" ? "border-primary bg-primary/5" : "border-border bg-card")}>
+                <Button type="button" variant="outline" onClick={() => setStockView("all")} className={cn("h-auto justify-start rounded-lg p-4 text-left", stockView === "all" && "border-primary bg-primary/5")}>
+                  <span>
                   <p className="text-sm text-muted-foreground">Todos os produtos</p>
                   <p className="mt-1 text-2xl font-bold">{allProducts.length}</p>
-                </button>
-                <button type="button" onClick={() => setStockView("low")} className={cn("rounded-lg border p-4 text-left", stockView === "low" ? "border-warning bg-warning/5" : "border-border bg-card")}>
+                  </span>
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setStockView("low")} className={cn("h-auto justify-start rounded-lg p-4 text-left", stockView === "low" && "border-warning bg-warning/5")}>
+                  <span>
                   <p className="text-sm text-muted-foreground">Estoque baixo</p>
                   <p className="mt-1 text-2xl font-bold">{allProducts.filter((product) => product.stock > 0 && product.stock <= 3).length}</p>
-                </button>
-                <button type="button" onClick={() => setStockView("out")} className={cn("rounded-lg border p-4 text-left", stockView === "out" ? "border-destructive bg-destructive/5" : "border-border bg-card")}>
+                  </span>
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setStockView("out")} className={cn("h-auto justify-start rounded-lg p-4 text-left", stockView === "out" && "border-destructive bg-destructive/5")}>
+                  <span>
                   <p className="text-sm text-muted-foreground">Sem estoque</p>
                   <p className="mt-1 text-2xl font-bold">{allProducts.filter((product) => product.stock === 0).length}</p>
-                </button>
+                  </span>
+                </Button>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
@@ -1188,6 +1194,8 @@ function AdminPage() {
         <TabsContent value="rodape" className="mt-6">
           <FooterAdmin />
         </TabsContent>
+          </main>
+        </div>
       </Tabs>
 
       <Dialog
@@ -1199,12 +1207,17 @@ function AdminPage() {
           }
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
+          <DialogHeader className="border-b border-border px-5 py-4 pr-12">
             <DialogTitle>{form?.id ? "Editar produto" : "Novo produto"}</DialogTitle>
+            <p className="text-sm text-muted-foreground">Preencha as informações principais e salve quando terminar.</p>
           </DialogHeader>
           {form && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <h3 className="font-semibold">Informações do produto</h3>
+                <p className="text-xs text-muted-foreground">Identificação e organização no catálogo.</p>
+              </div>
               <div>
                 <Label>Nome</Label>
                 <Input
@@ -1294,6 +1307,10 @@ function AdminPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
+                <h3 className="font-semibold">Preço e estoque</h3>
+                <p className="text-xs text-muted-foreground">Valores de venda e quantidade disponível.</p>
+              </div>
               <div>
                 <Label>Preço (R$)</Label>
                 <Input
@@ -1335,6 +1352,10 @@ function AdminPage() {
                   onChange={(e) => setForm({ ...form, badge: e.target.value })}
                 />
               </div>
+              <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
+                <h3 className="font-semibold">Imagem e publicação</h3>
+                <p className="text-xs text-muted-foreground">Foto principal e visibilidade do item na loja.</p>
+              </div>
               <div className="sm:col-span-2">
                 <Label>Imagem do produto</Label>
                 <div className="mt-2">
@@ -1355,6 +1376,10 @@ function AdminPage() {
                 />
                 <span className="text-sm">Publicado na loja</span>
               </div>
+              <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
+                <h3 className="font-semibold">Descrição para o cliente</h3>
+                <p className="text-xs text-muted-foreground">Textos exibidos na página do produto.</p>
+              </div>
               <div className="sm:col-span-2">
                 <Label>Resumo</Label>
                 <Input
@@ -1374,38 +1399,33 @@ function AdminPage() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
               </div>
-              <div className="sm:col-span-2">
-                <Label>Aplicações (separadas por vírgula)</Label>
-                <Input
-                  className="mt-1"
-                  value={form.use_cases}
-                  onChange={(e) => setForm({ ...form, use_cases: e.target.value })}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Especificações (uma por linha: rótulo | valor)</Label>
-                <Textarea
-                  className="mt-1"
-                  rows={5}
-                  value={form.specs}
-                  onChange={(e) => setForm({ ...form, specs: e.target.value })}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Parcelamento (uma por linha: parcelas | valor da parcela | valor total)</Label>
-                <Textarea
-                  className="mt-1 font-mono text-xs"
-                  rows={5}
-                  placeholder={"6 | 403,64 | 2421,84\n12 | 214,68 | 2576,16\n18 | 152,61 | 2746,98"}
-                  value={form.installments}
-                  onChange={(e) => setForm({ ...form, installments: e.target.value })}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Deixe em branco para usar o padrão de 12x com juros. Se o total não for informado,
-                  calculamos parcelas x valor.
-                </p>
-              </div>
-              <div className="sm:col-span-2 flex justify-end gap-2">
+              <Accordion type="single" collapsible className="sm:col-span-2 rounded-lg border border-border px-4">
+                <AccordionItem value="advanced" className="border-0">
+                  <AccordionTrigger>Detalhes avançados</AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <div>
+                      <Label>Aplicações (separadas por vírgula)</Label>
+                      <Input className="mt-1" value={form.use_cases} onChange={(e) => setForm({ ...form, use_cases: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Especificações (uma por linha: rótulo | valor)</Label>
+                      <Textarea className="mt-1" rows={5} value={form.specs} onChange={(e) => setForm({ ...form, specs: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Parcelamento próprio (opcional)</Label>
+                      <Textarea
+                        className="mt-1 font-mono text-xs"
+                        rows={5}
+                        placeholder={"6 | 403,64 | 2421,84\n12 | 214,68 | 2576,16"}
+                        value={form.installments}
+                        onChange={(e) => setForm({ ...form, installments: e.target.value })}
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">Deixe em branco para usar as taxas gerais da loja.</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              <div className="sticky bottom-0 -mx-5 -mb-5 flex justify-end gap-2 border-t border-border bg-background px-5 py-4 sm:col-span-2">
                 <Button variant="outline" onClick={() => setForm(null)}>
                   Cancelar
                 </Button>
