@@ -58,8 +58,8 @@ export function PricingAdmin() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Configure aqui os descontos e regras comerciais do site. Os valores substituem os antigos
-        percentuais fixos (como os 5% no Pix) em toda a loja, no carrinho e no checkout.
+        Configure aqui os descontos e regras comerciais aplicados em toda a loja, no carrinho e no
+        checkout.
       </p>
 
       <div className="grid gap-4 rounded-xl border border-border bg-card p-5 sm:grid-cols-3">

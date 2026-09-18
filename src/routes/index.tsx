@@ -83,8 +83,8 @@ function Index() {
                 Impressoras 3D e filamentos com pronta entrega
               </h2>
               <p className="mt-4 max-w-md text-white/80">
-                Até 12x com juros, 5% de desconto no Pix e suporte técnico de quem usa impressão 3D
-                todos os dias. Indicamos o equipamento certo e acompanhamos a operação depois da venda.
+                Até 12x com juros e suporte técnico de quem usa impressão 3D todos os dias. Indicamos
+                o equipamento certo e acompanhamos a operação depois da venda.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Button asChild variant="cta" size="lg">
