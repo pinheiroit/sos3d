@@ -939,19 +939,18 @@ function AdminPage() {
               <div>
                 <Label>Slug (URL)</Label>
                 <Input
-                  className="mt-1"
+                  className="mt-1 bg-muted text-muted-foreground"
                   maxLength={120}
                   value={form.slug}
-                  onChange={(e) => {
-                    setSlugTouched(true);
-                    setForm({ ...form, slug: e.target.value });
-                  }}
+                  readOnly
+                  aria-readonly="true"
+                  tabIndex={-1}
                 />
-                {!slugTouched && !form.id && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Gerado automaticamente a partir do nome e da marca.
-                  </p>
-                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {form.id
+                    ? "Bloqueado para preservar o link do produto."
+                    : "Gerado automaticamente a partir do nome e da marca."}
+                </p>
               </div>
               <div>
                 <Label>Marca</Label>
