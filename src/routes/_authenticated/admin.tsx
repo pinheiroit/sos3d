@@ -395,7 +395,13 @@ function AdminPage() {
           <Button asChild variant="outline">
             <Link to="/portal">Portal de membros</Link>
           </Button>
-          <Button variant="cta" onClick={() => setForm({ ...emptyForm })}>
+          <Button
+            variant="cta"
+            onClick={() => {
+              setSlugTouched(false);
+              setForm({ ...emptyForm });
+            }}
+          >
             <Plus /> Novo produto
           </Button>
         </div>
@@ -441,7 +447,13 @@ function AdminPage() {
             <p className="text-sm text-muted-foreground">
               Cadastre, edite e ajuste preço e estoque dos produtos.
             </p>
-            <Button variant="cta" onClick={() => setForm({ ...emptyForm })}>
+            <Button
+              variant="cta"
+              onClick={() => {
+                setSlugTouched(false);
+                setForm({ ...emptyForm });
+              }}
+            >
               <Plus /> Adicionar produto
             </Button>
           </div>
