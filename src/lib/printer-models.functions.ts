@@ -48,7 +48,7 @@ export const adminListPrinterModels = createServerFn({ method: "GET" })
 
     const [models, courses, memberships] = await Promise.all([
       db.from("printer_models").select(SELECT).order("sort_order", { ascending: true }),
-      db.from("courses").select("printer_model_id"),
+      db.from("course_printer_models").select("printer_model_id"),
       db.from("memberships").select("printer_model_id, active"),
     ]);
     const err = models.error ?? courses.error ?? memberships.error;
@@ -78,6 +78,63 @@ export const savePrinterModel = createServerFn({ method: "POST" })
       : await db.from("printer_models").insert(payload);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+/** Cria modelos de impressora a partir dos produtos cadastrados na categoria impressoras. */
+export const syncPrinterModelsFromProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+
+    const [products, models] = await Promise.all([
+      db
+        .from("products")
+        .select("id, slug, name, brand, subtitle")
+        .eq("category", "impressoras")
+        .eq("active", true)
+        .order("name", { ascending: true }),
+      db.from("printer_models").select("id, slug, product_id"),
+    ]);
+    const err = products.error ?? models.error;
+    if (err) throw new Error(err.message);
+
+    const existing = models.data ?? [];
+    const byProduct = new Set(existing.map((m) => m.product_id).filter(Boolean) as string[]);
+    const bySlug = new Set(existing.map((m) => m.slug));
+
+    let order = existing.length;
+    const rows = (products.data ?? [])
+      .filter((p) => !byProduct.has(p.id))
+      .map((p) => {
+        const name = [p.brand, p.name].filter(Boolean).join(" ").trim() || p.name;
+        return {
+          product_id: p.id,
+          slug: slugify(p.slug || name),
+          name: name.slice(0, 120),
+          description: (p.subtitle ?? "").slice(0, 600),
+          sort_order: ++order,
+          active: true,
+        };
+      })
+      .filter((r) => r.slug.length >= 2 && !bySlug.has(r.slug));
+
+    if (rows.length) {
+      const { error } = await db.from("printer_models").insert(rows);
+      if (error) throw new Error(error.message);
+    }
+    return { created: rows.length };
   });
 
 export const deletePrinterModel = createServerFn({ method: "POST" })
