@@ -11,6 +11,9 @@ export type PromoRule = {
   active: boolean;
 };
 
+/** Taxa da maquininha/gateway por número de parcelas. */
+export type InstallmentFee = { months: number; percent: number };
+
 export type PricingRules = {
   pixDiscountPercent: number;
   boletoDiscountPercent: number;
@@ -19,7 +22,23 @@ export type PricingRules = {
   flatShipping: number;
   defaultInstallments: number;
   promos: PromoRule[];
+  installmentFees: InstallmentFee[];
 };
+
+export const defaultInstallmentFees: InstallmentFee[] = [
+  { months: 1, percent: 4.2 },
+  { months: 2, percent: 6.09 },
+  { months: 3, percent: 7.01 },
+  { months: 4, percent: 7.91 },
+  { months: 5, percent: 8.8 },
+  { months: 6, percent: 9.67 },
+  { months: 7, percent: 12.59 },
+  { months: 8, percent: 13.42 },
+  { months: 9, percent: 14.25 },
+  { months: 10, percent: 15.06 },
+  { months: 11, percent: 15.87 },
+  { months: 12, percent: 16.66 },
+];
 
 export const defaultPricingRules: PricingRules = {
   pixDiscountPercent: 0,
@@ -29,6 +48,7 @@ export const defaultPricingRules: PricingRules = {
   flatShipping: 79,
   defaultInstallments: 12,
   promos: [],
+  installmentFees: defaultInstallmentFees,
 };
 
 export function normalizeRules(value: unknown): PricingRules {
