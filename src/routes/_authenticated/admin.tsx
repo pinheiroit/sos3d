@@ -108,6 +108,19 @@ const emptyForm: FormState = {
   installments: "",
 };
 
+function slugifyPart(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildAutoSlug(name: string, brand: string) {
+  return [slugifyPart(name), slugifyPart(brand)].filter(Boolean).join("-").slice(0, 120);
+}
+
 function toNumberBR(raw: string) {
   const cleaned = raw.replace(/[^\d,.-]/g, "").trim();
   if (!cleaned) return 0;
@@ -136,6 +149,7 @@ function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormState | null>(null);
+  const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
     brand: "all",
@@ -303,6 +317,7 @@ function AdminPage() {
   }
 
   function openEdit(p: NonNullable<typeof data>["products"][number]) {
+    setSlugTouched(true);
     setForm({
       id: p.id,
       slug: p.slug,
@@ -338,7 +353,7 @@ function AdminPage() {
     save.mutate({
       id: form.id,
       values: {
-        slug: form.slug.trim(),
+        slug: form.slug.trim() || buildAutoSlug(form.name, form.brand),
         name: form.name.trim(),
         brand: form.brand.trim(),
         category: form.category,
@@ -380,7 +395,13 @@ function AdminPage() {
           <Button asChild variant="outline">
             <Link to="/portal">Portal de membros</Link>
           </Button>
-          <Button variant="cta" onClick={() => setForm({ ...emptyForm })}>
+          <Button
+            variant="cta"
+            onClick={() => {
+              setSlugTouched(false);
+              setForm({ ...emptyForm });
+            }}
+          >
             <Plus /> Novo produto
           </Button>
         </div>
@@ -426,7 +447,13 @@ function AdminPage() {
             <p className="text-sm text-muted-foreground">
               Cadastre, edite e ajuste preço e estoque dos produtos.
             </p>
-            <Button variant="cta" onClick={() => setForm({ ...emptyForm })}>
+            <Button
+              variant="cta"
+              onClick={() => {
+                setSlugTouched(false);
+                setForm({ ...emptyForm });
+              }}
+            >
               <Plus /> Adicionar produto
             </Button>
           </div>
@@ -878,7 +905,15 @@ function AdminPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={form !== null} onOpenChange={(open) => !open && setForm(null)}>
+      <Dialog
+        open={form !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setForm(null);
+            setSlugTouched(false);
+          }
+        }}
+      >
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{form?.id ? "Editar produto" : "Novo produto"}</DialogTitle>
@@ -891,7 +926,14 @@ function AdminPage() {
                   className="mt-1"
                   maxLength={180}
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setForm({
+                      ...form,
+                      name,
+                      ...(slugTouched ? {} : { slug: buildAutoSlug(name, form.brand) }),
+                    });
+                  }}
                 />
               </div>
               <div>
@@ -900,8 +942,16 @@ function AdminPage() {
                   className="mt-1"
                   maxLength={120}
                   value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  onChange={(e) => {
+                    setSlugTouched(true);
+                    setForm({ ...form, slug: e.target.value });
+                  }}
                 />
+                {!slugTouched && !form.id && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Gerado automaticamente a partir do nome e da marca.
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Marca</Label>
@@ -909,7 +959,14 @@ function AdminPage() {
                   className="mt-1"
                   maxLength={80}
                   value={form.brand}
-                  onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                  onChange={(e) => {
+                    const brand = e.target.value;
+                    setForm({
+                      ...form,
+                      brand,
+                      ...(slugTouched ? {} : { slug: buildAutoSlug(form.name, brand) }),
+                    });
+                  }}
                 />
               </div>
               <div>
