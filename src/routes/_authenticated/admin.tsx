@@ -430,6 +430,7 @@ function AdminPage() {
             <TabsTrigger value="categorias">Categorias</TabsTrigger>
             <TabsTrigger value="importar">Importar</TabsTrigger>
             <TabsTrigger value="entrada-nfe">Entrada NF-e</TabsTrigger>
+            <TabsTrigger value="televendas">Televendas</TabsTrigger>
             <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
             <TabsTrigger value="membros">Membros</TabsTrigger>
             <TabsTrigger value="cursos">Cursos</TabsTrigger>
