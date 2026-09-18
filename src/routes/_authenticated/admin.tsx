@@ -905,7 +905,15 @@ function AdminPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={form !== null} onOpenChange={(open) => !open && setForm(null)}>
+      <Dialog
+        open={form !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setForm(null);
+            setSlugTouched(false);
+          }
+        }}
+      >
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{form?.id ? "Editar produto" : "Novo produto"}</DialogTitle>
@@ -918,7 +926,14 @@ function AdminPage() {
                   className="mt-1"
                   maxLength={180}
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setForm({
+                      ...form,
+                      name,
+                      ...(slugTouched ? {} : { slug: buildAutoSlug(name, form.brand) }),
+                    });
+                  }}
                 />
               </div>
               <div>
@@ -927,8 +942,16 @@ function AdminPage() {
                   className="mt-1"
                   maxLength={120}
                   value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  onChange={(e) => {
+                    setSlugTouched(true);
+                    setForm({ ...form, slug: e.target.value });
+                  }}
                 />
+                {!slugTouched && !form.id && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Gerado automaticamente a partir do nome e da marca.
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Marca</Label>
@@ -936,7 +959,14 @@ function AdminPage() {
                   className="mt-1"
                   maxLength={80}
                   value={form.brand}
-                  onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                  onChange={(e) => {
+                    const brand = e.target.value;
+                    setForm({
+                      ...form,
+                      brand,
+                      ...(slugTouched ? {} : { slug: buildAutoSlug(form.name, brand) }),
+                    });
+                  }}
                 />
               </div>
               <div>
