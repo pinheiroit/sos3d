@@ -16,6 +16,7 @@ const courseSchema = z.object({
   level: z.string().trim().min(2).max(60).default("Iniciante"),
   cover_key: z.string().trim().max(60).default("printer-1"),
   printer_model_id: z.string().uuid().nullable().default(null),
+  printer_model_ids: z.array(z.string().uuid()).max(50).default([]),
   published: z.boolean().default(true),
   sort_order: z.number().int().min(0).max(9999).default(0),
 });
@@ -39,11 +40,31 @@ export const saveCourse = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
-    const payload = { ...data.values, updated_at: new Date().toISOString() };
-    const { error } = data.id
-      ? await db.from("courses").update(payload).eq("id", data.id)
-      : await db.from("courses").insert(payload);
-    if (error) throw new Error(error.message);
+    const { printer_model_ids, ...values } = data.values;
+    const modelIds = Array.from(new Set(printer_model_ids));
+    const payload = {
+      ...values,
+      printer_model_id: modelIds[0] ?? values.printer_model_id ?? null,
+      updated_at: new Date().toISOString(),
+    };
+
+    let courseId = data.id ?? null;
+    if (courseId) {
+      const { error } = await db.from("courses").update(payload).eq("id", courseId);
+      if (error) throw new Error(error.message);
+    } else {
+      const { data: created, error } = await db.from("courses").insert(payload).select("id").single();
+      if (error) throw new Error(error.message);
+      courseId = created.id;
+    }
+
+    await db.from("course_printer_models").delete().eq("course_id", courseId);
+    if (modelIds.length) {
+      const { error: linkError } = await db.from("course_printer_models").insert(
+        modelIds.map((printer_model_id) => ({ course_id: courseId as string, printer_model_id })),
+      );
+      if (linkError) throw new Error(linkError.message);
+    }
     return { ok: true };
   });
 
