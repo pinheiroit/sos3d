@@ -37,7 +37,6 @@ export async function getWizard() {
         pathPDF: path.join(config.storageDir, "pdf"),
         UF: config.emitente.uf,
         CPFCNPJ: config.emitente.cnpj,
-challenge: undefined,
       },
       nfe: {
         ambiente: config.ambiente,
