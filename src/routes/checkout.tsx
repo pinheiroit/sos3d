@@ -55,7 +55,9 @@ function whatsappLink(phone: string, order: OrderResult, customerName: string) {
     `\n\n` +
     `${linhas}\n\n` +
     `Subtotal: ${formatBRL(order.subtotal)}\n` +
-    `Frete: ${order.shipping > 0 ? formatBRL(order.shipping) : "Grátis"}\n` +
+    (order.fulfillment === "coleta"
+      ? `Entrega: COLETA (retirada no local)\n`
+      : `Frete: ${order.shipping > 0 ? formatBRL(order.shipping) : "Grátis"}\n`) +
     (order.discount > 0 ? `Desconto: -${formatBRL(order.discount)}\n` : "") +
     `*Total: ${formatBRL(order.total)}*\n\n` +
     `Gostaria de concluir o pagamento.`;
