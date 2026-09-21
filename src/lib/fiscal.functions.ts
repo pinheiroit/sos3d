@@ -211,7 +211,7 @@ export const issueNfe = createServerFn({ method: "POST" })
         recipient_document: data.destinatario.documento,
         total: Number(total.toFixed(2)),
         payload: data,
-        response: payload,
+        response: payload as never,
         xml_url: (payload["xmlUrl"] as string) ?? null,
         danfe_url: (payload["danfeUrl"] as string) ?? null,
         error_message: ok ? null : ((payload["message"] as string) ?? "Falha na emissão."),
@@ -285,7 +285,7 @@ export const cancelNfe = createServerFn({ method: "POST" })
         cancel_protocol: ok ? ((payload["protocolo"] as string) ?? null) : null,
         cancelled_at: ok ? new Date().toISOString() : null,
         error_message: ok ? null : ((payload["message"] as string) ?? "Falha no cancelamento."),
-        response: payload,
+        response: payload as never,
       })
       .eq("id", doc.id);
     if (updateError) throw new Error(updateError.message);
