@@ -65,6 +65,7 @@ import { useSubcategories } from "@/lib/subcategories";
 import { ProductsImport } from "@/components/admin/ProductsImport";
 import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
+import { NfeEmissao } from "@/components/admin/NfeEmissao";
 import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
@@ -116,6 +117,7 @@ type AdminSection =
   | "overview"
   | "televendas"
   | "pedidos"
+  | "nfe"
   | "produtos"
   | "estoque"
   | "entrada-nfe"
@@ -141,6 +143,7 @@ const adminGroups = [
     items: [
       { value: "televendas", label: "Nova venda", icon: ShoppingCart },
       { value: "pedidos", label: "Pedidos", icon: ReceiptText },
+      { value: "nfe", label: "Emissão de NF-e", icon: ReceiptText },
     ],
   },
   {
@@ -183,6 +186,7 @@ const sectionCopy: Record<AdminSection, { title: string; description: string }> 
   overview: { title: "Visão geral", description: "Acompanhe os números e acesse as tarefas mais usadas." },
   televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
   pedidos: { title: "Pedidos", description: "Acompanhe pedidos e atualize o andamento de cada venda." },
+  nfe: { title: "Emissão de NF-e", description: "Emita e cancele notas fiscais dos pedidos." },
   produtos: { title: "Produtos", description: "Consulte, cadastre e edite os itens da loja." },
   estoque: { title: "Controle de estoque", description: "Localize produtos e ajuste quantidades rapidamente." },
   "entrada-nfe": { title: "Entrada por NF-e", description: "Importe notas e vincule os itens ao catálogo." },
@@ -1068,6 +1072,10 @@ function AdminPage() {
               active: p.active,
             }))}
           />
+        </TabsContent>
+
+        <TabsContent value="nfe" className="mt-6">
+          <NfeEmissao />
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6 space-y-3">
