@@ -229,6 +229,21 @@ function CheckoutPage() {
         <div className="space-y-6">
           <fieldset className="rounded-xl border border-border bg-card p-6">
             <legend className="px-2 text-sm font-semibold uppercase tracking-wide">Identificação</legend>
+            {prefilled ? (
+              <p className="mb-4 rounded-lg border border-tech/40 bg-tech/5 px-3 py-2 text-xs text-muted-foreground">
+                Dados preenchidos automaticamente com o seu cadastro. Confira e ajuste se precisar.
+              </p>
+            ) : (
+              !session && (
+                <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  Já é cliente?{" "}
+                  <Link to="/auth" className="font-semibold text-tech hover:underline">
+                    Entre na sua conta
+                  </Link>{" "}
+                  e preenchemos CPF, contato e endereço para você.
+                </p>
+              )
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="nome">Nome completo</Label>
