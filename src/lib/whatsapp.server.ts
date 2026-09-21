@@ -43,7 +43,7 @@ export function buildOrderMessage(order: NotifyOrder): string {
     `*Cliente:* ${order.customer.name}\n` +
     `*E-mail:* ${order.customer.email}\n` +
     (order.customer.phone ? `*Telefone:* ${order.customer.phone}\n` : "") +
-    (order.customer.document ? `*Documento:* ${order.customer.document}\n` : "") +
+    (order.customer.document ? `*CPF/CNPJ:* ${order.customer.document}\n` : "") +
     (order.fulfillment === "coleta"
       ? `*Retirada:* venda por COLETA (cliente retira no local)\n`
       : end
