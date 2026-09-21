@@ -73,8 +73,20 @@ import {
   quickUpdateProduct,
   saveProduct,
   setMembership,
+  setMemberPassword,
+  sendMemberPasswordReset,
+  updateMemberProfile,
   updateOrderStatus,
 } from "@/lib/admin.functions";
+
+type MemberForm = {
+  userId: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  notes: string;
+  password: string;
+};
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -275,6 +287,7 @@ function AdminPage() {
   const [stockSearch, setStockSearch] = useState("");
   const [stockView, setStockView] = useState<"all" | "low" | "out">("all");
   const [form, setForm] = useState<FormState | null>(null);
+  const [memberForm, setMemberForm] = useState<MemberForm | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
@@ -352,6 +365,44 @@ function AdminPage() {
       refresh();
     },
     onError: (e: Error) => toast.error("Erro ao atualizar acesso", { description: e.message }),
+  });
+
+  const memberProfile = useMutation({
+    mutationFn: (input: {
+      userId: string;
+      fullName: string;
+      phone: string;
+      email: string;
+      notes: string;
+    }) => updateMemberProfile({ data: input } as never),
+    onSuccess: () => {
+      toast.success("Cadastro do membro atualizado");
+      setMemberForm(null);
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Erro ao salvar cadastro", { description: e.message }),
+  });
+
+  const memberPassword = useMutation({
+    mutationFn: (input: { userId: string; password: string }) =>
+      setMemberPassword({ data: input } as never),
+    onSuccess: () => {
+      toast.success("Nova senha definida");
+      setMemberForm((prev) => (prev ? { ...prev, password: "" } : prev));
+    },
+    onError: (e: Error) => toast.error("Erro ao definir senha", { description: e.message }),
+  });
+
+  const memberReset = useMutation({
+    mutationFn: (input: { email: string }) =>
+      sendMemberPasswordReset({
+        data: {
+          email: input.email,
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth` : undefined,
+        },
+      } as never),
+    onSuccess: () => toast.success("E-mail de redefinição enviado"),
+    onError: (e: Error) => toast.error("Erro ao enviar e-mail", { description: e.message }),
   });
 
   const siteImages = useQuery(siteImagesQueryOptions);
@@ -1134,10 +1185,140 @@ function AdminPage() {
                     />
                     <span className="text-xs text-muted-foreground">Acesso ao portal</span>
                   </div>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setMemberForm({
+                          userId: profile.id,
+                          fullName: profile.full_name ?? "",
+                          phone: profile.phone ?? "",
+                          email: profile.email ?? "",
+                          notes: m?.notes ?? "",
+                          password: "",
+                        })
+                      }
+                    >
+                      <Pencil className="mr-2 h-4 w-4" /> Editar cadastro
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={!profile.email || memberReset.isPending}
+                      onClick={() => memberReset.mutate({ email: profile.email ?? "" })}
+                    >
+                      Enviar redefinição de senha
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
           })}
+
+          <Dialog open={Boolean(memberForm)} onOpenChange={(open) => !open && setMemberForm(null)}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Cadastro do membro</DialogTitle>
+              </DialogHeader>
+              {memberForm && (
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <Label className="text-xs">Nome completo</Label>
+                      <Input
+                        value={memberForm.fullName}
+                        onChange={(e) =>
+                          setMemberForm({ ...memberForm, fullName: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Telefone</Label>
+                      <Input
+                        value={memberForm.phone}
+                        onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">E-mail de acesso</Label>
+                    <Input
+                      type="email"
+                      value={memberForm.email}
+                      onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Observações</Label>
+                    <Textarea
+                      rows={3}
+                      value={memberForm.notes}
+                      onChange={(e) => setMemberForm({ ...memberForm, notes: e.target.value })}
+                    />
+                  </div>
+                  <div className="rounded-xl border border-border p-3">
+                    <Label className="text-xs">Nova senha (mínimo 8 caracteres)</Label>
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        type="text"
+                        placeholder="Digite a nova senha"
+                        value={memberForm.password}
+                        onChange={(e) =>
+                          setMemberForm({ ...memberForm, password: e.target.value })
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={memberForm.password.trim().length < 8 || memberPassword.isPending}
+                        onClick={() =>
+                          memberPassword.mutate({
+                            userId: memberForm.userId,
+                            password: memberForm.password.trim(),
+                          })
+                        }
+                      >
+                        Definir senha
+                      </Button>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 px-0"
+                      disabled={!memberForm.email || memberReset.isPending}
+                      onClick={() => memberReset.mutate({ email: memberForm.email })}
+                    >
+                      Prefiro enviar o e-mail de redefinição
+                    </Button>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setMemberForm(null)}>
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={memberProfile.isPending}
+                      onClick={() =>
+                        memberProfile.mutate({
+                          userId: memberForm.userId,
+                          fullName: memberForm.fullName.trim(),
+                          phone: memberForm.phone.trim(),
+                          email: memberForm.email.trim(),
+                          notes: memberForm.notes.trim(),
+                        })
+                      }
+                    >
+                      Salvar cadastro
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="modelos" className="mt-6">

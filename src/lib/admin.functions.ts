@@ -392,6 +392,103 @@ export const setMembership = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Atualiza cadastro do membro (nome, telefone, e-mail e observações). */
+export const updateMemberProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        fullName: z.string().trim().max(160).default(""),
+        phone: z.string().trim().max(40).default(""),
+        email: z.string().trim().email().max(180),
+        notes: z.string().trim().max(600).default(""),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+
+    const current = await db.from("profiles").select("email").eq("id", data.userId).maybeSingle();
+    if (current.error) throw new Error(current.error.message);
+
+    const email = data.email.toLowerCase();
+    if ((current.data?.email ?? "").toLowerCase() !== email) {
+      const authUpdate = await db.auth.admin.updateUserById(data.userId, {
+        email,
+        email_confirm: true,
+      });
+      if (authUpdate.error) throw new Error(authUpdate.error.message);
+    }
+
+    const profile = await db
+      .from("profiles")
+      .update({
+        full_name: data.fullName || null,
+        phone: data.phone || null,
+        email,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.userId);
+    if (profile.error) throw new Error(profile.error.message);
+
+    const membership = await db
+      .from("memberships")
+      .update({ notes: data.notes || null, updated_at: new Date().toISOString() })
+      .eq("user_id", data.userId);
+    if (membership.error) throw new Error(membership.error.message);
+
+    return { ok: true };
+  });
+
+/** Define uma nova senha diretamente para o membro. */
+export const setMemberPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        password: z.string().min(8).max(72),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const { error } = await db.auth.admin.updateUserById(data.userId, {
+      password: data.password,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Envia e-mail de redefinição de senha para o membro. */
+export const sendMemberPasswordReset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        email: z.string().trim().email().max(180),
+        redirectTo: z.string().trim().max(400).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const redirectTo =
+      data.redirectTo && /^https?:\/\//.test(data.redirectTo) ? data.redirectTo : undefined;
+    const { error } = await db.auth.resetPasswordForEmail(data.email.toLowerCase(), {
+      ...(redirectTo ? { redirectTo } : {}),
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 const importRowSchema = productSchema.partial({
   brand: true,
   subcategory: true,
