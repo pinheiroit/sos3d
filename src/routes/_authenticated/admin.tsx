@@ -367,6 +367,44 @@ function AdminPage() {
     onError: (e: Error) => toast.error("Erro ao atualizar acesso", { description: e.message }),
   });
 
+  const memberProfile = useMutation({
+    mutationFn: (input: {
+      userId: string;
+      fullName: string;
+      phone: string;
+      email: string;
+      notes: string;
+    }) => updateMemberProfile({ data: input } as never),
+    onSuccess: () => {
+      toast.success("Cadastro do membro atualizado");
+      setMemberForm(null);
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Erro ao salvar cadastro", { description: e.message }),
+  });
+
+  const memberPassword = useMutation({
+    mutationFn: (input: { userId: string; password: string }) =>
+      setMemberPassword({ data: input } as never),
+    onSuccess: () => {
+      toast.success("Nova senha definida");
+      setMemberForm((prev) => (prev ? { ...prev, password: "" } : prev));
+    },
+    onError: (e: Error) => toast.error("Erro ao definir senha", { description: e.message }),
+  });
+
+  const memberReset = useMutation({
+    mutationFn: (input: { email: string }) =>
+      sendMemberPasswordReset({
+        data: {
+          email: input.email,
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth` : undefined,
+        },
+      } as never),
+    onSuccess: () => toast.success("E-mail de redefinição enviado"),
+    onError: (e: Error) => toast.error("Erro ao enviar e-mail", { description: e.message }),
+  });
+
   const siteImages = useQuery(siteImagesQueryOptions);
   const printerModels = useQuery({
     queryKey: ["printer-models"],
