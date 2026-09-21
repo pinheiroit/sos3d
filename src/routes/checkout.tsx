@@ -210,6 +210,7 @@ function CheckoutPage() {
                   state: f.uf,
                 },
                 paymentMethod: pagamento as "pix" | "boleto" | "cartao",
+                fulfillment: entrega,
                 installmentMonths: isCard ? parcelasSel : undefined,
                 notes: "",
               },
