@@ -101,9 +101,11 @@ export const createOrder = createServerFn({ method: "POST" })
         customer_email: data.customer.email,
         customer_phone: data.customer.phone || null,
         customer_document: data.customer.document || null,
-        shipping_address: data.address,
+        shipping_address: isPickup ? { ...data.address, fulfillment: "coleta" } : data.address,
         payment_method: data.paymentMethod,
-        notes: data.notes || null,
+        notes: [isPickup ? "Venda por COLETA (retirada no local)" : null, data.notes || null]
+          .filter(Boolean)
+          .join(" | ") || null,
         subtotal,
         shipping,
         discount,
