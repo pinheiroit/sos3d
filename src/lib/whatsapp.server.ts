@@ -11,7 +11,7 @@ type NotifyOrder = {
   customer: { name: string; email: string; phone: string; document: string };
   address: Record<string, string>;
   fulfillment?: "entrega" | "coleta";
-  items: { name: string; qty: number; unitPrice: number }[];
+  items: { name: string; brand?: string; qty: number; unitPrice: number }[];
 };
 
 const brl = (v: number) =>

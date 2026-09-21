@@ -68,6 +68,7 @@ export const createOrder = createServerFn({ method: "POST" })
         product_id: product.id,
         product_slug: product.slug,
         product_name: product.name,
+        product_brand: product.brand,
         qty: item.qty,
         unit_price: (() => {
           const base = effectivePrice(
