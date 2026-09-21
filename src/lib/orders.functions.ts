@@ -164,12 +164,47 @@ export const createOrder = createServerFn({ method: "POST" })
       shipping,
       discount,
       paymentMethod: data.paymentMethod,
+      fulfillment: data.fulfillment,
       installmentMonths: data.paymentMethod === "cartao" ? (data.installmentMonths ?? null) : null,
       items: lines.map((l) => ({
         name: l.product_name,
         qty: l.qty,
         unitPrice: l.unit_price,
       })),
+    };
+  });
+
+/** Dados do cadastro do cliente logado para preencher o checkout automaticamente. */
+export const getMyCheckoutData = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const [{ data: profile }, { data: lastOrder }] = await Promise.all([
+      context.supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("id", context.userId)
+        .maybeSingle(),
+      context.supabase
+        .from("orders")
+        .select("customer_name, customer_email, customer_phone, customer_document, shipping_address")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    const addr = (lastOrder?.shipping_address ?? {}) as Record<string, string>;
+    return {
+      name: lastOrder?.customer_name || profile?.full_name || "",
+      email: lastOrder?.customer_email || profile?.email || "",
+      phone: lastOrder?.customer_phone || profile?.phone || "",
+      document: lastOrder?.customer_document || "",
+      address: {
+        zip: addr["zip"] ?? "",
+        street: addr["street"] ?? "",
+        number: addr["number"] ?? "",
+        city: addr["city"] ?? "",
+        state: addr["state"] ?? "",
+      },
     };
   });
 
