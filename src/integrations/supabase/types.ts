@@ -360,6 +360,89 @@ export type Database = {
           },
         ]
       }
+      nfe_documents: {
+        Row: {
+          cancel_protocol: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          chave: string | null
+          created_at: string
+          created_by: string | null
+          danfe_url: string | null
+          environment: string
+          error_message: string | null
+          id: string
+          numero: number | null
+          order_id: string | null
+          payload: Json
+          protocolo: string | null
+          recipient_document: string
+          recipient_name: string
+          response: Json
+          serie: number | null
+          status: string
+          total: number
+          updated_at: string
+          xml_url: string | null
+        }
+        Insert: {
+          cancel_protocol?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          chave?: string | null
+          created_at?: string
+          created_by?: string | null
+          danfe_url?: string | null
+          environment?: string
+          error_message?: string | null
+          id?: string
+          numero?: number | null
+          order_id?: string | null
+          payload?: Json
+          protocolo?: string | null
+          recipient_document?: string
+          recipient_name?: string
+          response?: Json
+          serie?: number | null
+          status?: string
+          total?: number
+          updated_at?: string
+          xml_url?: string | null
+        }
+        Update: {
+          cancel_protocol?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          chave?: string | null
+          created_at?: string
+          created_by?: string | null
+          danfe_url?: string | null
+          environment?: string
+          error_message?: string | null
+          id?: string
+          numero?: number | null
+          order_id?: string | null
+          payload?: Json
+          protocolo?: string | null
+          recipient_document?: string
+          recipient_name?: string
+          response?: Json
+          serie?: number | null
+          status?: string
+          total?: number
+          updated_at?: string
+          xml_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_documents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
