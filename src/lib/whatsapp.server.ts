@@ -10,6 +10,7 @@ type NotifyOrder = {
   installmentMonths: number | null;
   customer: { name: string; email: string; phone: string; document: string };
   address: Record<string, string>;
+  fulfillment?: "entrega" | "coleta";
   items: { name: string; qty: number; unitPrice: number }[];
 };
 
@@ -43,7 +44,11 @@ export function buildOrderMessage(order: NotifyOrder): string {
     `*E-mail:* ${order.customer.email}\n` +
     (order.customer.phone ? `*Telefone:* ${order.customer.phone}\n` : "") +
     (order.customer.document ? `*Documento:* ${order.customer.document}\n` : "") +
-    (end ? `*Entrega:* ${end}\n` : "") +
+    (order.fulfillment === "coleta"
+      ? `*Retirada:* venda por COLETA (cliente retira no local)\n`
+      : end
+        ? `*Entrega:* ${end}\n`
+        : "") +
     `\n${linhas}\n\n` +
     `Subtotal: ${brl(order.subtotal)}\n` +
     `Frete: ${order.shipping > 0 ? brl(order.shipping) : "Grátis"}\n` +

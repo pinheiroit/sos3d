@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, CreditCard, Lock, MessageCircle, Truck } from "lucide-react";
+import { CheckCircle2, CreditCard, Lock, MessageCircle, Store, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,9 @@ import {
   shippingFor,
   usePricing,
 } from "@/lib/pricing";
-import { createOrder } from "@/lib/orders.functions";
+import { createOrder, getMyCheckoutData } from "@/lib/orders.functions";
 import { useSiteContent } from "@/lib/site-content";
+import { useSession } from "@/lib/session";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -54,7 +55,9 @@ function whatsappLink(phone: string, order: OrderResult, customerName: string) {
     `\n\n` +
     `${linhas}\n\n` +
     `Subtotal: ${formatBRL(order.subtotal)}\n` +
-    `Frete: ${order.shipping > 0 ? formatBRL(order.shipping) : "Grátis"}\n` +
+    (order.fulfillment === "coleta"
+      ? `Entrega: COLETA (retirada no local)\n`
+      : `Frete: ${order.shipping > 0 ? formatBRL(order.shipping) : "Grátis"}\n`) +
     (order.discount > 0 ? `Desconto: -${formatBRL(order.discount)}\n` : "") +
     `*Total: ${formatBRL(order.total)}*\n\n` +
     `Gostaria de concluir o pagamento.`;
@@ -80,6 +83,35 @@ function CheckoutPage() {
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
 
+  const { session } = useSession();
+  const [entrega, setEntrega] = useState<"entrega" | "coleta">("entrega");
+  const [prefilled, setPrefilled] = useState(false);
+
+  useEffect(() => {
+    if (!session) return;
+    let active = true;
+    getMyCheckoutData()
+      .then((d) => {
+        if (!active) return;
+        setF((prev) => ({
+          nome: prev.nome || d.name,
+          email: prev.email || d.email,
+          doc: prev.doc || d.document,
+          tel: prev.tel || d.phone,
+          cep: prev.cep || d.address.zip,
+          rua: prev.rua || d.address.street,
+          num: prev.num || d.address.number,
+          cidade: prev.cidade || d.address.city,
+          uf: prev.uf || d.address.state,
+        }));
+        if (d.name || d.document) setPrefilled(true);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [session]);
+
   const rules = usePricing();
   const { footer } = useSiteContent();
 
@@ -96,7 +128,7 @@ function CheckoutPage() {
   const baseSubtotal = isCard
     ? items.reduce((s, { product, qty }) => s + quoteFor(product, parcelasSel, rules).total * qty, 0)
     : subtotal;
-  const frete = shippingFor(baseSubtotal, rules);
+  const frete = entrega === "coleta" ? 0 : shippingFor(baseSubtotal, rules);
   const desconto = (baseSubtotal * paymentDiscountPercent(pagamento, rules)) / 100;
   const total = baseSubtotal + frete - desconto;
 
@@ -180,6 +212,7 @@ function CheckoutPage() {
                   state: f.uf,
                 },
                 paymentMethod: pagamento as "pix" | "boleto" | "cartao",
+                fulfillment: entrega,
                 installmentMonths: isCard ? parcelasSel : undefined,
                 notes: "",
               },
@@ -198,6 +231,21 @@ function CheckoutPage() {
         <div className="space-y-6">
           <fieldset className="rounded-xl border border-border bg-card p-6">
             <legend className="px-2 text-sm font-semibold uppercase tracking-wide">Identificação</legend>
+            {prefilled ? (
+              <p className="mb-4 rounded-lg border border-tech/40 bg-tech/5 px-3 py-2 text-xs text-muted-foreground">
+                Dados preenchidos automaticamente com o seu cadastro. Confira e ajuste se precisar.
+              </p>
+            ) : (
+              !session && (
+                <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  Já é cliente?{" "}
+                  <Link to="/auth" className="font-semibold text-tech hover:underline">
+                    Entre na sua conta
+                  </Link>{" "}
+                  e preenchemos CPF, contato e endereço para você.
+                </p>
+              )
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="nome">Nome completo</Label>
@@ -220,6 +268,29 @@ function CheckoutPage() {
 
           <fieldset className="rounded-xl border border-border bg-card p-6">
             <legend className="px-2 text-sm font-semibold uppercase tracking-wide">Entrega</legend>
+            <RadioGroup
+              value={entrega}
+              onValueChange={(v) => setEntrega(v as "entrega" | "coleta")}
+              className="mb-5 gap-3 sm:grid-cols-2 sm:grid"
+            >
+              {[
+                { v: "entrega", t: "Entrega no endereço", d: "Envio para todo o Brasil" },
+                { v: "coleta", t: "Coleta (retirada no local)", d: "Sem frete — você retira na SOS.3D" },
+              ].map((o) => (
+                <label
+                  key={o.v}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 transition-colors has-[button[data-state=checked]]:border-tech"
+                >
+                  <RadioGroupItem value={o.v} id={`fulfill-${o.v}`} />
+                  <span>
+                    <span className="block text-sm font-semibold">{o.t}</span>
+                    <span className="block text-xs text-muted-foreground">{o.d}</span>
+                  </span>
+                </label>
+              ))}
+            </RadioGroup>
+            {entrega === "entrega" ? (
+              <>
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="sm:col-span-1">
                 <Label htmlFor="cep">CEP</Label>
@@ -245,6 +316,17 @@ function CheckoutPage() {
             <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
               <Truck className="size-4 text-tech" /> Frete grátis para pedidos acima de {formatBRL(rules.freeShippingFrom)}.
             </p>
+              </>
+            ) : (
+              <p className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-4 text-xs text-muted-foreground">
+                <Store className="mt-0.5 size-4 shrink-0 text-tech" />
+                <span>
+                  Venda por coleta: o pedido fica separado e você retira no endereço da SOS.3D
+                  {footer.address ? ` (${footer.address})` : ""}. Combinamos o horário pelo WhatsApp
+                  após a confirmação do pagamento. Nenhum valor de frete é cobrado.
+                </span>
+              </p>
+            )}
           </fieldset>
 
           <fieldset className="rounded-xl border border-border bg-card p-6">

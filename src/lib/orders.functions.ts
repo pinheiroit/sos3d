@@ -23,6 +23,7 @@ const checkoutSchema = z.object({
     state: z.string().trim().max(60).optional().default(""),
   }),
   paymentMethod: z.enum(["pix", "boleto", "cartao"]),
+  fulfillment: z.enum(["entrega", "coleta"]).optional().default("entrega"),
   installmentMonths: z.number().int().min(1).max(48).optional(),
   notes: z.string().trim().max(1000).optional().default(""),
 });
@@ -86,7 +87,8 @@ export const createOrder = createServerFn({ method: "POST" })
     });
 
     const subtotal = round2(lines.reduce((s, l) => s + l.qty * l.unit_price, 0));
-    const shipping = shippingFor(subtotal, rules);
+    const isPickup = data.fulfillment === "coleta";
+    const shipping = isPickup ? 0 : shippingFor(subtotal, rules);
     const discount = round2((subtotal * paymentDiscountPercent(data.paymentMethod, rules)) / 100);
     const total = round2(subtotal + shipping - discount);
 
@@ -99,9 +101,11 @@ export const createOrder = createServerFn({ method: "POST" })
         customer_email: data.customer.email,
         customer_phone: data.customer.phone || null,
         customer_document: data.customer.document || null,
-        shipping_address: data.address,
+        shipping_address: isPickup ? { ...data.address, fulfillment: "coleta" } : data.address,
         payment_method: data.paymentMethod,
-        notes: data.notes || null,
+        notes: [isPickup ? "Venda por COLETA (retirada no local)" : null, data.notes || null]
+          .filter(Boolean)
+          .join(" | ") || null,
         subtotal,
         shipping,
         discount,
@@ -147,6 +151,7 @@ export const createOrder = createServerFn({ method: "POST" })
         document: data.customer.document,
       },
       address: data.address,
+      fulfillment: data.fulfillment,
       items: lines.map((l) => ({ name: l.product_name, qty: l.qty, unitPrice: l.unit_price })),
     });
 
@@ -159,12 +164,47 @@ export const createOrder = createServerFn({ method: "POST" })
       shipping,
       discount,
       paymentMethod: data.paymentMethod,
+      fulfillment: data.fulfillment,
       installmentMonths: data.paymentMethod === "cartao" ? (data.installmentMonths ?? null) : null,
       items: lines.map((l) => ({
         name: l.product_name,
         qty: l.qty,
         unitPrice: l.unit_price,
       })),
+    };
+  });
+
+/** Dados do cadastro do cliente logado para preencher o checkout automaticamente. */
+export const getMyCheckoutData = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const [{ data: profile }, { data: lastOrder }] = await Promise.all([
+      context.supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("id", context.userId)
+        .maybeSingle(),
+      context.supabase
+        .from("orders")
+        .select("customer_name, customer_email, customer_phone, customer_document, shipping_address")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    const addr = (lastOrder?.shipping_address ?? {}) as Record<string, string>;
+    return {
+      name: lastOrder?.customer_name || profile?.full_name || "",
+      email: lastOrder?.customer_email || profile?.email || "",
+      phone: lastOrder?.customer_phone || profile?.phone || "",
+      document: lastOrder?.customer_document || "",
+      address: {
+        zip: addr["zip"] ?? "",
+        street: addr["street"] ?? "",
+        number: addr["number"] ?? "",
+        city: addr["city"] ?? "",
+        state: addr["state"] ?? "",
+      },
     };
   });
 
