@@ -23,6 +23,7 @@ const checkoutSchema = z.object({
     state: z.string().trim().max(60).optional().default(""),
   }),
   paymentMethod: z.enum(["pix", "boleto", "cartao"]),
+  fulfillment: z.enum(["entrega", "coleta"]).optional().default("entrega"),
   installmentMonths: z.number().int().min(1).max(48).optional(),
   notes: z.string().trim().max(1000).optional().default(""),
 });
