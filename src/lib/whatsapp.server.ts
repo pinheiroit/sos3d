@@ -11,7 +11,7 @@ type NotifyOrder = {
   customer: { name: string; email: string; phone: string; document: string };
   address: Record<string, string>;
   fulfillment?: "entrega" | "coleta";
-  items: { name: string; qty: number; unitPrice: number }[];
+  items: { name: string; brand?: string; qty: number; unitPrice: number }[];
 };
 
 const brl = (v: number) =>
@@ -25,7 +25,7 @@ const paymentLabel: Record<string, string> = {
 
 export function buildOrderMessage(order: NotifyOrder): string {
   const linhas = order.items
-    .map((i) => `• ${i.qty}x ${i.name} — ${brl(i.unitPrice * i.qty)}`)
+    .map((i) => `• ${i.qty}x ${i.name}${i.brand ? ` (${i.brand})` : ""} — ${brl(i.unitPrice * i.qty)}`)
     .join("\n");
   const end = [
     order.address["street"],
@@ -43,7 +43,7 @@ export function buildOrderMessage(order: NotifyOrder): string {
     `*Cliente:* ${order.customer.name}\n` +
     `*E-mail:* ${order.customer.email}\n` +
     (order.customer.phone ? `*Telefone:* ${order.customer.phone}\n` : "") +
-    (order.customer.document ? `*Documento:* ${order.customer.document}\n` : "") +
+    (order.customer.document ? `*CPF/CNPJ:* ${order.customer.document}\n` : "") +
     (order.fulfillment === "coleta"
       ? `*Retirada:* venda por COLETA (cliente retira no local)\n`
       : end
