@@ -21,6 +21,7 @@ import {
   defaultFiscalSettings,
   getFiscalPanel,
   issueNfe,
+  saveFiscalSettings,
   type FiscalSettings,
 } from "@/lib/fiscal.functions";
 
@@ -90,10 +91,7 @@ export function NfeEmissao() {
   const [justificativa, setJustificativa] = useState("");
 
   const saveSettings = useMutation({
-    mutationFn: async (values: FiscalSettings) => {
-      const { saveFiscalSettings } = await import("@/lib/fiscal.functions");
-      return saveFiscalSettings({ data: values });
-    },
+    mutationFn: (values: FiscalSettings) => saveSettingsFn({ data: values }),
     onSuccess: () => {
       toast.success("Configuração fiscal salva.");
       void queryClient.invalidateQueries({ queryKey: ["fiscal-panel"] });
@@ -102,10 +100,7 @@ export function NfeEmissao() {
   });
 
   const testService = useMutation({
-    mutationFn: async () => {
-      const { checkNfeService: check } = await import("@/lib/fiscal.functions");
-      return check();
-    },
+    mutationFn: () => checkServiceFn(),
     onSuccess: (result) => {
       if (result.online) toast.success(`Serviço no ar (ambiente: ${result.ambiente}).`);
       else toast.error(result.message || "O serviço de NF-e não respondeu.");
@@ -114,9 +109,8 @@ export function NfeEmissao() {
   });
 
   const emitir = useMutation({
-    mutationFn: async (form: IssueForm) => {
-      const { issueNfe: emit } = await import("@/lib/fiscal.functions");
-      return emit({
+    mutationFn: (form: IssueForm) => {
+      return issueNfeFn({
         data: {
           orderId: form.orderId,
           numero: Number(form.numero),
@@ -171,10 +165,7 @@ export function NfeEmissao() {
   });
 
   const cancelar = useMutation({
-    mutationFn: async () => {
-      const { cancelNfe: cancel } = await import("@/lib/fiscal.functions");
-      return cancel({ data: { id: cancelTarget!.id, justificativa } });
-    },
+    mutationFn: () => cancelNfeFn({ data: { id: cancelTarget!.id, justificativa } }),
     onSuccess: (result) => {
       if (result.ok) {
         toast.success(result.message);
