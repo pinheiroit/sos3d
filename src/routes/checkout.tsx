@@ -81,6 +81,35 @@ function CheckoutPage() {
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
 
+  const { session } = useSession();
+  const [entrega, setEntrega] = useState<"entrega" | "coleta">("entrega");
+  const [prefilled, setPrefilled] = useState(false);
+
+  useEffect(() => {
+    if (!session) return;
+    let active = true;
+    getMyCheckoutData()
+      .then((d) => {
+        if (!active) return;
+        setF((prev) => ({
+          nome: prev.nome || d.name,
+          email: prev.email || d.email,
+          doc: prev.doc || d.document,
+          tel: prev.tel || d.phone,
+          cep: prev.cep || d.address.zip,
+          rua: prev.rua || d.address.street,
+          num: prev.num || d.address.number,
+          cidade: prev.cidade || d.address.city,
+          uf: prev.uf || d.address.state,
+        }));
+        if (d.name || d.document) setPrefilled(true);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [session]);
+
   const rules = usePricing();
   const { footer } = useSiteContent();
 
