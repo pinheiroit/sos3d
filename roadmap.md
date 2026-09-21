@@ -28,3 +28,6 @@
 - [x] Verificar o novo painel em computador e celular
 - [x] Isolar o painel administrativo do cabeçalho e rodapé da loja
 - [x] Verificar o cabeçalho compacto do painel em computador e celular
+- [x] Implementar emissão de NF-e com NFeWizard (serviço Node + painel)
+- [x] Implementar cancelamento de NF-e com justificativa
+- [ ] Hospedar o serviço nfe-service e salvar NFE_SERVICE_URL/NFE_SERVICE_TOKEN
