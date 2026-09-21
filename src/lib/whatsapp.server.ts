@@ -25,7 +25,7 @@ const paymentLabel: Record<string, string> = {
 
 export function buildOrderMessage(order: NotifyOrder): string {
   const linhas = order.items
-    .map((i) => `• ${i.qty}x ${i.name} — ${brl(i.unitPrice * i.qty)}`)
+    .map((i) => `• ${i.qty}x ${i.name}${i.brand ? ` (${i.brand})` : ""} — ${brl(i.unitPrice * i.qty)}`)
     .join("\n");
   const end = [
     order.address["street"],
