@@ -126,7 +126,7 @@ function CheckoutPage() {
   const baseSubtotal = isCard
     ? items.reduce((s, { product, qty }) => s + quoteFor(product, parcelasSel, rules).total * qty, 0)
     : subtotal;
-  const frete = shippingFor(baseSubtotal, rules);
+  const frete = entrega === "coleta" ? 0 : shippingFor(baseSubtotal, rules);
   const desconto = (baseSubtotal * paymentDiscountPercent(pagamento, rules)) / 100;
   const total = baseSubtotal + frete - desconto;
 
