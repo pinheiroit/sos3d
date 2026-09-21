@@ -151,6 +151,7 @@ export const createOrder = createServerFn({ method: "POST" })
         document: data.customer.document,
       },
       address: data.address,
+      fulfillment: data.fulfillment,
       items: lines.map((l) => ({ name: l.product_name, qty: l.qty, unitPrice: l.unit_price })),
     });
 
