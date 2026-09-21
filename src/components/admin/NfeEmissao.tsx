@@ -75,9 +75,10 @@ const statusLabel: Record<string, string> = {
 export function NfeEmissao() {
   const queryClient = useQueryClient();
   const loadPanel = useServerFn(getFiscalPanel);
-  const saveSettingsFn = useServerFn(
-    (await0 as never) ?? (undefined as never),
-  ) as unknown as never;
+  const saveSettingsFn = useServerFn(saveFiscalSettings);
+  const checkServiceFn = useServerFn(checkNfeService);
+  const issueNfeFn = useServerFn(issueNfe);
+  const cancelNfeFn = useServerFn(cancelNfe);
 
   const { data, isLoading } = useQuery({ queryKey: ["fiscal-panel"], queryFn: () => loadPanel() });
 
