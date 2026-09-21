@@ -16,8 +16,9 @@ import {
   shippingFor,
   usePricing,
 } from "@/lib/pricing";
-import { createOrder } from "@/lib/orders.functions";
+import { createOrder, getMyCheckoutData } from "@/lib/orders.functions";
 import { useSiteContent } from "@/lib/site-content";
+import { useSession } from "@/lib/session";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
