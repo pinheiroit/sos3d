@@ -796,7 +796,7 @@ function AdminPage() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs">Preço mín.</Label>
+                  <Label className="text-xs">Preço mínimo (R$)</Label>
                   <Input
                     type="number"
                     min={0}
@@ -807,7 +807,7 @@ function AdminPage() {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Preço máx.</Label>
+                  <Label className="text-xs">Preço máximo (R$)</Label>
                   <Input
                     type="number"
                     min={0}
@@ -887,7 +887,7 @@ function AdminPage() {
 
               <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <div className="hidden grid-cols-[minmax(260px,1fr)_140px_110px_100px_108px] gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground xl:grid">
-                  <span>Produto</span><span>Preço</span><span>Estoque</span><span>Situação</span><span className="text-right">Ações</span>
+                  <span>Produto</span><span>Preço (R$)</span><span>Estoque</span><span>Situação</span><span className="text-right">Ações</span>
                 </div>
 
                 {filteredProducts.length === 0 && (
@@ -913,9 +913,9 @@ function AdminPage() {
                       </div>
                     </div>
                     <div>
-                      <Label className="text-xs xl:sr-only">Preço</Label>
+                      <Label className="text-xs xl:sr-only">Preço (R$)</Label>
                       <Input
-                        aria-label={`Preço de ${product.name}`}
+                        aria-label={`Preço em reais de ${product.name}`}
                         type="number"
                         step="0.01"
                         min={0}
@@ -1518,7 +1518,7 @@ function AdminPage() {
                 />
               </div>
               <div>
-                <Label>Preço antigo (opcional)</Label>
+                <Label>Preço antigo (R$ — opcional)</Label>
                 <Input
                   type="number"
                   step="0.01"
