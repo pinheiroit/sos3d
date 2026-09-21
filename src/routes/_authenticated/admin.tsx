@@ -73,8 +73,20 @@ import {
   quickUpdateProduct,
   saveProduct,
   setMembership,
+  setMemberPassword,
+  sendMemberPasswordReset,
+  updateMemberProfile,
   updateOrderStatus,
 } from "@/lib/admin.functions";
+
+type MemberForm = {
+  userId: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  notes: string;
+  password: string;
+};
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -275,6 +287,7 @@ function AdminPage() {
   const [stockSearch, setStockSearch] = useState("");
   const [stockView, setStockView] = useState<"all" | "low" | "out">("all");
   const [form, setForm] = useState<FormState | null>(null);
+  const [memberForm, setMemberForm] = useState<MemberForm | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
