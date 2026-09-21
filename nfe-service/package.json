@@ -1,0 +1,19 @@
+{
+  "name": "sos3d-nfe-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Serviço Node de emissão e cancelamento de NF-e (NFeWizard-io) usado pelo painel SOS.3D.",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "nfewizard-io": "^0.1.22",
+    "zod": "^3.24.1"
+  }
+}
