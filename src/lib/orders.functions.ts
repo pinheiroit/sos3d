@@ -87,7 +87,8 @@ export const createOrder = createServerFn({ method: "POST" })
     });
 
     const subtotal = round2(lines.reduce((s, l) => s + l.qty * l.unit_price, 0));
-    const shipping = shippingFor(subtotal, rules);
+    const isPickup = data.fulfillment === "coleta";
+    const shipping = isPickup ? 0 : shippingFor(subtotal, rules);
     const discount = round2((subtotal * paymentDiscountPercent(data.paymentMethod, rules)) / 100);
     const total = round2(subtotal + shipping - discount);
 
