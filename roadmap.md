@@ -26,3 +26,5 @@
 - [x] Tornar a listagem e o cadastro de produtos mais operacionais
 - [x] Criar uma área dedicada para edição rápida de estoque
 - [x] Verificar o novo painel em computador e celular
+- [x] Isolar o painel administrativo do cabeçalho e rodapé da loja
+- [ ] Verificar o cabeçalho compacto do painel em computador e celular

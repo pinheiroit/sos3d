@@ -621,31 +621,40 @@ function AdminPage() {
   );
 
   return (
-    <div className="container-page py-6 md:py-10">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
-        <div className="min-w-0">
-          <span className="eyebrow">Administração</span>
-          <h1 className="mt-1 truncate text-2xl font-bold md:text-3xl">Painel SOS.3D</h1>
+    <div className="min-h-screen bg-muted/30">
+      <header className="border-b border-border bg-background">
+        <div className="flex h-14 w-full items-center justify-between gap-3 px-4 md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-brand text-sm font-bold text-brand-foreground">3D</span>
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-bold">SOS.3D Admin</h1>
+              <p className="hidden text-xs text-muted-foreground sm:block">Gestão da loja</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Link to="/">Ver loja</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
+              <Link to="/portal">Portal de membros</Link>
+            </Button>
+            <Button variant="cta" size="sm" onClick={newProduct}>
+              <Plus /> <span className="hidden sm:inline">Novo produto</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button asChild variant="outline" className="hidden sm:inline-flex">
-            <Link to="/portal">Portal de membros</Link>
-          </Button>
-          <Button variant="cta" size="sm" onClick={newProduct}>
-            <Plus /> <span className="hidden sm:inline">Novo produto</span>
-          </Button>
-        </div>
-      </div>
+      </header>
 
-      <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSection)}>
+      <div className="w-full px-4 py-5 md:px-6 md:py-6">
+        <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as AdminSection)}>
         <TabsList className="sr-only">
           {Object.keys(sectionCopy).map((value) => (
             <TabsTrigger key={value} value={value}>{sectionCopy[value as AdminSection].title}</TabsTrigger>
           ))}
         </TabsList>
 
-        <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <aside className="hidden self-start rounded-lg border border-border bg-card p-3 lg:sticky lg:top-6 lg:block">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="hidden max-h-[calc(100vh-6.5rem)] self-start overflow-y-auto rounded-lg border border-border bg-card p-3 lg:sticky lg:top-5 lg:block">
             {menu}
           </aside>
 
@@ -1381,7 +1390,8 @@ function AdminPage() {
         </TabsContent>
           </main>
         </div>
-      </Tabs>
+        </Tabs>
+      </div>
 
       <Dialog
         open={form !== null}
