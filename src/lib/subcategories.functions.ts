@@ -19,6 +19,7 @@ const subcategorySchema = z.object({
   description: z.string().trim().max(400).default(""),
   sort_order: z.number().int().min(0).max(9999).default(0),
   active: z.boolean().default(true),
+  backorder: z.boolean().default(false),
 });
 
 export type SubcategoryRow = {
@@ -29,9 +30,10 @@ export type SubcategoryRow = {
   description: string;
   sort_order: number;
   active: boolean;
+  backorder: boolean;
 };
 
-const SELECT = "id, category_slug, slug, name, description, sort_order, active";
+const SELECT = "id, category_slug, slug, name, description, sort_order, active, backorder";
 
 /** Subcategorias ativas (uso público na loja). */
 export const listSubcategories = createServerFn({ method: "GET" }).handler(async () => {
@@ -90,6 +92,7 @@ export const saveSubcategory = createServerFn({ method: "POST" })
       description: data.values.description,
       sort_order: data.values.sort_order,
       active: data.values.active,
+      backorder: data.values.backorder,
       updated_at: new Date().toISOString(),
     };
 

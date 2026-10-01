@@ -37,7 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         {product.stock === 0 && (
           <span className="absolute inset-x-0 bottom-0 bg-brand/85 py-1.5 text-center text-xs font-semibold text-brand-foreground">
-            Sob consulta
+            {product.backorder ? "Sob encomenda" : "Sob consulta"}
           </span>
         )}
       </Link>

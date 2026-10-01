@@ -20,24 +20,39 @@ export const listProducts = createServerFn({ method: "GET" }).handler(async () =
     },
   });
 
-  const [{ data, error }, settings] = await Promise.all([
+  const [{ data, error }, settings, cats, subs] = await Promise.all([
     client
       .from("products")
       .select(
-        "id, slug, name, brand, category, subcategory, subtitle, description, price, old_price, image_key, image_url, badge, stock, active, use_cases, specs, installments",
+        "id, slug, name, brand, category, subcategory, subtitle, description, price, old_price, image_key, image_url, badge, stock, active, backorder, use_cases, specs, installments",
       )
       .eq("active", true)
       .order("created_at", { ascending: true }),
     client.from("site_settings").select("value").eq("key", "pricing").maybeSingle(),
+    client.from("categories").select("slug, backorder").eq("backorder", true),
+    client.from("subcategories").select("category_slug, slug, backorder").eq("backorder", true),
   ]);
+  const catBackorder = new Set((cats.data ?? []).map((c) => c.slug));
+  const subBackorder = new Set((subs.data ?? []).map((s) => `${s.category_slug}::${s.slug}`));
 
   if (error) throw new Error(error.message);
 
   const { normalizeRules, promoPercentFor, round2 } = await import("@/lib/pricing");
   const rules = normalizeRules(settings.data?.value ?? null);
 
-  return (data ?? []).map((row) => {
-    const product = mapProduct(row as unknown as ProductRow);
+  const visible = (data ?? [])
+    .map((row) => {
+      const p = mapProduct(row as unknown as ProductRow);
+      const backorder =
+        p.backorder ||
+        catBackorder.has(p.category) ||
+        (!!p.subcategory && subBackorder.has(`${p.category}::${p.subcategory}`));
+      return { ...p, backorder };
+    })
+    // Sem estoque só aparece quando há venda por encomenda.
+    .filter((p) => p.stock > 0 || p.backorder);
+
+  return visible.map((product) => {
     const pct = promoPercentFor(product, rules);
     if (pct <= 0) return product;
     return {

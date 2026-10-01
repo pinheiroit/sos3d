@@ -219,6 +219,7 @@ type FormState = {
   badge: string;
   stock: string;
   active: boolean;
+  backorder: boolean;
   use_cases: string;
   specs: string;
   installments: string;
@@ -240,6 +241,7 @@ const emptyForm: FormState = {
   badge: "",
   stock: "0",
   active: true,
+  backorder: false,
   use_cases: "",
   specs: "",
   installments: "",
@@ -529,6 +531,7 @@ function AdminPage() {
       badge: p.badge ?? "",
       stock: String(p.stock),
       active: p.active,
+      backorder: Boolean((p as { backorder?: boolean }).backorder),
       use_cases: (p.use_cases ?? []).join(", "),
       specs: Array.isArray(p.specs)
         ? (p.specs as { label: string; value: string }[])
@@ -562,6 +565,7 @@ function AdminPage() {
         badge: form.badge.trim() || null,
         stock: Number(form.stock) || 0,
         active: form.active,
+        backorder: form.backorder,
         use_cases: form.use_cases
           .split(",")
           .map((s) => s.trim())
@@ -1578,6 +1582,18 @@ function AdminPage() {
                   onCheckedChange={(active) => setForm({ ...form, active })}
                 />
                 <span className="text-sm">Publicado na loja</span>
+              </div>
+              <div className="flex items-start gap-3 sm:col-span-2">
+                <Switch
+                  checked={form.backorder}
+                  onCheckedChange={(backorder) => setForm({ ...form, backorder })}
+                />
+                <div>
+                  <span className="text-sm">Venda por encomenda</span>
+                  <p className="text-xs text-muted-foreground">
+                    Continua aparecendo na loja mesmo sem estoque. Também pode ser ativado na categoria ou subcategoria.
+                  </p>
+                </div>
               </div>
               <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
                 <h3 className="font-semibold">Descrição para o cliente</h3>
