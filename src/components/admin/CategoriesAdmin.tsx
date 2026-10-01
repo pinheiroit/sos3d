@@ -237,7 +237,9 @@ export function CategoriesAdmin() {
               </div>
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={c.backorder} onCheckedChange={(backorder) => update(c, { backorder })} />
-                <span className="text-xs text-muted-foreground">Venda por encomenda</span>
+                <span className="text-xs text-muted-foreground">
+                  Venda por encomenda{c.backorder ? " — vale para todas as subcategorias e produtos" : ""}
+                </span>
               </div>
               <Button
                 variant="ghost"
@@ -373,6 +375,9 @@ function SubcategoryList({
               <div className="flex items-center gap-2">
                 <Switch checked={s.backorder} onCheckedChange={(backorder) => onUpdate(s, { backorder })} />
                 <span className="text-xs text-muted-foreground">Encomenda</span>
+                <span className={s.backorder || category.backorder ? "rounded-full border border-tech px-2 py-0.5 text-xs text-tech" : "rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground"}>
+                  {s.backorder ? "Valendo: subcategoria" : category.backorder ? "Valendo: herdado da categoria" : "Desligado"}
+                </span>
               </div>
               <Button
                 variant="ghost"
