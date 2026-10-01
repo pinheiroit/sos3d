@@ -148,6 +148,7 @@ export const quickUpdateProduct = createServerFn({ method: "POST" })
         price: z.number().min(0).max(10_000_000).optional(),
         stock: z.number().int().min(0).max(1_000_000).optional(),
         active: z.boolean().optional(),
+        backorder: z.boolean().optional(),
       })
       .parse(input),
   )
@@ -155,7 +156,7 @@ export const quickUpdateProduct = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
-    const current = await db.from("products").select("price, stock, active").eq("id", data.id).single();
+    const current = await db.from("products").select("price, stock, active, backorder").eq("id", data.id).single();
     if (current.error) throw new Error(current.error.message);
     const { error } = await db
       .from("products")
@@ -163,6 +164,7 @@ export const quickUpdateProduct = createServerFn({ method: "POST" })
         price: data.price ?? current.data.price,
         stock: data.stock ?? current.data.stock,
         active: data.active ?? current.data.active,
+        backorder: data.backorder ?? current.data.backorder,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.id);

@@ -310,6 +310,13 @@ function AdminPage() {
   const { categories: categoryList } = useCategories();
   const { all: subcategoryList } = useSubcategories();
 
+  const backorderSource = (category: string, subcategory: string) => {
+    if (categoryList.find((c) => c.slug === category)?.backorder) return `categoria ${categoryList.find((c) => c.slug === category)?.name}`;
+    const sub = subcategoryList.find((s) => s.category_slug === category && s.slug === subcategory);
+    if (sub?.backorder) return `subcategoria ${sub.name}`;
+    return null;
+  };
+
   const overview = useQuery({
     queryKey: ["admin-overview"],
     queryFn: () => adminOverview(),
@@ -333,7 +340,7 @@ function AdminPage() {
   });
 
   const quick = useMutation({
-    mutationFn: (input: { id: string; price?: number; stock?: number; active?: boolean }) =>
+    mutationFn: (input: { id: string; price?: number; stock?: number; active?: boolean; backorder?: boolean }) =>
       quickUpdateProduct({ data: input } as never),
     onSuccess: refresh,
     onError: (e: Error) => toast.error("Erro ao atualizar", { description: e.message }),
@@ -957,6 +964,23 @@ function AdminPage() {
                       <Switch checked={product.active} onCheckedChange={(active) => quick.mutate({ id: product.id, active })} />
                       <span className="text-xs text-muted-foreground">{product.active ? "Ativo" : "Inativo"}</span>
                     </div>
+                    {(() => {
+                      const own = Boolean((product as { backorder?: boolean }).backorder);
+                      const inherited = backorderSource(product.category, (product as { subcategory?: string }).subcategory ?? "");
+                      return (
+                        <div className="flex flex-wrap items-center gap-2 xl:col-span-full">
+                          <Switch
+                            checked={own}
+                            onCheckedChange={(backorder) => quick.mutate({ id: product.id, backorder })}
+                            aria-label={`Venda por encomenda de ${product.name}`}
+                          />
+                          <span className="text-xs text-muted-foreground">Encomenda no produto</span>
+                          <span className={cn("rounded-full border px-2 py-0.5 text-xs", own || inherited ? "border-tech text-tech" : "border-border text-muted-foreground")}>
+                            {own ? "Valendo: produto" : inherited ? `Valendo: herdado da ${inherited}` : "Sem encomenda — some sem estoque"}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     <div className="flex justify-end gap-1">
                       <Button variant="outline" size="icon" aria-label={`Editar ${product.name}`} onClick={() => openEdit(product)}><Pencil /></Button>
                       <Button
@@ -1593,6 +1617,18 @@ function AdminPage() {
                   <p className="text-xs text-muted-foreground">
                     Continua aparecendo na loja mesmo sem estoque. Também pode ser ativado na categoria ou subcategoria.
                   </p>
+                  {(() => {
+                    const inherited = backorderSource(form.category, form.subcategory);
+                    return (
+                      <p className={cn("mt-1 text-xs font-medium", form.backorder || inherited ? "text-tech" : "text-muted-foreground")}>
+                        {form.backorder
+                          ? "Valendo: ativado neste produto."
+                          : inherited
+                            ? `Valendo: herdado da ${inherited} (sem precisar ligar aqui).`
+                            : "Não vale: o produto some da loja quando o estoque zerar."}
+                      </p>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="sm:col-span-2 mt-2 border-t border-border pt-4">
