@@ -32,6 +32,7 @@ export type Database = {
       categories: {
         Row: {
           active: boolean
+          backorder: boolean
           created_at: string
           description: string
           id: string
@@ -42,6 +43,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          backorder?: boolean
           created_at?: string
           description?: string
           id?: string
@@ -52,6 +54,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          backorder?: boolean
           created_at?: string
           description?: string
           id?: string
@@ -631,6 +634,7 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          backorder: boolean
           badge: string | null
           brand: string
           category: string
@@ -653,6 +657,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          backorder?: boolean
           badge?: string | null
           brand?: string
           category?: string
@@ -675,6 +680,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          backorder?: boolean
           badge?: string | null
           brand?: string
           category?: string
@@ -874,6 +880,7 @@ export type Database = {
       subcategories: {
         Row: {
           active: boolean
+          backorder: boolean
           category_slug: string
           created_at: string
           description: string
@@ -885,6 +892,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          backorder?: boolean
           category_slug: string
           created_at?: string
           description?: string
@@ -896,6 +904,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          backorder?: boolean
           category_slug?: string
           created_at?: string
           description?: string

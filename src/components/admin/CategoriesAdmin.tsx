@@ -109,6 +109,7 @@ export function CategoriesAdmin() {
         description: patch.description ?? sub.description,
         sort_order: patch.sort_order ?? sub.sort_order,
         active: patch.active ?? sub.active,
+        backorder: patch.backorder ?? sub.backorder,
       },
     });
   }
@@ -122,6 +123,7 @@ export function CategoriesAdmin() {
         description: patch.description ?? c.description,
         sort_order: patch.sort_order ?? c.sort_order,
         active: patch.active ?? c.active,
+        backorder: patch.backorder ?? c.backorder,
       },
     });
   }
@@ -232,6 +234,10 @@ export function CategoriesAdmin() {
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={c.active} onCheckedChange={(active) => update(c, { active })} />
                 <span className="text-xs text-muted-foreground">Visível</span>
+              </div>
+              <div className="flex items-center gap-2 pb-2">
+                <Switch checked={c.backorder} onCheckedChange={(backorder) => update(c, { backorder })} />
+                <span className="text-xs text-muted-foreground">Venda por encomenda</span>
               </div>
               <Button
                 variant="ghost"
@@ -363,6 +369,10 @@ function SubcategoryList({
               <div className="flex items-center gap-2">
                 <Switch checked={s.active} onCheckedChange={(active) => onUpdate(s, { active })} />
                 <span className="text-xs text-muted-foreground">Visível</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={s.backorder} onCheckedChange={(backorder) => onUpdate(s, { backorder })} />
+                <span className="text-xs text-muted-foreground">Encomenda</span>
               </div>
               <Button
                 variant="ghost"

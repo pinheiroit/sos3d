@@ -61,6 +61,8 @@ export type Product = {
   badge?: string;
   stock: number;
   active: boolean;
+  /** Pode ser vendido sem estoque (sob encomenda), considerando produto, categoria e subcategoria. */
+  backorder: boolean;
   useCases: string[];
   description: string;
   specs: Spec[];
@@ -105,6 +107,7 @@ export type ProductRow = {
   badge: string | null;
   stock: number;
   active: boolean;
+  backorder?: boolean | null;
   use_cases: string[] | null;
   specs: unknown;
   installments?: unknown;
@@ -140,6 +143,7 @@ export function mapProduct(row: ProductRow): Product {
     ...(row.badge ? { badge: row.badge } : {}),
     stock: row.stock ?? 0,
     active: row.active ?? true,
+    backorder: row.backorder ?? false,
     useCases: row.use_cases ?? [],
     specs,
     installments,

@@ -13,6 +13,7 @@ const categorySchema = z.object({
   description: z.string().trim().max(400).default(""),
   sort_order: z.number().int().min(0).max(9999).default(0),
   active: z.boolean().default(true),
+  backorder: z.boolean().default(false),
 });
 
 export type CategoryRow = {
@@ -22,6 +23,7 @@ export type CategoryRow = {
   description: string;
   sort_order: number;
   active: boolean;
+  backorder: boolean;
 };
 
 /** Categorias ativas (uso público na loja). */
@@ -29,7 +31,7 @@ export const listCategories = createServerFn({ method: "GET" }).handler(async ()
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("categories")
-    .select("id, slug, name, description, sort_order, active")
+    .select("id, slug, name, description, sort_order, active, backorder")
     .eq("active", true)
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
@@ -46,7 +48,7 @@ export const adminListCategories = createServerFn({ method: "GET" })
     const [cats, products] = await Promise.all([
       db
         .from("categories")
-        .select("id, slug, name, description, sort_order, active")
+        .select("id, slug, name, description, sort_order, active, backorder")
         .order("sort_order", { ascending: true }),
       db.from("products").select("category"),
     ]);
@@ -80,6 +82,7 @@ export const saveCategory = createServerFn({ method: "POST" })
       description: data.values.description,
       sort_order: data.values.sort_order,
       active: data.values.active,
+      backorder: data.values.backorder,
       updated_at: new Date().toISOString(),
     };
 

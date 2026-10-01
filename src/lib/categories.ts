@@ -9,6 +9,7 @@ export const defaultCategories: CategoryRow[] = [
     description: "",
     sort_order: 1,
     active: true,
+    backorder: false,
   },
   {
     id: "filamentos",
@@ -17,6 +18,7 @@ export const defaultCategories: CategoryRow[] = [
     description: "",
     sort_order: 2,
     active: true,
+    backorder: false,
   },
   {
     id: "acessorios",
@@ -25,6 +27,7 @@ export const defaultCategories: CategoryRow[] = [
     description: "",
     sort_order: 3,
     active: true,
+    backorder: false,
   },
 ];
 

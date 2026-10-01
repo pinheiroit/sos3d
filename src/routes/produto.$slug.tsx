@@ -119,7 +119,11 @@ function ProductPage() {
           <div className="mt-5 flex flex-wrap gap-2">
             {product.badge && <Badge className="bg-accent text-accent-foreground">{product.badge}</Badge>}
             <Badge variant="secondary">
-              {product.stock > 0 ? `${product.stock} em estoque` : "Sob consulta"}
+              {product.stock > 0
+                ? `${product.stock} em estoque`
+                : product.backorder
+                  ? "Sob encomenda"
+                  : "Sob consulta"}
             </Badge>
             {product.useCases.map((u) => (
               <Badge key={u} variant="secondary">
