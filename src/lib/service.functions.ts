@@ -668,7 +668,8 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
     if (o.error) throw new Error("O.S. não encontrada.");
     const cur = o.data;
     if (cur.closed_at && data.section !== "closing") throw new Error("O.S. encerrada — não pode mais ser alterada.");
-    const update: any = { // eslint-disable-line @typescript-eslint/no-explicit-any updated_at: new Date().toISOString() };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const update: any = { updated_at: new Date().toISOString() };
 
     const term = cur.private_term as { signed_at?: string } | null;
     const nextWarranty = data.warranty_status ?? cur.warranty_status;
