@@ -14,7 +14,7 @@ import {
   type Budget,
 } from "@/lib/service";
 
-type Any = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+type Any = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const esc = (v: unknown) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);

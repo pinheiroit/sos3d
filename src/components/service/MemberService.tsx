@@ -85,7 +85,7 @@ const KEY = ["my-service"];
 
 export function MemberService() {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: KEY, queryFn: () => myService() as Promise<MyData> });
+  const q = useQuery({ queryKey: KEY, queryFn: () => myService() as unknown as Promise<MyData> });
   const [tab, setTab] = useState("abertas");
   const [detail, setDetail] = useState<{ kind: "request" | "order"; id: string } | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: KEY });
@@ -657,7 +657,7 @@ export function TransferDialog({
 
 type Detail = {
   kind: "request" | "order";
-  row: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  row: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   events: ServiceEvent[];
   files: ServiceFile[];
   owner: { name: string; email: string; phone: string; document: string };
@@ -832,7 +832,7 @@ function DetailDialog({
   );
 }
 
-function Info({ label, value }: { label: string; value?: string }) {
+function Info({ label, value }: { label: string; value?: string | undefined }) {
   return (
     <div className="rounded-lg border border-border p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
