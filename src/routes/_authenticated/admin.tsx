@@ -117,6 +117,7 @@ const statusOptions = [
 
 type AdminSection =
   | "overview"
+  | "assistencia"
   | "televendas"
   | "pedidos"
   | "nfe"
