@@ -191,6 +191,7 @@ const adminGroups = [
 
 const sectionCopy: Record<AdminSection, { title: string; description: string }> = {
   overview: { title: "Visão geral", description: "Acompanhe os números e acesse as tarefas mais usadas." },
+  assistencia: { title: "Ordens de serviço", description: "Pré-atendimentos, recebimento, diagnóstico, garantia, orçamento e encerramento das O.S." },
   televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
   pedidos: { title: "Pedidos", description: "Acompanhe pedidos e atualize o andamento de cada venda." },
   nfe: { title: "Emissão de NF-e", description: "Emita e cancele notas fiscais dos pedidos." },
