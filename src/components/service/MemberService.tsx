@@ -178,7 +178,7 @@ export function MemberService() {
             <Card
               key={o.id}
               title={`${osNumber(o.number)} — ${o.equipment?.brand ?? ""} ${o.equipment?.model ?? ""}`}
-              status={CLOSING_REASON[o.closing?.reason ?? ""] ?? ORDER_STATUS[o.status]}
+              status={CLOSING_REASON[o.closing?.reason ?? ""] ?? ORDER_STATUS[o.status] ?? o.status}
               tone="default"
               lines={[`Finalizada em: ${fmtDate(o.closed_at ?? o.updated_at)}`]}
               onOpen={() => setDetail({ kind: "order", id: o.id })}
@@ -221,7 +221,7 @@ function Card({
   status: string;
   tone: "default" | "secondary" | "destructive" | "outline";
   lines: string[];
-  badge?: string;
+  badge?: string | undefined;
   onOpen: () => void;
   pdf?: boolean;
 }) {
@@ -332,7 +332,7 @@ function RequestWizard({
   onCreated,
   onEquipmentSaved,
 }: {
-  data?: MyData;
+  data?: MyData | undefined;
   onCreated: (id: string) => void;
   onEquipmentSaved: () => void;
 }) {
@@ -501,7 +501,7 @@ function RequestWizard({
   );
 }
 
-function EquipmentList({ data, onChanged }: { data?: MyData; onChanged: () => void }) {
+function EquipmentList({ data, onChanged }: { data?: MyData | undefined; onChanged: () => void }) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Equip | null>(null);
   const [history, setHistory] = useState<string | null>(null);
@@ -556,7 +556,7 @@ function EquipmentList({ data, onChanged }: { data?: MyData; onChanged: () => vo
 export function EquipmentHistoryDialog({ id, onClose }: { id: string | null; onClose: () => void }) {
   const q = useQuery({
     queryKey: ["equipment-history", id],
-    queryFn: () => getEquipmentHistory({ data: { id: id! } } as never) as Promise<{
+    queryFn: () => getEquipmentHistory({ data: { id: id! } } as never) as unknown as Promise<{
       equipment: Equip;
       orders: { id: string; number: number; status: string; received_at: string; title: string; mine: boolean }[];
       owners: { id: string; previous: string; next: string; at: string; notes: string; proof: string }[];
@@ -703,8 +703,8 @@ function DetailDialog({
   const d = q.data;
   const r = d?.row;
   const isOrder = d?.kind === "order";
-  const term = r?.private_term as Record<string, string> | null | undefined;
-  const b = (r?.budget ?? {}) as Record<string, number>;
+  const term = r?.private_term as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const b = (r?.budget ?? {}) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   return (
     <Dialog open={Boolean(detail)} onOpenChange={(o) => !o && onClose()}>

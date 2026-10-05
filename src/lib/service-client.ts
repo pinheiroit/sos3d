@@ -21,12 +21,10 @@ export async function uploadServiceFile(
       mime: file.type,
       size: file.size,
       category: opts.category ?? guessCategory(file),
-      stage: opts.stage,
+      ...(opts.stage ? { stage: opts.stage } : {}),
       visible_to_client: opts.visible_to_client ?? true,
     },
   } as never)) as { path: string; token: string; bucket: string };
-  const { error } = await supabase.storage.from(res.bucket).uploadToSignedUrl(res.path, res.token, file, {
-    contentType: file.type || undefined,
-  });
+  const { error } = await supabase.storage.from(res.bucket).uploadToSignedUrl(res.path, res.token, file, file.type ? { contentType: file.type } : {});
   if (error) throw new Error(error.message);
 }

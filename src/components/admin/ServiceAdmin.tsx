@@ -115,7 +115,7 @@ export function ServiceAdmin() {
       (statusFilter === "todas" ||
         (statusFilter === "abertas" ? !o.closed_at : statusFilter === "atrasadas" ? isOverdue(o) : o.status === statusFilter || (statusFilter === "aguardando_fabricante" && o.status === "analise_garantia"))) &&
       afterDate(o.received_at) &&
-      match(o.user_id, o.equipment, [osNumber(o.number), String(o.number), ORDER_STATUS[o.status]]),
+      match(o.user_id, o.equipment, [osNumber(o.number), String(o.number), ORDER_STATUS[o.status] ?? ""]),
   );
 
   return (
@@ -229,7 +229,7 @@ function useDetail(kind: "request" | "order", id: string) {
   });
 }
 
-function F({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+function F({ label, children, className }: { label: string; children: React.ReactNode; className?: string | undefined }) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label className="text-xs">{label}</Label>
@@ -544,7 +544,7 @@ function OrderDialog({ id, onClose, onChanged }: { id: string; onClose: () => vo
           <Tabs defaultValue="relato">
             <TabsList className="flex h-auto flex-wrap justify-start">
               {[["relato", "Relato e recebimento"], ["diagnostico", "Diagnóstico"], ["garantia", "Garantia"], ["orcamento", "Orçamento"], ["execucao", "Execução"], ["validacao", "Validação final"], ["encerramento", "Encerramento"], ["arquivos", "Arquivos"], ["historico", "Histórico"]].map(([v, l]) => (
-                <TabsTrigger key={v} value={v}>{l}</TabsTrigger>
+                <TabsTrigger key={v} value={v!}>{l}</TabsTrigger>
               ))}
             </TabsList>
 

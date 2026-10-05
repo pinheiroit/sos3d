@@ -180,8 +180,8 @@ export function FileDrop({
         await uploadServiceFile(file, {
           scope,
           id,
-          stage,
-          category: category === "auto" ? undefined : category,
+          ...(stage ? { stage } : {}),
+          ...(category === "auto" ? {} : { category }),
           visible_to_client: !internal,
         });
       }
