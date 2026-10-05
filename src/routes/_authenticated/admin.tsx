@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Image,
   LayoutDashboard,
+  Wrench,
   Menu,
   Package,
   Palette,
@@ -67,6 +68,7 @@ import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
 import { NfeEmissao } from "@/components/admin/NfeEmissao";
 import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
+import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
   adminOverview,
@@ -115,6 +117,7 @@ const statusOptions = [
 
 type AdminSection =
   | "overview"
+  | "assistencia"
   | "televendas"
   | "pedidos"
   | "nfe"
@@ -145,6 +148,10 @@ const adminGroups = [
       { value: "pedidos", label: "Pedidos", icon: ReceiptText },
       { value: "nfe", label: "Emissão de NF-e", icon: ReceiptText },
     ],
+  },
+  {
+    label: "Assistência técnica",
+    items: [{ value: "assistencia", label: "Ordens de serviço", icon: Wrench }],
   },
   {
     label: "Catálogo",
@@ -184,6 +191,7 @@ const adminGroups = [
 
 const sectionCopy: Record<AdminSection, { title: string; description: string }> = {
   overview: { title: "Visão geral", description: "Acompanhe os números e acesse as tarefas mais usadas." },
+  assistencia: { title: "Ordens de serviço", description: "Pré-atendimentos, recebimento, diagnóstico, garantia, orçamento e encerramento das O.S." },
   televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
   pedidos: { title: "Pedidos", description: "Acompanhe pedidos e atualize o andamento de cada venda." },
   nfe: { title: "Emissão de NF-e", description: "Emita e cancele notas fiscais dos pedidos." },
@@ -1087,6 +1095,10 @@ function AdminPage() {
               queryClient.invalidateQueries({ queryKey: ["products"] });
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="assistencia" className="mt-6">
+          <ServiceAdmin />
         </TabsContent>
 
         <TabsContent value="televendas" className="mt-6">

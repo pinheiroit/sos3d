@@ -42,7 +42,7 @@ import { printFinal, printReceipt, printTerm } from "@/lib/service-pdf";
 import { EventTimeline, FileDrop, FileGrid, OrderProgress, type ServiceEvent, type ServiceFile } from "@/components/service/ServiceShared";
 import { EquipmentHistoryDialog, TransferDialog } from "@/components/service/MemberService";
 
-type Any = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+type Any = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 type Mini = { id: string; brand: string; model: string; serial: string } | null;
 type Board = {
   requests: { id: string; number: number; status: string; problem: string; error_code: string; created_at: string; user_id: string; equipment: Mini }[];
@@ -68,7 +68,7 @@ const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").t
 
 export function ServiceAdmin() {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: BOARD, queryFn: () => adminServiceBoard() as Promise<Board> });
+  const q = useQuery({ queryKey: BOARD, queryFn: () => adminServiceBoard() as unknown as Promise<Board> });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("abertas");
   const [dateFrom, setDateFrom] = useState("");
@@ -115,7 +115,7 @@ export function ServiceAdmin() {
       (statusFilter === "todas" ||
         (statusFilter === "abertas" ? !o.closed_at : statusFilter === "atrasadas" ? isOverdue(o) : o.status === statusFilter || (statusFilter === "aguardando_fabricante" && o.status === "analise_garantia"))) &&
       afterDate(o.received_at) &&
-      match(o.user_id, o.equipment, [osNumber(o.number), String(o.number), ORDER_STATUS[o.status]]),
+      match(o.user_id, o.equipment, [osNumber(o.number), String(o.number), ORDER_STATUS[o.status] ?? ""]),
   );
 
   return (
@@ -225,11 +225,11 @@ type Detail = { kind: string; row: Any; request: Any | null; events: ServiceEven
 function useDetail(kind: "request" | "order", id: string) {
   return useQuery({
     queryKey: ["service-detail", kind, id],
-    queryFn: () => getServiceDetail({ data: { kind, id } } as never) as Promise<Detail>,
+    queryFn: () => getServiceDetail({ data: { kind, id } } as never) as unknown as Promise<Detail>,
   });
 }
 
-function F({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+function F({ label, children, className }: { label: string; children: React.ReactNode; className?: string | undefined }) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label className="text-xs">{label}</Label>
@@ -364,7 +364,7 @@ function CustomerBox({ owner }: { owner: Any }) {
   );
 }
 
-function Info({ label, value, className }: { label: string; value?: string | null; className?: string }) {
+function Info({ label, value, className }: { label: string; value?: string | null | undefined; className?: string }) {
   return (
     <div className={cn("rounded-lg border border-border p-3", className)}>
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -544,7 +544,7 @@ function OrderDialog({ id, onClose, onChanged }: { id: string; onClose: () => vo
           <Tabs defaultValue="relato">
             <TabsList className="flex h-auto flex-wrap justify-start">
               {[["relato", "Relato e recebimento"], ["diagnostico", "Diagnóstico"], ["garantia", "Garantia"], ["orcamento", "Orçamento"], ["execucao", "Execução"], ["validacao", "Validação final"], ["encerramento", "Encerramento"], ["arquivos", "Arquivos"], ["historico", "Histórico"]].map(([v, l]) => (
-                <TabsTrigger key={v} value={v}>{l}</TabsTrigger>
+                <TabsTrigger key={v} value={v!}>{l}</TabsTrigger>
               ))}
             </TabsList>
 
@@ -780,7 +780,7 @@ type EqRow = { id: string; brand: string; model: string; serial: string; owner_n
 
 function EquipmentAdmin({ search }: { search: string }) {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["admin-equipment"], queryFn: () => adminListEquipment() as Promise<EqRow[]> });
+  const q = useQuery({ queryKey: ["admin-equipment"], queryFn: () => adminListEquipment() as unknown as Promise<EqRow[]> });
   const [history, setHistory] = useState<string | null>(null);
   const [transfer, setTransfer] = useState<EqRow | null>(null);
   const list = (q.data ?? []).filter((e) => !search.trim() || norm(`${e.brand} ${e.model} ${e.serial} ${e.owner_name} ${e.owner_email}`).includes(norm(search)));

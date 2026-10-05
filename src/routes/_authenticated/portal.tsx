@@ -27,6 +27,7 @@ import { getLessonMedia } from "@/lib/courses.functions";
 import { myLessonProgress, saveLessonProgress } from "@/lib/progress.functions";
 import { listMyOrders } from "@/lib/orders.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { MemberService } from "@/components/service/MemberService";
 
 const PdfLessonViewer = lazy(() => import("@/components/site/PdfLessonViewer"));
 
@@ -34,7 +35,7 @@ const PdfLessonViewer = lazy(() => import("@/components/site/PdfLessonViewer"));
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({
     meta: [
-      { title: "Portal de membros | SOS.3D" },
+      { title: "Minha SOS-3D | Pedidos, cursos e assistência técnica" },
       {
         name: "description",
         content: "Cursos, conteúdos técnicos e histórico de pedidos para clientes SOS.3D.",
@@ -82,7 +83,7 @@ function PortalPage() {
     <div className="container-page py-12">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <span className="eyebrow">Portal SOS.3D</span>
+          <span className="eyebrow">Minha SOS-3D</span>
           <h1 className="mt-2 text-3xl font-bold md:text-4xl">
             Olá, {data?.profile?.full_name?.split(" ")[0] ?? "cliente"}
           </h1>
@@ -123,8 +124,9 @@ function PortalPage() {
 
       <Tabs defaultValue={data?.isMember ? "cursos" : "pedidos"} className="mt-10">
         <TabsList>
-          <TabsTrigger value="cursos">Cursos e conteúdos</TabsTrigger>
           <TabsTrigger value="pedidos">Meus pedidos</TabsTrigger>
+          <TabsTrigger value="cursos">Cursos e vídeos</TabsTrigger>
+          <TabsTrigger value="assistencia">Assistência técnica</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cursos" className="mt-8">
@@ -232,6 +234,10 @@ function PortalPage() {
 
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="assistencia" className="mt-8">
+          <MemberService />
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-8">
