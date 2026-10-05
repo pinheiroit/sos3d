@@ -676,7 +676,7 @@ function DetailDialog({
   const key = ["service-detail", detail?.kind, detail?.id];
   const q = useQuery({
     queryKey: key,
-    queryFn: () => getServiceDetail({ data: detail! } as never) as Promise<Detail>,
+    queryFn: () => getServiceDetail({ data: detail! } as never) as unknown as Promise<Detail>,
     enabled: Boolean(detail),
   });
   const reload = () => {

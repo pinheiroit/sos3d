@@ -225,7 +225,7 @@ type Detail = { kind: string; row: Any; request: Any | null; events: ServiceEven
 function useDetail(kind: "request" | "order", id: string) {
   return useQuery({
     queryKey: ["service-detail", kind, id],
-    queryFn: () => getServiceDetail({ data: { kind, id } } as never) as Promise<Detail>,
+    queryFn: () => getServiceDetail({ data: { kind, id } } as never) as unknown as Promise<Detail>,
   });
 }
 
