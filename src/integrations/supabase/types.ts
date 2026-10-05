@@ -202,6 +202,92 @@ export type Database = {
         }
         Relationships: []
       }
+      equipment: {
+        Row: {
+          brand: string
+          created_at: string
+          id: string
+          invoice_date: string | null
+          invoice_number: string
+          model: string
+          notes: string
+          order_reference: string
+          owner_id: string | null
+          purchase_date: string | null
+          serial: string
+          updated_at: string
+        }
+        Insert: {
+          brand?: string
+          created_at?: string
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string
+          model?: string
+          notes?: string
+          order_reference?: string
+          owner_id?: string | null
+          purchase_date?: string | null
+          serial: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string
+          model?: string
+          notes?: string
+          order_reference?: string
+          owner_id?: string | null
+          purchase_date?: string | null
+          serial?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      equipment_ownership: {
+        Row: {
+          equipment_id: string
+          id: string
+          new_owner_id: string | null
+          notes: string
+          previous_owner_id: string | null
+          proof: string
+          requested_by: string | null
+          transferred_at: string
+        }
+        Insert: {
+          equipment_id: string
+          id?: string
+          new_owner_id?: string | null
+          notes?: string
+          previous_owner_id?: string | null
+          proof?: string
+          requested_by?: string | null
+          transferred_at?: string
+        }
+        Update: {
+          equipment_id?: string
+          id?: string
+          new_owner_id?: string | null
+          notes?: string
+          previous_owner_id?: string | null
+          proof?: string
+          requested_by?: string | null
+          transferred_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_ownership_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           completed: boolean
@@ -729,6 +815,304 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      service_events: {
+        Row: {
+          actor_id: string | null
+          actor_name: string
+          created_at: string
+          description: string
+          field: string | null
+          id: string
+          kind: string
+          new_value: string | null
+          old_value: string | null
+          order_id: string | null
+          request_id: string | null
+          visible_to_client: boolean
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          description: string
+          field?: string | null
+          id?: string
+          kind?: string
+          new_value?: string | null
+          old_value?: string | null
+          order_id?: string | null
+          request_id?: string | null
+          visible_to_client?: boolean
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          description?: string
+          field?: string | null
+          id?: string
+          kind?: string
+          new_value?: string | null
+          old_value?: string | null
+          order_id?: string | null
+          request_id?: string | null
+          visible_to_client?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_files: {
+        Row: {
+          category: string
+          created_at: string
+          equipment_id: string | null
+          id: string
+          locked: boolean
+          mime: string
+          name: string
+          order_id: string | null
+          owner_id: string | null
+          path: string
+          request_id: string | null
+          size: number
+          stage: string
+          uploaded_by: string | null
+          visible_to_client: boolean
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          equipment_id?: string | null
+          id?: string
+          locked?: boolean
+          mime?: string
+          name: string
+          order_id?: string | null
+          owner_id?: string | null
+          path: string
+          request_id?: string | null
+          size?: number
+          stage?: string
+          uploaded_by?: string | null
+          visible_to_client?: boolean
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          equipment_id?: string | null
+          id?: string
+          locked?: boolean
+          mime?: string
+          name?: string
+          order_id?: string | null
+          owner_id?: string | null
+          path?: string
+          request_id?: string | null
+          size?: number
+          stage?: string
+          uploaded_by?: string | null
+          visible_to_client?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_files_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_files_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_files_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_orders: {
+        Row: {
+          budget: Json
+          budget_status: string
+          closed_at: string | null
+          closing: Json
+          created_at: string
+          diagnosis: Json
+          due_at: string | null
+          equipment_id: string
+          execution: Json
+          id: string
+          number: number
+          private_term: Json | null
+          received_at: string
+          received_by: string | null
+          reception: Json
+          reported: Json
+          request_id: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          validation: Json
+          warranty: Json
+          warranty_status: string
+        }
+        Insert: {
+          budget?: Json
+          budget_status?: string
+          closed_at?: string | null
+          closing?: Json
+          created_at?: string
+          diagnosis?: Json
+          due_at?: string | null
+          equipment_id: string
+          execution?: Json
+          id?: string
+          number?: number
+          private_term?: Json | null
+          received_at?: string
+          received_by?: string | null
+          reception?: Json
+          reported?: Json
+          request_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          validation?: Json
+          warranty?: Json
+          warranty_status?: string
+        }
+        Update: {
+          budget?: Json
+          budget_status?: string
+          closed_at?: string | null
+          closing?: Json
+          created_at?: string
+          diagnosis?: Json
+          due_at?: string | null
+          equipment_id?: string
+          execution?: Json
+          id?: string
+          number?: number
+          private_term?: Json | null
+          received_at?: string
+          received_by?: string | null
+          reception?: Json
+          reported?: Json
+          request_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          validation?: Json
+          warranty?: Json
+          warranty_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_requests: {
+        Row: {
+          created_at: string
+          equipment_id: string
+          error_code: string
+          failure_type: string
+          frequency: string
+          id: string
+          number: number
+          problem: string
+          service_order_id: string | null
+          staff_message: string
+          started_when: string
+          status: string
+          steps_tried: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          equipment_id: string
+          error_code?: string
+          failure_type?: string
+          frequency?: string
+          id?: string
+          number?: number
+          problem: string
+          service_order_id?: string | null
+          staff_message?: string
+          started_when?: string
+          status?: string
+          steps_tried?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          equipment_id?: string
+          error_code?: string
+          failure_type?: string
+          frequency?: string
+          id?: string
+          number?: number
+          problem?: string
+          service_order_id?: string | null
+          staff_message?: string
+          started_when?: string
+          status?: string
+          steps_tried?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_order_fk"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_images: {
         Row: {
