@@ -36,6 +36,13 @@
       "when": 1790890178022,
       "tag": "0004_add_backorder_flags",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791220784026,
+      "tag": "0005_create_service_orders",
+      "breakpoints": true
     }
   ]
 }
