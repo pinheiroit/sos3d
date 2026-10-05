@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Image,
   LayoutDashboard,
+  Wrench,
   Menu,
   Package,
   Palette,
@@ -67,6 +68,7 @@ import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
 import { NfeEmissao } from "@/components/admin/NfeEmissao";
 import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
+import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
   adminOverview,
@@ -145,6 +147,10 @@ const adminGroups = [
       { value: "pedidos", label: "Pedidos", icon: ReceiptText },
       { value: "nfe", label: "Emissão de NF-e", icon: ReceiptText },
     ],
+  },
+  {
+    label: "Assistência técnica",
+    items: [{ value: "assistencia", label: "Ordens de serviço", icon: Wrench }],
   },
   {
     label: "Catálogo",
@@ -1087,6 +1093,10 @@ function AdminPage() {
               queryClient.invalidateQueries({ queryKey: ["products"] });
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="assistencia" className="mt-6">
+          <ServiceAdmin />
         </TabsContent>
 
         <TabsContent value="televendas" className="mt-6">
