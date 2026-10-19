@@ -35,9 +35,9 @@ export const Route = createFileRoute("/suporte")({
         content: "Chamado técnico, base de conhecimento, garantia e treinamento.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://sos3d.lovable.app/suporte" },
+      { property: "og:url", content: "https://sos3d.com.br/suporte" },
     ],
-    links: [{ rel: "canonical", href: "https://sos3d.lovable.app/suporte" }],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/suporte" }],
     scripts: [
       {
         type: "application/ld+json",

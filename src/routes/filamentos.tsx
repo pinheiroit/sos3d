@@ -15,7 +15,9 @@ export const Route = createFileRoute("/filamentos")({
         property: "og:description",
         content: "Materiais selecionados, com orientação de parâmetros e secagem para cada aplicação.",
       },
+      { property: "og:url", content: "https://sos3d.com.br/filamentos" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/filamentos" }],
   }),
   component: () => (
     <CatalogView

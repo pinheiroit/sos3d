@@ -2,7 +2,7 @@
 
 
 
-**Live app**: https://sos3d.lovable.app
+**Live app**: https://sos3d.com.br
 
 ## Build with Lovable
 

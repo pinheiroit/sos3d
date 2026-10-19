@@ -21,7 +21,9 @@ export const Route = createFileRoute("/loja")({
         property: "og:description",
         content: "Compre impressoras 3D, filamentos e acessórios com curadoria e suporte técnico.",
       },
+      { property: "og:url", content: "https://sos3d.com.br/loja" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/loja" }],
   }),
   component: Loja,
 });
