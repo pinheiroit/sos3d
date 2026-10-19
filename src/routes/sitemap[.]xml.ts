@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { listProducts } from "@/lib/catalog.functions";
 
-const BASE_URL = "https://sos3d.lovable.app";
+const BASE_URL = "https://sos3d.com.br";
 
 interface SitemapEntry {
   path: string;

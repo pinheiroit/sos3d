@@ -93,6 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Impressoras 3D, filamentos, acessórios, impressão sob demanda e suporte técnico para empresas, escolas, profissionais e makers.",
       },
       { name: "author", content: "SOS.3D" },
+      { name: "google-site-verification", content: "mc2V0uBmFD4PLR5eEqpNKfHLjiPDYjM4TAiQoumdl8Y" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
