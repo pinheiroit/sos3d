@@ -188,6 +188,7 @@ export const getMyCheckoutData = createServerFn({ method: "GET" })
       context.supabase
         .from("orders")
         .select("customer_name, customer_email, customer_phone, customer_document, shipping_address")
+        .eq("user_id", context.userId)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -215,6 +216,7 @@ export const listMyOrders = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("orders")
       .select("id, reference, status, total, created_at, order_items(product_name, qty, unit_price)")
+      .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
