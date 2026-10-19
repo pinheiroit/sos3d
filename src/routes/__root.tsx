@@ -115,20 +115,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@graph": [
             {
               "@type": "Organization",
-              "@id": "https://sos3d.lovable.app/#organization",
+              "@id": "https://sos3d.com.br/#organization",
               name: "SOS.3D",
-              url: "https://sos3d.lovable.app/",
-              logo: "https://sos3d.lovable.app/favicon.png",
+              url: "https://sos3d.com.br/",
+              logo: "https://sos3d.com.br/favicon.png",
               description:
                 "Impressoras 3D, filamentos, acessórios, impressão sob demanda e suporte técnico especializado.",
             },
             {
               "@type": "WebSite",
-              "@id": "https://sos3d.lovable.app/#website",
+              "@id": "https://sos3d.com.br/#website",
               name: "SOS.3D",
-              url: "https://sos3d.lovable.app/",
+              url: "https://sos3d.com.br/",
               inLanguage: "pt-BR",
-              publisher: { "@id": "https://sos3d.lovable.app/#organization" },
+              publisher: { "@id": "https://sos3d.com.br/#organization" },
             },
           ],
         }),

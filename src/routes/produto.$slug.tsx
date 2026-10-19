@@ -25,7 +25,7 @@ export const Route = createFileRoute("/produto/$slug")({
         meta: [{ title: "Produto indisponível | SOS.3D" }, { name: "robots", content: "noindex" }],
       };
     }
-    const url = `https://sos3d.lovable.app/produto/${params.slug}`;
+    const url = `https://sos3d.com.br/produto/${params.slug}`;
     const image = product.imageUrl?.startsWith("http") ? product.imageUrl : undefined;
     return {
       meta: [

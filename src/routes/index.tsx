@@ -22,9 +22,9 @@ export const Route = createFileRoute("/")({
           "Impressoras 3D, filamentos e acessórios com envio para todo o Brasil, parcelamento e suporte técnico real.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://sos3d.lovable.app/" },
+      { property: "og:url", content: "https://sos3d.com.br/" },
     ],
-    links: [{ rel: "canonical", href: "https://sos3d.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/" }],
   }),
   component: Index,
 });
