@@ -37,7 +37,9 @@ export const Route = createFileRoute("/impressao-3d")({
         property: "og:description",
         content: "Envie o arquivo ou a ideia e receba a peça pronta com o material adequado.",
       },
+      { property: "og:url", content: "https://sos3d.com.br/impressao-3d" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/impressao-3d" }],
   }),
   component: PrintingPage,
 });

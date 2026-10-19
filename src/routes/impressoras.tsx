@@ -15,7 +15,9 @@ export const Route = createFileRoute("/impressoras")({
         property: "og:description",
         content: "Da impressora de bancada à industrial, com indicação técnica pela sua aplicação.",
       },
+      { property: "og:url", content: "https://sos3d.com.br/impressoras" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/impressoras" }],
   }),
   component: () => (
     <CatalogView

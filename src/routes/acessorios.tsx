@@ -17,7 +17,9 @@ export const Route = createFileRoute("/acessorios")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://sos3d.com.br/acessorios" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/acessorios" }],
   }),
   component: () => (
     <CatalogView

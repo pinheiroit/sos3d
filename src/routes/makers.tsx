@@ -22,7 +22,9 @@ export const Route = createFileRoute("/makers")({
         property: "og:description",
         content: "Conteúdo técnico, kits, downloads e comunidade para makers e criadores.",
       },
+      { property: "og:url", content: "https://sos3d.com.br/makers" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/makers" }],
   }),
   component: MakersPage,
 });

@@ -28,7 +28,9 @@ export const Route = createFileRoute("/contato")({
         property: "og:description",
         content: "Conte o que você precisa produzir e receba uma recomendação adequada.",
       },
+      { property: "og:url", content: "https://sos3d.com.br/contato" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/contato" }],
   }),
   component: ContactPage,
 });

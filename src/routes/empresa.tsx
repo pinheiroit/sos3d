@@ -16,7 +16,9 @@ export const Route = createFileRoute("/empresa")({
         property: "og:description",
         content: "Missão, visão, valores e diferenciais da SOS.3D em manufatura aditiva.",
       },
+      { property: "og:url", content: "https://sos3d.com.br/empresa" },
     ],
+    links: [{ rel: "canonical", href: "https://sos3d.com.br/empresa" }],
   }),
   component: CompanyPage,
 });
