@@ -18,6 +18,7 @@ import {
   ReceiptText,
   Search,
   Settings,
+  ShieldCheck,
   ShoppingCart,
   Store,
   Tags,
@@ -76,6 +77,7 @@ import {
   quickUpdateProduct,
   saveProduct,
   setMembership,
+  setMemberAdmin,
   setMemberPassword,
   sendMemberPasswordReset,
   updateMemberProfile,
@@ -386,6 +388,16 @@ function AdminPage() {
       refresh();
     },
     onError: (e: Error) => toast.error("Erro ao atualizar acesso", { description: e.message }),
+  });
+
+  const memberAdmin = useMutation({
+    mutationFn: (input: { userId: string; isAdmin: boolean }) =>
+      setMemberAdmin({ data: input } as never),
+    onSuccess: (_r, input) => {
+      toast.success(input.isAdmin ? "Acesso de administrador concedido" : "Acesso de administrador removido");
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Erro ao alterar administrador", { description: e.message }),
   });
 
   const memberProfile = useMutation({
@@ -1174,6 +1186,8 @@ function AdminPage() {
             const selectedIds = (data?.memberModels ?? [])
               .filter((x) => x.user_id === profile.id)
               .map((x) => x.printer_model_id);
+            const isAdminUser = (data?.adminIds ?? []).includes(profile.id);
+            const isSelf = data?.currentUserId === profile.id;
             const toggleModel = (id: string, checked: boolean) => {
               const next = checked
                 ? Array.from(new Set([...selectedIds, id]))
@@ -1196,6 +1210,11 @@ function AdminPage() {
                 </div>
                 <div className="flex flex-wrap items-start gap-4">
                   {m?.active && <Badge className="bg-success text-white">Membro ativo</Badge>}
+                  {isAdminUser && (
+                    <Badge className="bg-tech text-primary-foreground">
+                      <ShieldCheck className="mr-1 h-3 w-3" /> Administrador
+                    </Badge>
+                  )}
                   <div className="max-w-md">
                     <Label className="text-xs">Impressoras compradas</Label>
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -1241,6 +1260,23 @@ function AdminPage() {
                       }
                     />
                     <span className="text-xs text-muted-foreground">Acesso ao portal</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={isAdminUser}
+                      disabled={memberAdmin.isPending || (isSelf && isAdminUser)}
+                      onCheckedChange={(next) => {
+                        const name = profile.full_name || profile.email || "este usuário";
+                        const msg = next
+                          ? `Tornar ${name} administrador? Ele terá acesso total ao painel.`
+                          : `Remover o acesso de administrador de ${name}?`;
+                        if (!window.confirm(msg)) return;
+                        memberAdmin.mutate({ userId: profile.id, isAdmin: next });
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      Administrador{isSelf ? " (você)" : ""}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-2">
                     <Button
