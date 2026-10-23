@@ -56,17 +56,23 @@ export const adminOverview = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
 
-    const [products, orders, memberships, profiles, courses, memberModels] = await Promise.all([
-      db.from("products").select("*").order("created_at", { ascending: true }),
-      db.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200),
-      db.from("memberships").select("*").order("granted_at", { ascending: false }),
-      db.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
-      db
-        .from("courses")
-        .select("*, lessons(*), course_printer_models(printer_model_id)")
-        .order("sort_order", { ascending: true }),
-      db.from("membership_printer_models").select("user_id, printer_model_id"),
-    ]);
+    const [products, orders, memberships, profiles, courses, memberModels, adminRoles] =
+      await Promise.all([
+        db.from("products").select("*").order("created_at", { ascending: true }),
+        db
+          .from("orders")
+          .select("*, order_items(*)")
+          .order("created_at", { ascending: false })
+          .limit(200),
+        db.from("memberships").select("*").order("granted_at", { ascending: false }),
+        db.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
+        db
+          .from("courses")
+          .select("*, lessons(*), course_printer_models(printer_model_id)")
+          .order("sort_order", { ascending: true }),
+        db.from("membership_printer_models").select("user_id, printer_model_id"),
+        db.from("user_roles").select("user_id").eq("role", "admin"),
+      ]);
 
     const firstError =
       products.error ??
@@ -74,7 +80,8 @@ export const adminOverview = createServerFn({ method: "GET" })
       memberships.error ??
       profiles.error ??
       courses.error ??
-      memberModels.error;
+      memberModels.error ??
+      adminRoles.error;
     if (firstError) throw new Error(firstError.message);
 
     return {
@@ -84,7 +91,50 @@ export const adminOverview = createServerFn({ method: "GET" })
       profiles: profiles.data ?? [],
       courses: courses.data ?? [],
       memberModels: memberModels.data ?? [],
+      adminIds: (adminRoles.data ?? []).map((r) => r.user_id),
+      currentUserId: context.userId,
     };
+  });
+
+/** Concede ou remove o papel de administrador de um usuário. */
+export const setMemberAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ userId: z.string().uuid(), isAdmin: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+
+    if (data.isAdmin) {
+      const { error } = await db
+        .from("user_roles")
+        .upsert(
+          { user_id: data.userId, role: "admin" },
+          { onConflict: "user_id,role", ignoreDuplicates: true },
+        );
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+
+    if (data.userId === context.userId) {
+      throw new Error("Você não pode remover o seu próprio acesso de administrador.");
+    }
+    const { count, error: countError } = await db
+      .from("user_roles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if (countError) throw new Error(countError.message);
+    if ((count ?? 0) <= 1) throw new Error("O sistema precisa de pelo menos um administrador.");
+
+    const { error } = await db
+      .from("user_roles")
+      .delete()
+      .eq("user_id", data.userId)
+      .eq("role", "admin");
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const saveProduct = createServerFn({ method: "POST" })
