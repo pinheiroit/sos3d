@@ -12,6 +12,7 @@ import {
   Wrench,
   Menu,
   Package,
+  PackageMinus,
   Palette,
   Pencil,
   Plus,
@@ -69,6 +70,7 @@ import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
 import { NfeEmissao } from "@/components/admin/NfeEmissao";
 import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
+import { StockWithdrawalAdmin } from "@/components/admin/StockWithdrawalAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
@@ -126,6 +128,7 @@ type AdminSection =
   | "produtos"
   | "estoque"
   | "entrada-nfe"
+  | "baixas"
   | "importar"
   | "fotos"
   | "categorias"
@@ -168,6 +171,7 @@ const adminGroups = [
     items: [
       { value: "estoque", label: "Controle de estoque", icon: Boxes },
       { value: "entrada-nfe", label: "Entrada por NF-e", icon: Truck },
+      { value: "baixas", label: "Baixa de estoque", icon: PackageMinus },
       { value: "importar", label: "Planilhas", icon: FileSpreadsheet },
     ],
   },
@@ -200,6 +204,7 @@ const sectionCopy: Record<AdminSection, { title: string; description: string }> 
   produtos: { title: "Produtos", description: "Consulte, cadastre e edite os itens da loja." },
   estoque: { title: "Controle de estoque", description: "Localize produtos e ajuste quantidades rapidamente." },
   "entrada-nfe": { title: "Entrada por NF-e", description: "Importe notas e vincule os itens ao catálogo." },
+  baixas: { title: "Baixa de estoque", description: "Retire itens do estoque por consumo ou avaria e registre o motivo / destino." },
   importar: { title: "Planilhas", description: "Importe, exporte e atualize produtos em massa." },
   fotos: { title: "Fotos dos produtos", description: "Encontre e vincule imagens aos itens do catálogo." },
   categorias: { title: "Categorias", description: "Organize categorias e subcategorias da loja." },
@@ -1103,6 +1108,22 @@ function AdminPage() {
           <NfeImport
             products={(data?.products ?? []) as never}
             onImported={() => {
+              queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
+              queryClient.invalidateQueries({ queryKey: ["products"] });
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="baixas" className="mt-6">
+          <StockWithdrawalAdmin
+            products={(data?.products ?? []).map((p) => ({
+              id: p.id,
+              slug: p.slug,
+              name: p.name,
+              brand: p.brand,
+              stock: p.stock,
+            }))}
+            onSaved={() => {
               queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
               queryClient.invalidateQueries({ queryKey: ["products"] });
             }}
