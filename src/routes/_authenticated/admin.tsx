@@ -20,6 +20,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  ShoppingBasket,
   ShoppingCart,
   Store,
   Tags,
@@ -71,6 +72,7 @@ import { NfeImport } from "@/components/admin/NfeImport";
 import { NfeEmissao } from "@/components/admin/NfeEmissao";
 import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
 import { StockWithdrawalAdmin } from "@/components/admin/StockWithdrawalAdmin";
+import { AbandonedCartsAdmin } from "@/components/admin/AbandonedCartsAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
@@ -124,6 +126,7 @@ type AdminSection =
   | "assistencia"
   | "televendas"
   | "pedidos"
+  | "carrinhos"
   | "nfe"
   | "produtos"
   | "estoque"
@@ -151,6 +154,7 @@ const adminGroups = [
     items: [
       { value: "televendas", label: "Nova venda", icon: ShoppingCart },
       { value: "pedidos", label: "Pedidos", icon: ReceiptText },
+      { value: "carrinhos", label: "Carrinhos abandonados", icon: ShoppingBasket },
       { value: "nfe", label: "Emissão de NF-e", icon: ReceiptText },
     ],
   },
@@ -199,6 +203,7 @@ const sectionCopy: Record<AdminSection, { title: string; description: string }> 
   overview: { title: "Visão geral", description: "Acompanhe os números e acesse as tarefas mais usadas." },
   assistencia: { title: "Ordens de serviço", description: "Pré-atendimentos, recebimento, diagnóstico, garantia, orçamento e encerramento das O.S." },
   televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
+  carrinhos: { title: "Carrinhos abandonados", description: "Veja quem montou carrinho e não finalizou, por onde entrou no site e de onde veio." },
   pedidos: { title: "Pedidos", description: "Acompanhe pedidos e atualize o andamento de cada venda." },
   nfe: { title: "Emissão de NF-e", description: "Emita e cancele notas fiscais dos pedidos." },
   produtos: { title: "Produtos", description: "Consulte, cadastre e edite os itens da loja." },
@@ -1112,6 +1117,10 @@ function AdminPage() {
               queryClient.invalidateQueries({ queryKey: ["products"] });
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="carrinhos" className="mt-6">
+          <AbandonedCartsAdmin />
         </TabsContent>
 
         <TabsContent value="baixas" className="mt-6">

@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { formatBRL } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { getCartSessionId, resetCartSessionId } from "@/lib/cart-tracking";
 import {
   normalizeFees,
   paymentDiscountPercent,
@@ -65,7 +66,7 @@ function whatsappLink(phone: string, order: OrderResult, customerName: string) {
 }
 
 function CheckoutPage() {
-  const { items, subtotal, clear } = useCart();
+  const { items, subtotal, clear, trackCheckout } = useCart();
   const [done, setDone] = useState<OrderResult | null>(null);
   const [pagamento, setPagamento] = useState("pix");
   const [sending, setSending] = useState(false);
@@ -82,6 +83,10 @@ function CheckoutPage() {
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
+
+  useEffect(() => {
+    trackCheckout({ name: f.nome, email: f.email, phone: f.tel });
+  }, [f.nome, f.email, f.tel, trackCheckout]);
 
   const { session } = useSession();
   const [entrega, setEntrega] = useState<"entrega" | "coleta">("entrega");
@@ -215,8 +220,10 @@ function CheckoutPage() {
                 fulfillment: entrega,
                 installmentMonths: isCard ? parcelasSel : undefined,
                 notes: "",
+                cartSessionId: getCartSessionId(),
               },
             });
+            resetCartSessionId();
             clear();
             setDone(result);
           } catch (error) {

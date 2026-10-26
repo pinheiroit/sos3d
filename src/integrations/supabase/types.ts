@@ -29,6 +29,81 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_sessions: {
+        Row: {
+          contacted_at: string | null
+          converted_at: string | null
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          device: string
+          entry_page: string
+          id: string
+          item_count: number
+          items: Json
+          last_page: string
+          order_reference: string | null
+          reached_checkout: boolean
+          referrer: string
+          status: string
+          subtotal: number
+          updated_at: string
+          user_id: string | null
+          utm_campaign: string
+          utm_medium: string
+          utm_source: string
+        }
+        Insert: {
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          device?: string
+          entry_page?: string
+          id: string
+          item_count?: number
+          items?: Json
+          last_page?: string
+          order_reference?: string | null
+          reached_checkout?: boolean
+          referrer?: string
+          status?: string
+          subtotal?: number
+          updated_at?: string
+          user_id?: string | null
+          utm_campaign?: string
+          utm_medium?: string
+          utm_source?: string
+        }
+        Update: {
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          device?: string
+          entry_page?: string
+          id?: string
+          item_count?: number
+          items?: Json
+          last_page?: string
+          order_reference?: string | null
+          reached_checkout?: boolean
+          referrer?: string
+          status?: string
+          subtotal?: number
+          updated_at?: string
+          user_id?: string | null
+          utm_campaign?: string
+          utm_medium?: string
+          utm_source?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           active: boolean

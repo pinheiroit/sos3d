@@ -12,3 +12,4 @@
 - Service orders (P.A./O.S.) tables are server-only (service_role grants, no client policies); all access goes through `src/lib/service.functions.ts`, which checks ownership or admin role — keeps previous-owner and internal bench data private.
 - Service files live in the private `service-files` bucket, uploaded via signed upload URLs and read via signed URLs; history (`service_events`) is append-only.
 - Stock write-offs (consumo/avaria) go through `register_stock_withdrawal` (service_role-only SQL function called from `src/lib/admin.functions.ts` after `assertAdmin`) — decrements stock and logs reason atomically, never below zero.
+- Abandoned carts: the browser cart syncs (debounced) to server-only `cart_sessions` via public `trackCart` in `src/lib/cart-tracking.functions.ts`; prices/names are resolved server-side, entry page/origin come from sessionStorage on first page of the visit, and `createOrder` marks the session `convertido` by `cartSessionId`.
