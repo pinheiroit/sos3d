@@ -880,3 +880,54 @@ export const createSalesOrder = createServerFn({ method: "POST" })
       discount,
     };
   });
+
+// ============================ Baixa de estoque ============================
+
+const stockWithdrawalSchema = z.object({
+  productId: z.string().uuid(),
+  kind: z.enum(["consumo", "avaria"]),
+  quantity: z.number().int().min(1).max(1_000_000),
+  reason: z.string().trim().min(3, "Informe o motivo / destino.").max(500),
+});
+
+/** Registra uma baixa de estoque (consumo interno ou avaria) com motivo/destino. */
+export const registerStockWithdrawal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => stockWithdrawalSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const { data: profile } = await db
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const actorName = profile?.full_name || profile?.email || "Administrador";
+    const { data: id, error } = await db.rpc("register_stock_withdrawal", {
+      _product_id: data.productId,
+      _kind: data.kind,
+      _quantity: data.quantity,
+      _reason: data.reason,
+      _actor: context.userId,
+      _actor_name: actorName,
+    });
+    if (error) throw new Error(error.message);
+    return { id };
+  });
+
+/** Lista as baixas de estoque mais recentes. */
+export const listStockWithdrawals = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+    const { data, error } = await db
+      .from("stock_withdrawals")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
