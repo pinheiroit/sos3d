@@ -182,7 +182,7 @@ const adminGroups = [
   {
     label: "Clientes e membros",
     items: [
-      { value: "membros", label: "Membros", icon: Users },
+      { value: "membros", label: "Clientes e membros", icon: Users },
       { value: "cursos", label: "Cursos", icon: GraduationCap },
       { value: "modelos", label: "Modelos de impressora", icon: Store },
     ],
@@ -213,7 +213,10 @@ const sectionCopy: Record<AdminSection, { title: string; description: string }> 
   importar: { title: "Planilhas", description: "Importe, exporte e atualize produtos em massa." },
   fotos: { title: "Fotos dos produtos", description: "Encontre e vincule imagens aos itens do catálogo." },
   categorias: { title: "Categorias", description: "Organize categorias e subcategorias da loja." },
-  membros: { title: "Membros", description: "Gerencie acessos e impressoras dos clientes." },
+  membros: {
+    title: "Clientes e membros",
+    description: "Todo cadastro entra como cliente. Libere aqui quem vira membro.",
+  },
   cursos: { title: "Cursos", description: "Publique cursos, aulas e materiais para membros." },
   modelos: { title: "Modelos de impressora", description: "Cadastre os modelos disponíveis para membros." },
   banners: { title: "Imagens do site", description: "Atualize logomarca, banners e fotos das páginas." },
@@ -314,6 +317,8 @@ function AdminPage() {
   const [stockView, setStockView] = useState<"all" | "low" | "out">("all");
   const [form, setForm] = useState<FormState | null>(null);
   const [memberForm, setMemberForm] = useState<MemberForm | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberView, setMemberView] = useState<"all" | "clients" | "members" | "admins">("all");
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
@@ -1211,7 +1216,72 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="membros" className="mt-6 space-y-3">
-          {(data?.profiles ?? []).map((profile) => {
+          {(() => {
+            const profiles = data?.profiles ?? [];
+            const activeIds = new Set(
+              (data?.memberships ?? []).filter((x) => x.active).map((x) => x.user_id),
+            );
+            const adminIds = new Set(data?.adminIds ?? []);
+            const counts = {
+              all: profiles.length,
+              clients: profiles.filter((p) => !activeIds.has(p.id)).length,
+              members: profiles.filter((p) => activeIds.has(p.id)).length,
+              admins: profiles.filter((p) => adminIds.has(p.id)).length,
+            };
+            const views: { key: typeof memberView; label: string; n: number }[] = [
+              { key: "all", label: "Todos", n: counts.all },
+              { key: "clients", label: "Clientes", n: counts.clients },
+              { key: "members", label: "Membros", n: counts.members },
+              { key: "admins", label: "Administradores", n: counts.admins },
+            ];
+            return (
+              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+                <p className="text-sm text-muted-foreground">
+                  Todo cadastro novo entra como <strong className="text-foreground">Cliente</strong>
+                  : faz compras e acompanha pedidos. Só um administrador pode torná-lo{" "}
+                  <strong className="text-foreground">Membro</strong>, liberando os cursos das
+                  impressoras marcadas.
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {views.map((v) => (
+                    <Button
+                      key={v.key}
+                      type="button"
+                      size="sm"
+                      variant={memberView === v.key ? "tech" : "outline"}
+                      className="rounded-full"
+                      onClick={() => setMemberView(v.key)}
+                    >
+                      {v.label} ({v.n})
+                    </Button>
+                  ))}
+                  <div className="relative ml-auto w-full sm:w-72">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={memberSearch}
+                      onChange={(e) => setMemberSearch(e.target.value)}
+                      placeholder="Buscar por nome ou e-mail"
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+          {(data?.profiles ?? [])
+            .filter((profile) => {
+              const isMember = (data?.memberships ?? []).some(
+                (x) => x.user_id === profile.id && x.active,
+              );
+              const isAdm = (data?.adminIds ?? []).includes(profile.id);
+              if (memberView === "clients" && isMember) return false;
+              if (memberView === "members" && !isMember) return false;
+              if (memberView === "admins" && !isAdm) return false;
+              const q = memberSearch.trim().toLowerCase();
+              if (!q) return true;
+              return `${profile.full_name ?? ""} ${profile.email ?? ""}`.toLowerCase().includes(q);
+            })
+            .map((profile) => {
             const m = (data?.memberships ?? []).find((x) => x.user_id === profile.id);
             const selectedIds = (data?.memberModels ?? [])
               .filter((x) => x.user_id === profile.id)
@@ -1239,7 +1309,11 @@ function AdminPage() {
                   <p className="text-xs text-muted-foreground">{profile.email}</p>
                 </div>
                 <div className="flex flex-wrap items-start gap-4">
-                  {m?.active && <Badge className="bg-success text-white">Membro ativo</Badge>}
+                  {m?.active ? (
+                    <Badge className="bg-success text-primary-foreground">Membro</Badge>
+                  ) : (
+                    <Badge variant="secondary">Cliente</Badge>
+                  )}
                   {isAdminUser && (
                     <Badge className="bg-tech text-primary-foreground">
                       <ShieldCheck className="mr-1 h-3 w-3" /> Administrador
@@ -1280,16 +1354,24 @@ function AdminPage() {
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={Boolean(m?.active)}
-                      onCheckedChange={(active) =>
+                      disabled={membership.isPending}
+                      onCheckedChange={(active) => {
+                        const name = profile.full_name || profile.email || "este cliente";
+                        const msg = active
+                          ? `Tornar ${name} membro? Ele passa a ver os cursos das impressoras marcadas.`
+                          : `Voltar ${name} para cliente? Ele perde o acesso aos cursos.`;
+                        if (!window.confirm(msg)) return;
                         membership.mutate({
                           userId: profile.id,
                           active,
                           printerModelId: selectedIds[0] ?? null,
                           printerModelIds: selectedIds,
-                        })
-                      }
+                        });
+                      }}
                     />
-                    <span className="text-xs text-muted-foreground">Acesso ao portal</span>
+                    <span className="text-xs text-muted-foreground">
+                      Membro (libera cursos)
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
