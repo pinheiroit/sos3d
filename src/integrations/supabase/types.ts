@@ -1261,6 +1261,59 @@ export type Database = {
           },
         ]
       }
+      stock_withdrawals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          kind: string
+          previous_stock: number
+          product_id: string | null
+          product_name: string
+          product_slug: string
+          quantity: number
+          reason: string
+          resulting_stock: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          kind: string
+          previous_stock: number
+          product_id?: string | null
+          product_name?: string
+          product_slug?: string
+          quantity: number
+          reason: string
+          resulting_stock: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          kind?: string
+          previous_stock?: number
+          product_id?: string | null
+          product_name?: string
+          product_slug?: string
+          quantity?: number
+          reason?: string
+          resulting_stock?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_withdrawals_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subcategories: {
         Row: {
           active: boolean
@@ -1386,6 +1439,17 @@ export type Database = {
       member_printer_model: { Args: { _user_id: string }; Returns: string }
       process_nfe_stock_entry: {
         Args: { _invoice: Json; _items: Json }
+        Returns: string
+      }
+      register_stock_withdrawal: {
+        Args: {
+          _actor: string
+          _actor_name: string
+          _kind: string
+          _product_id: string
+          _quantity: number
+          _reason: string
+        }
         Returns: string
       }
     }
