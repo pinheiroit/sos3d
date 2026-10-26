@@ -26,6 +26,7 @@ const checkoutSchema = z.object({
   fulfillment: z.enum(["entrega", "coleta"]).optional().default("entrega"),
   installmentMonths: z.number().int().min(1).max(48).optional(),
   notes: z.string().trim().max(1000).optional().default(""),
+  cartSessionId: z.string().uuid().optional(),
 });
 
 export const createOrder = createServerFn({ method: "POST" })
@@ -128,6 +129,18 @@ export const createOrder = createServerFn({ method: "POST" })
       })),
     );
     if (itemsError) throw new Error(itemsError.message);
+
+    if (data.cartSessionId) {
+      await supabaseAdmin
+        .from("cart_sessions")
+        .update({
+          status: "convertido",
+          order_reference: order.reference,
+          converted_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", data.cartSessionId);
+    }
 
     for (const l of lines) {
       await supabaseAdmin
