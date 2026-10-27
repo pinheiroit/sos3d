@@ -1297,7 +1297,7 @@ function AdminPage() {
                     <Input
                       value={memberSearch}
                       onChange={(e) => setMemberSearch(e.target.value)}
-                      placeholder="Buscar por nome ou e-mail"
+                      placeholder="Buscar por nome, e-mail ou telefone"
                       className="pl-9"
                     />
                   </div>
@@ -1488,9 +1488,8 @@ function AdminPage() {
                     <Badge variant="secondary">Cliente</Badge>
                     <Badge variant="outline">Televendas</Badge>
                     <p className="max-w-xs text-xs text-muted-foreground">
-                      Cadastrado pelo atendimento, ainda sem conta no site. Para virar membro, ele
-                      precisa criar a conta no site{c.email ? " com este e-mail" : ""}; a ficha é
-                      juntada automaticamente.
+                      Sem conta no site. Para virar membro, precisa criar a conta
+                      {c.email ? " com este e-mail" : ""}.
                     </p>
                     <Button
                       type="button"
