@@ -71,6 +71,7 @@ import { ProductPhotosAdmin } from "@/components/admin/ProductPhotosAdmin";
 import { NfeImport } from "@/components/admin/NfeImport";
 import { NfeEmissao } from "@/components/admin/NfeEmissao";
 import { TeleSalesAdmin } from "@/components/admin/TeleSalesAdmin";
+import { OrderEditDialog, type EditableOrder } from "@/components/admin/OrderEditDialog";
 import { StockWithdrawalAdmin } from "@/components/admin/StockWithdrawalAdmin";
 import { AbandonedCartsAdmin } from "@/components/admin/AbandonedCartsAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
@@ -379,6 +380,8 @@ function AdminPage() {
     },
     onError: (e: Error) => toast.error("Erro ao remover", { description: e.message }),
   });
+
+  const [editingOrder, setEditingOrder] = useState<EditableOrder | null>(null);
 
   const orderStatus = useMutation({
     mutationFn: (input: { id: string; status: string }) =>
@@ -1180,8 +1183,17 @@ function AdminPage() {
                     {o.customer_email} • {new Date(o.created_at).toLocaleString("pt-BR")}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="font-bold text-brand">{formatBRL(Number(o.total))}</span>
+                  {o.status === "pendente" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingOrder(o as unknown as EditableOrder)}
+                    >
+                      <Pencil className="mr-1.5 h-4 w-4" /> Editar itens
+                    </Button>
+                  )}
                   <Select
                     value={o.status}
                     onValueChange={(status) =>
@@ -1213,6 +1225,19 @@ function AdminPage() {
               </ul>
             </div>
           ))}
+          <OrderEditDialog
+            order={editingOrder}
+            products={(data?.products ?? []).map((p) => ({
+              slug: p.slug,
+              name: p.name,
+              brand: p.brand,
+              price: Number(p.price),
+              stock: p.stock,
+              active: p.active,
+            }))}
+            onClose={() => setEditingOrder(null)}
+            onSaved={refresh}
+          />
         </TabsContent>
 
         <TabsContent value="membros" className="mt-6 space-y-3">
