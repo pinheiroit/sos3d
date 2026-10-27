@@ -84,7 +84,9 @@ export type SalesLookups = {
 };
 
 const shortBRL = (v: number) =>
-  v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mil` : formatBRL(v);
+  v >= 1000
+    ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`
+    : `R$ ${Math.round(v).toLocaleString("pt-BR")}`;
 
 const fmtDate = (d: Date) => d.toLocaleDateString("pt-BR");
 
@@ -478,7 +480,7 @@ export function SalesOverview({
             </ChartContainer>
           </Panel>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid items-start gap-4 xl:grid-cols-2">
             <Panel
               title="Vendas por categoria"
               subtitle="Valor dos itens vendidos · clique para filtrar"
@@ -515,9 +517,9 @@ export function SalesOverview({
                   <thead className="text-left text-xs text-muted-foreground">
                     <tr>
                       <th className="pb-2 font-medium">Produto</th>
-                      <th className="pb-2 text-right font-medium">Qtd.</th>
-                      <th className="pb-2 text-right font-medium">Pedidos</th>
-                      <th className="pb-2 text-right font-medium">Valor</th>
+                      <th className="pb-2 pl-3 text-right font-medium whitespace-nowrap">Qtd.</th>
+                      <th className="pb-2 pl-3 text-right font-medium whitespace-nowrap">Pedidos</th>
+                      <th className="pb-2 pl-3 text-right font-medium whitespace-nowrap">Valor</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -533,9 +535,9 @@ export function SalesOverview({
                           </span>
                           {r.label}
                         </td>
-                        <td className="py-2 text-right tabular-nums">{r.qty}</td>
-                        <td className="py-2 text-right tabular-nums">{r.orders}</td>
-                        <td className="py-2 text-right font-semibold tabular-nums">{formatBRL(r.value)}</td>
+                        <td className="py-2 pl-3 text-right tabular-nums">{r.qty}</td>
+                        <td className="py-2 pl-3 text-right tabular-nums">{r.orders}</td>
+                        <td className="py-2 pl-3 text-right font-semibold tabular-nums whitespace-nowrap">{formatBRL(r.value)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -550,7 +552,7 @@ export function SalesOverview({
             <Donut title="Entrega" rows={m.byDelivery} />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid items-start gap-4 xl:grid-cols-2">
             <Panel title="Vendas por marca" subtitle="Clique para filtrar">
               <BarList rows={m.byBrand} onSelect={(row) => row.key !== "-" && onChange({ ...filters, brand: row.key })} />
             </Panel>
@@ -560,9 +562,9 @@ export function SalesOverview({
                   <thead className="text-left text-xs text-muted-foreground">
                     <tr>
                       <th className="pb-2 font-medium">Cliente</th>
-                      <th className="pb-2 text-right font-medium">Pedidos</th>
-                      <th className="pb-2 text-right font-medium">Último</th>
-                      <th className="pb-2 text-right font-medium">Total</th>
+                      <th className="pb-2 pl-3 text-right font-medium whitespace-nowrap">Pedidos</th>
+                      <th className="pb-2 pl-3 text-right font-medium whitespace-nowrap">Último</th>
+                      <th className="pb-2 pl-3 text-right font-medium whitespace-nowrap">Total</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -576,11 +578,11 @@ export function SalesOverview({
                           <p className="font-medium">{c.name}</p>
                           {c.contact && <p className="text-xs text-muted-foreground">{c.contact}</p>}
                         </td>
-                        <td className="py-2 text-right tabular-nums">{c.orders}</td>
-                        <td className="py-2 text-right text-xs text-muted-foreground">
+                        <td className="py-2 pl-3 text-right tabular-nums">{c.orders}</td>
+                        <td className="py-2 pl-3 text-right text-xs text-muted-foreground whitespace-nowrap">
                           {new Date(c.lastOrder).toLocaleDateString("pt-BR")}
                         </td>
-                        <td className="py-2 text-right font-semibold tabular-nums">{formatBRL(c.value)}</td>
+                        <td className="py-2 pl-3 text-right font-semibold tabular-nums whitespace-nowrap">{formatBRL(c.value)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -589,7 +591,7 @@ export function SalesOverview({
             </Panel>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid items-start gap-4 xl:grid-cols-3">
             <Panel title="Vendas por dia da semana">
               <ChartContainer config={{ value: { label: "Faturamento", color: "var(--chart-1)" } }} className="aspect-auto h-56 w-full">
                 <BarChart data={m.weekdays} margin={{ top: 8 }}>
