@@ -339,7 +339,7 @@ function FilterSelect({
 
 /* ============================== Visão geral ============================== */
 
-const chartColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--success)", "var(--chart-5)"];
+const chartColors: string[] = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--success)", "var(--chart-5)"];
 
 export function SalesOverview({
   orders,
@@ -702,9 +702,9 @@ function BarList({ rows, onSelect }: { rows: Breakdown[]; onSelect?: (row: Break
 }
 
 function Donut({ title, rows }: { title: string; rows: Breakdown[] }) {
-  const config = Object.fromEntries(
-    rows.map((r, i) => [r.key, { label: r.label, color: chartColors[i % chartColors.length] }]),
-  ) satisfies ChartConfig;
+  const config: ChartConfig = Object.fromEntries(
+    rows.map((r, i) => [r.key, { label: r.label, color: chartColors[i % chartColors.length] ?? "var(--chart-1)" }]),
+  );
   return (
     <Panel title={title}>
       {rows.length === 0 ? (
