@@ -394,6 +394,116 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const editOrderSchema = z.object({
+  orderId: z.string().uuid(),
+  items: z
+    .array(
+      z.object({
+        itemId: z.string().uuid().optional(),
+        slug: z.string().trim().max(120),
+        qty: z.number().int().min(1).max(999),
+      }),
+    )
+    .min(1)
+    .max(60),
+});
+
+/**
+ * Altera os itens de um pedido pendente (quantidade, inclusão, remoção).
+ * Itens que já estavam no pedido mantêm o preço combinado; itens novos usam o preço atual.
+ * Estoque, frete, desconto e total são recalculados de forma atômica no banco.
+ */
+export const updatePendingOrderItems = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => editOrderSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
+    await assertAdmin(context.supabase, context.userId);
+    const db = await adminClient();
+
+    const { data: order, error: orderError } = await db
+      .from("orders")
+      .select("id, status, payment_method, shipping_address, subtotal, shipping, discount, order_items(*)")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (orderError) throw new Error(orderError.message);
+    if (!order) throw new Error("Pedido não encontrado.");
+    if (order.status !== "pendente") throw new Error("Só pedidos pendentes podem ser alterados.");
+
+    const existing = new Map((order.order_items ?? []).map((i) => [i.id, i]));
+    const newSlugs = data.items.filter((i) => !i.itemId || !existing.has(i.itemId)).map((i) => i.slug);
+
+    const [{ data: rows, error }, settings] = await Promise.all([
+      newSlugs.length
+        ? db
+            .from("products")
+            .select("id, slug, name, brand, category, price, active, installments")
+            .in("slug", newSlugs)
+        : Promise.resolve({ data: [], error: null }),
+      db.from("site_settings").select("value").eq("key", "pricing").maybeSingle(),
+    ]);
+    if (error) throw new Error(error.message);
+
+    const { normalizeRules, effectivePrice, paymentDiscountPercent, shippingFor, round2, quoteFor } =
+      await import("@/lib/pricing");
+    const rules = normalizeRules(settings.data?.value ?? null);
+    type Plan = { months: number; installment: number; total: number };
+
+    const lines = data.items.map((item) => {
+      const kept = item.itemId ? existing.get(item.itemId) : undefined;
+      if (kept) {
+        return {
+          product_id: kept.product_id,
+          product_slug: kept.product_slug,
+          product_name: kept.product_name,
+          unit_price: Number(kept.unit_price),
+          qty: item.qty,
+        };
+      }
+      const product = (rows ?? []).find((r) => r.slug === item.slug);
+      if (!product || !product.active) throw new Error(`Produto indisponível: ${item.slug}`);
+      const base = effectivePrice(
+        { slug: product.slug, brand: product.brand, category: product.category, price: Number(product.price) },
+        rules,
+      );
+      const plans = Array.isArray(product.installments)
+        ? (product.installments as unknown as Plan[]).filter((p) => p && p.total > 0)
+        : [];
+      const unit =
+        order.payment_method === "cartao"
+          ? quoteFor({ price: base, installments: plans }, rules.defaultInstallments, rules).total
+          : base;
+      return {
+        product_id: product.id,
+        product_slug: product.slug,
+        product_name: product.name,
+        unit_price: unit,
+        qty: item.qty,
+      };
+    });
+
+    const subtotal = round2(lines.reduce((s, l) => s + l.qty * l.unit_price, 0));
+    const address = (order.shipping_address ?? {}) as Record<string, unknown>;
+    const isPickup = address["fulfillment"] === "coleta";
+    const shipping = isPickup ? 0 : shippingFor(subtotal, rules);
+    // Mantém o mesmo percentual de desconto combinado no pedido original.
+    const oldSubtotal = Number(order.subtotal);
+    const discountRate =
+      oldSubtotal > 0
+        ? Number(order.discount) / oldSubtotal
+        : paymentDiscountPercent(order.payment_method, rules) / 100;
+    const discount = round2(subtotal * discountRate);
+
+    const { data: result, error: rpcError } = await db.rpc("replace_pending_order_items", {
+      _order_id: order.id,
+      _items: lines,
+      _shipping: shipping,
+      _discount: discount,
+    });
+    if (rpcError) throw new Error(rpcError.message);
+    return result as { reference: string; subtotal: number; total: number };
+  });
+
 export const setMembership = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
