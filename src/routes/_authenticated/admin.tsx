@@ -81,6 +81,7 @@ import {
   deleteProduct,
   quickUpdateProduct,
   saveProduct,
+  listCustomers,
   setMembership,
   setMemberAdmin,
   setMemberPassword,
@@ -319,7 +320,9 @@ function AdminPage() {
   const [form, setForm] = useState<FormState | null>(null);
   const [memberForm, setMemberForm] = useState<MemberForm | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
-  const [memberView, setMemberView] = useState<"all" | "clients" | "members" | "admins">("all");
+  const [memberView, setMemberView] = useState<
+    "all" | "clients" | "members" | "admins" | "telesales"
+  >("all");
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
@@ -462,6 +465,13 @@ function AdminPage() {
     queryFn: () => listPrinterModels(),
     retry: false,
   });
+  // Clientes cadastrados só pelo televendas (sem conta no site).
+  const unifiedCustomers = useQuery({
+    queryKey: ["admin-customers"],
+    queryFn: () => listCustomers(),
+    enabled: activeSection === "membros",
+  });
+  const teleOnlyCustomers = (unifiedCustomers.data ?? []).filter((c) => c.source === "televendas");
 
   const banner = useMutation({
     mutationFn: (input: { key: string; url: string | null }) =>
@@ -1247,9 +1257,10 @@ function AdminPage() {
               (data?.memberships ?? []).filter((x) => x.active).map((x) => x.user_id),
             );
             const adminIds = new Set(data?.adminIds ?? []);
+            const tele = teleOnlyCustomers.length;
             const counts = {
-              all: profiles.length,
-              clients: profiles.filter((p) => !activeIds.has(p.id)).length,
+              all: profiles.length + tele,
+              clients: profiles.filter((p) => !activeIds.has(p.id)).length + tele,
               members: profiles.filter((p) => activeIds.has(p.id)).length,
               admins: profiles.filter((p) => adminIds.has(p.id)).length,
             };
@@ -1258,6 +1269,7 @@ function AdminPage() {
               { key: "clients", label: "Clientes", n: counts.clients },
               { key: "members", label: "Membros", n: counts.members },
               { key: "admins", label: "Administradores", n: counts.admins },
+              { key: "telesales", label: "Só televendas", n: tele },
             ];
             return (
               <div className="space-y-4 rounded-xl border border-border bg-card p-4">
@@ -1285,7 +1297,7 @@ function AdminPage() {
                     <Input
                       value={memberSearch}
                       onChange={(e) => setMemberSearch(e.target.value)}
-                      placeholder="Buscar por nome ou e-mail"
+                      placeholder="Buscar por nome, e-mail ou telefone"
                       className="pl-9"
                     />
                   </div>
@@ -1299,12 +1311,13 @@ function AdminPage() {
                 (x) => x.user_id === profile.id && x.active,
               );
               const isAdm = (data?.adminIds ?? []).includes(profile.id);
+              if (memberView === "telesales") return false;
               if (memberView === "clients" && isMember) return false;
               if (memberView === "members" && !isMember) return false;
               if (memberView === "admins" && !isAdm) return false;
               const q = memberSearch.trim().toLowerCase();
               if (!q) return true;
-              return `${profile.full_name ?? ""} ${profile.email ?? ""}`.toLowerCase().includes(q);
+              return `${profile.full_name ?? ""} ${profile.email ?? ""} ${profile.phone ?? ""}`.toLowerCase().includes(q);
             })
             .map((profile) => {
             const m = (data?.memberships ?? []).find((x) => x.user_id === profile.id);
@@ -1447,6 +1460,52 @@ function AdminPage() {
               </div>
             );
           })}
+
+          {(memberView === "all" || memberView === "clients" || memberView === "telesales") &&
+            teleOnlyCustomers
+              .filter((c) => {
+                const q = memberSearch.trim().toLowerCase();
+                if (!q) return true;
+                return `${c.name} ${c.email} ${c.phone} ${c.document}`.toLowerCase().includes(q);
+              })
+              .map((c) => (
+                <div
+                  key={c.key}
+                  className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-card p-4"
+                >
+                  <div className="space-y-0.5">
+                    <p className="font-semibold">{c.name || "Sem nome"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[c.email, c.phone, c.document].filter(Boolean).join(" · ") || "Sem contato"}
+                    </p>
+                    {(c.city || c.state) && (
+                      <p className="text-xs text-muted-foreground">
+                        {[c.city, c.state].filter(Boolean).join(" / ")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-start gap-4">
+                    <Badge variant="secondary">Cliente</Badge>
+                    <Badge variant="outline">Televendas</Badge>
+                    <p className="max-w-xs text-xs text-muted-foreground">
+                      Sem conta no site. Para virar membro, precisa criar a conta
+                      {c.email ? " com este e-mail" : ""}.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setActiveSection("televendas")}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" /> Abrir no televendas
+                    </Button>
+                  </div>
+                </div>
+              ))}
+          {unifiedCustomers.isLoading && (
+            <p className="text-sm text-muted-foreground">Carregando clientes do televendas…</p>
+          )}
+
 
           <Dialog open={Boolean(memberForm)} onOpenChange={(open) => !open && setMemberForm(null)}>
             <DialogContent className="max-w-lg">
