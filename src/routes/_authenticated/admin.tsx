@@ -1257,9 +1257,10 @@ function AdminPage() {
               (data?.memberships ?? []).filter((x) => x.active).map((x) => x.user_id),
             );
             const adminIds = new Set(data?.adminIds ?? []);
+            const tele = teleOnlyCustomers.length;
             const counts = {
-              all: profiles.length,
-              clients: profiles.filter((p) => !activeIds.has(p.id)).length,
+              all: profiles.length + tele,
+              clients: profiles.filter((p) => !activeIds.has(p.id)).length + tele,
               members: profiles.filter((p) => activeIds.has(p.id)).length,
               admins: profiles.filter((p) => adminIds.has(p.id)).length,
             };
@@ -1268,6 +1269,7 @@ function AdminPage() {
               { key: "clients", label: "Clientes", n: counts.clients },
               { key: "members", label: "Membros", n: counts.members },
               { key: "admins", label: "Administradores", n: counts.admins },
+              { key: "telesales", label: "Só televendas", n: tele },
             ];
             return (
               <div className="space-y-4 rounded-xl border border-border bg-card p-4">
@@ -1309,6 +1311,7 @@ function AdminPage() {
                 (x) => x.user_id === profile.id && x.active,
               );
               const isAdm = (data?.adminIds ?? []).includes(profile.id);
+              if (memberView === "telesales") return false;
               if (memberView === "clients" && isMember) return false;
               if (memberView === "members" && !isMember) return false;
               if (memberView === "admins" && !isAdm) return false;
