@@ -56,14 +56,30 @@ export const adminOverview = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
 
+    // Histórico completo de pedidos (em páginas de 1000) para filtros e gráficos de gestão.
+    const PAGE = 1000;
+    const ordersPage = (from: number) =>
+      db
+        .from("orders")
+        .select("*, order_items(*)")
+        .order("created_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+    type OrderRow = NonNullable<Awaited<ReturnType<typeof ordersPage>>["data"]>[number];
+    const loadOrders = async () => {
+      const rows: OrderRow[] = [];
+      for (let from = 0; from < 20_000; from += PAGE) {
+        const page = await ordersPage(from);
+        if (page.error) return { data: null, error: page.error };
+        rows.push(...(page.data ?? []));
+        if ((page.data ?? []).length < PAGE) break;
+      }
+      return { data: rows, error: null };
+    };
+
     const [products, orders, memberships, profiles, courses, memberModels, adminRoles] =
       await Promise.all([
         db.from("products").select("*").order("created_at", { ascending: true }),
-        db
-          .from("orders")
-          .select("*, order_items(*)")
-          .order("created_at", { ascending: false })
-          .limit(200),
+        loadOrders(),
         db.from("memberships").select("*").order("granted_at", { ascending: false }),
         db.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
         db

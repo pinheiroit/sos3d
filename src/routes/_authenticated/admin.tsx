@@ -77,6 +77,24 @@ import { AbandonedCartsAdmin } from "@/components/admin/AbandonedCartsAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
+  OrdersSummary,
+  SalesFiltersBar,
+  SalesOverview,
+  type SalesLookups,
+} from "@/components/admin/SalesDashboard";
+import {
+  defaultSalesFilters,
+  filterOrders,
+  hasItemFilter,
+  orderChannel,
+  orderDelivery,
+  paymentLabels,
+  statusLabels,
+  type ProductInfo,
+  type SalesFilters,
+  type SalesOrder,
+} from "@/lib/sales-analytics";
+import {
   adminOverview,
   deleteProduct,
   quickUpdateProduct,
@@ -498,6 +516,40 @@ function AdminPage() {
 
   const allProducts = data?.products ?? [];
 
+  // Filtros de vendas compartilhados entre Visão geral e Pedidos.
+  const [salesFilters, setSalesFilters] = useState<SalesFilters>(defaultSalesFilters);
+  const salesOrders = useMemo(() => (data?.orders ?? []) as unknown as SalesOrder[], [data]);
+  const salesProducts = useMemo<ProductInfo[]>(
+    () =>
+      (data?.products ?? []).map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        brand: p.brand,
+        category: p.category,
+        subcategory: p.subcategory,
+      })),
+    [data],
+  );
+  const salesLookups = useMemo<SalesLookups>(
+    () => ({
+      categories: categoryList.map((c) => ({ value: c.slug, label: c.name })),
+      subcategories: subcategoryList.map((s) => ({
+        value: s.slug,
+        label: s.name,
+        category: s.category_slug,
+      })),
+      categoryName: (slug) => categoryList.find((c) => c.slug === slug)?.name ?? slug,
+      subcategoryName: (slug, category) =>
+        subcategoryList.find((s) => s.slug === slug && s.category_slug === category)?.name ?? slug,
+    }),
+    [categoryList, subcategoryList],
+  );
+  const filteredSalesOrders = useMemo(
+    () => filterOrders(salesOrders, salesProducts, salesFilters),
+    [salesOrders, salesProducts, salesFilters],
+  );
+
   const brandOptions = useMemo(
     () => Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean))).sort(),
     [allProducts],
@@ -742,37 +794,55 @@ function AdminPage() {
               </Sheet>
             </div>
 
-            <TabsContent value="overview" className="mt-6 space-y-6">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {[
-                  { icon: CircleDollarSign, t: "Receita registrada", v: formatBRL(totals.revenue) },
-                  { icon: ReceiptText, t: "Pedidos pendentes", v: String(totals.pending) },
-                  { icon: Boxes, t: "Estoque baixo", v: String(totals.lowStock) },
-                  { icon: Users, t: "Membros ativos", v: String(totals.members) },
-                ].map((item) => (
-                  <div key={item.t} className="rounded-lg border border-border bg-card p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm text-muted-foreground">{item.t}</p>
-                      <item.icon className="size-5 shrink-0 text-tech" />
-                    </div>
-                    <p className="mt-3 text-2xl font-bold">{item.v}</p>
-                  </div>
-                ))}
-              </div>
-              <section>
-                <h3 className="text-lg font-semibold">Ações rápidas</h3>
-                <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("televendas")}>
-                    <ShoppingCart className="size-5 text-tech" /> Nova venda
-                  </Button>
-                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={newProduct}>
-                    <Plus className="size-5 text-tech" /> Novo produto
-                  </Button>
-                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("entrada-nfe")}>
-                    <Truck className="size-5 text-tech" /> Entrada por NF-e
-                  </Button>
+            <TabsContent value="overview" className="mt-6 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => selectSection("televendas")}>
+                  <ShoppingCart className="size-4 text-tech" /> Nova venda
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={newProduct}>
+                  <Plus className="size-4 text-tech" /> Novo produto
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => selectSection("entrada-nfe")}>
+                  <Truck className="size-4 text-tech" /> Entrada por NF-e
+                </Button>
+                <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSalesFilters({ ...defaultSalesFilters, period: "all", status: "pendente" });
+                      selectSection("pedidos");
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 hover:bg-secondary"
+                  >
+                    <ReceiptText className="size-4 text-tech" /> {totals.pending} pedido(s) pendente(s)
+                  </button>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+                    <Boxes className="size-4 text-tech" /> {totals.lowStock} com estoque baixo
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+                    <Users className="size-4 text-tech" /> {totals.members} membros ativos
+                  </span>
                 </div>
-              </section>
+              </div>
+              <SalesFiltersBar
+                filters={salesFilters}
+                onChange={setSalesFilters}
+                orders={salesOrders}
+                products={salesProducts}
+                lookups={salesLookups}
+              />
+              <SalesOverview
+                orders={salesOrders}
+                products={salesProducts}
+                filters={salesFilters}
+                onChange={setSalesFilters}
+                lookups={salesLookups}
+              />
+              <div className="flex justify-end">
+                <Button variant="tech" onClick={() => selectSection("pedidos")}>
+                  <CircleDollarSign className="size-4" /> Ver {filteredSalesOrders.length} pedido(s) com esses filtros
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="produtos" className="mt-6 space-y-4">
@@ -1179,10 +1249,31 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6 space-y-3">
-          {(data?.orders ?? []).length === 0 && (
+          <SalesFiltersBar
+            filters={salesFilters}
+            onChange={setSalesFilters}
+            orders={salesOrders}
+            products={salesProducts}
+            lookups={salesLookups}
+          />
+          <OrdersSummary orders={filteredSalesOrders} itemFilter={hasItemFilter(salesFilters)} />
+          {(data?.orders ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum pedido registrado ainda.</p>
+          ) : (
+            filteredSalesOrders.length === 0 && (
+              <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+                Nenhum pedido com esses filtros.{" "}
+                <button
+                  type="button"
+                  className="text-tech underline-offset-4 hover:underline"
+                  onClick={() => setSalesFilters({ ...defaultSalesFilters, period: "all" })}
+                >
+                  Ver todos os pedidos
+                </button>
+              </div>
+            )
           )}
-          {(data?.orders ?? []).map((o) => (
+          {filteredSalesOrders.map((o) => (
             <div key={o.id} className="rounded-xl border border-border bg-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -1192,6 +1283,11 @@ function AdminPage() {
                   <p className="text-xs text-muted-foreground">
                     {o.customer_email} • {new Date(o.created_at).toLocaleString("pt-BR")}
                   </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <Badge variant="secondary">{paymentLabels[o.payment_method] ?? o.payment_method}</Badge>
+                    <Badge variant="outline">{orderChannel(o) === "site" ? "Site" : "Televendas"}</Badge>
+                    <Badge variant="outline">{orderDelivery(o) === "coleta" ? "Coleta" : "Envio"}</Badge>
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-bold text-brand">{formatBRL(Number(o.total))}</span>
@@ -1219,7 +1315,7 @@ function AdminPage() {
                     <SelectContent>
                       {statusOptions.map((s) => (
                         <SelectItem key={s} value={s}>
-                          {s.replace("_", " ")}
+                          {statusLabels[s] ?? s}
                         </SelectItem>
                       ))}
                     </SelectContent>
