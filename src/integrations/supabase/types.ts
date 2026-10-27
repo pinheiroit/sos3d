@@ -1530,6 +1530,15 @@ export type Database = {
         }
         Returns: string
       }
+      replace_pending_order_items: {
+        Args: {
+          _discount: number
+          _items: Json
+          _order_id: string
+          _shipping: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "member"

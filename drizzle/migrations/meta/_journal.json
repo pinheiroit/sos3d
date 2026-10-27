@@ -64,6 +64,13 @@
       "when": 1793127208637,
       "tag": "0008_link_customers_to_site_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793127590995,
+      "tag": "0009_replace_pending_order_items",
+      "breakpoints": true
     }
   ]
 }
