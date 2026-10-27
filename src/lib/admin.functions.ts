@@ -818,7 +818,7 @@ async function upsertCustomerRow(
     "id" | "userId" | "notes"
   >,
 ) {
-  const { id, userId, ...values } = input;
+  const { id, userId, notes, ...values } = input as typeof input & { notes?: string | undefined };
   if (userId) {
     const { data: profile } = await db
       .from("profiles")
@@ -842,14 +842,19 @@ async function upsertCustomerRow(
   if (targetId) {
     const { error } = await db
       .from("customers")
-      .update({ ...values, ...(userId ? { user_id: userId } : {}), updated_at: now })
+      .update({
+        ...values,
+        ...(notes !== undefined ? { notes } : {}),
+        ...(userId ? { user_id: userId } : {}),
+        updated_at: now,
+      })
       .eq("id", targetId);
     if (error) throw new Error(error.message);
     return targetId;
   }
   const { data: row, error } = await db
     .from("customers")
-    .insert({ ...values, user_id: userId ?? null })
+    .insert({ ...values, ...(notes !== undefined ? { notes } : {}), user_id: userId ?? null })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
