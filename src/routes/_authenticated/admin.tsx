@@ -77,6 +77,24 @@ import { AbandonedCartsAdmin } from "@/components/admin/AbandonedCartsAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import {
+  OrdersSummary,
+  SalesFiltersBar,
+  SalesOverview,
+  type SalesLookups,
+} from "@/components/admin/SalesDashboard";
+import {
+  defaultSalesFilters,
+  filterOrders,
+  hasItemFilter,
+  orderChannel,
+  orderDelivery,
+  paymentLabels,
+  statusLabels,
+  type ProductInfo,
+  type SalesFilters,
+  type SalesOrder,
+} from "@/lib/sales-analytics";
+import {
   adminOverview,
   deleteProduct,
   quickUpdateProduct,
@@ -497,6 +515,40 @@ function AdminPage() {
   }, [data]);
 
   const allProducts = data?.products ?? [];
+
+  // Filtros de vendas compartilhados entre Visão geral e Pedidos.
+  const [salesFilters, setSalesFilters] = useState<SalesFilters>(defaultSalesFilters);
+  const salesOrders = useMemo(() => (data?.orders ?? []) as unknown as SalesOrder[], [data]);
+  const salesProducts = useMemo<ProductInfo[]>(
+    () =>
+      (data?.products ?? []).map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        brand: p.brand,
+        category: p.category,
+        subcategory: p.subcategory,
+      })),
+    [data],
+  );
+  const salesLookups = useMemo<SalesLookups>(
+    () => ({
+      categories: categoryList.map((c) => ({ value: c.slug, label: c.name })),
+      subcategories: subcategoryList.map((s) => ({
+        value: s.slug,
+        label: s.name,
+        category: s.category_slug,
+      })),
+      categoryName: (slug) => categoryList.find((c) => c.slug === slug)?.name ?? slug,
+      subcategoryName: (slug, category) =>
+        subcategoryList.find((s) => s.slug === slug && s.category_slug === category)?.name ?? slug,
+    }),
+    [categoryList, subcategoryList],
+  );
+  const filteredSalesOrders = useMemo(
+    () => filterOrders(salesOrders, salesProducts, salesFilters),
+    [salesOrders, salesProducts, salesFilters],
+  );
 
   const brandOptions = useMemo(
     () => Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean))).sort(),
