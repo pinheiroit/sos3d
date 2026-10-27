@@ -1458,6 +1458,53 @@ function AdminPage() {
             );
           })}
 
+          {(memberView === "all" || memberView === "clients" || memberView === "telesales") &&
+            teleOnlyCustomers
+              .filter((c) => {
+                const q = memberSearch.trim().toLowerCase();
+                if (!q) return true;
+                return `${c.name} ${c.email} ${c.phone} ${c.document}`.toLowerCase().includes(q);
+              })
+              .map((c) => (
+                <div
+                  key={c.key}
+                  className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-card p-4"
+                >
+                  <div className="space-y-0.5">
+                    <p className="font-semibold">{c.name || "Sem nome"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[c.email, c.phone, c.document].filter(Boolean).join(" · ") || "Sem contato"}
+                    </p>
+                    {(c.city || c.state) && (
+                      <p className="text-xs text-muted-foreground">
+                        {[c.city, c.state].filter(Boolean).join(" / ")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-start gap-4">
+                    <Badge variant="secondary">Cliente</Badge>
+                    <Badge variant="outline">Televendas</Badge>
+                    <p className="max-w-xs text-xs text-muted-foreground">
+                      Cadastrado pelo atendimento, ainda sem conta no site. Para virar membro, ele
+                      precisa criar a conta no site{c.email ? " com este e-mail" : ""}; a ficha é
+                      juntada automaticamente.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setActiveSection("televendas")}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" /> Abrir no televendas
+                    </Button>
+                  </div>
+                </div>
+              ))}
+          {unifiedCustomers.isLoading && (
+            <p className="text-sm text-muted-foreground">Carregando clientes do televendas…</p>
+          )}
+
+
           <Dialog open={Boolean(memberForm)} onOpenChange={(open) => !open && setMemberForm(null)}>
             <DialogContent className="max-w-lg">
               <DialogHeader>
