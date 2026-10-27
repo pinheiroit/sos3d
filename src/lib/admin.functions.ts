@@ -57,15 +57,18 @@ export const adminOverview = createServerFn({ method: "GET" })
     const db = await adminClient();
 
     // Histórico completo de pedidos (em páginas de 1000) para filtros e gráficos de gestão.
+    const PAGE = 1000;
+    const ordersPage = (from: number) =>
+      db
+        .from("orders")
+        .select("*, order_items(*)")
+        .order("created_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+    type OrderRow = NonNullable<Awaited<ReturnType<typeof ordersPage>>["data"]>[number];
     const loadOrders = async () => {
-      const PAGE = 1000;
-      const rows = [];
+      const rows: OrderRow[] = [];
       for (let from = 0; from < 20_000; from += PAGE) {
-        const page = await db
-          .from("orders")
-          .select("*, order_items(*)")
-          .order("created_at", { ascending: false })
-          .range(from, from + PAGE - 1);
+        const page = await ordersPage(from);
         if (page.error) return { data: null, error: page.error };
         rows.push(...(page.data ?? []));
         if ((page.data ?? []).length < PAGE) break;
