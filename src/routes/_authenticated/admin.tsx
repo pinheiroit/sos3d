@@ -81,6 +81,7 @@ import {
   deleteProduct,
   quickUpdateProduct,
   saveProduct,
+  listCustomers,
   setMembership,
   setMemberAdmin,
   setMemberPassword,
@@ -319,7 +320,9 @@ function AdminPage() {
   const [form, setForm] = useState<FormState | null>(null);
   const [memberForm, setMemberForm] = useState<MemberForm | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
-  const [memberView, setMemberView] = useState<"all" | "clients" | "members" | "admins">("all");
+  const [memberView, setMemberView] = useState<
+    "all" | "clients" | "members" | "admins" | "telesales"
+  >("all");
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
@@ -462,6 +465,13 @@ function AdminPage() {
     queryFn: () => listPrinterModels(),
     retry: false,
   });
+  // Clientes cadastrados só pelo televendas (sem conta no site).
+  const unifiedCustomers = useQuery({
+    queryKey: ["admin-customers"],
+    queryFn: () => listCustomers(),
+    enabled: activeSection === "membros",
+  });
+  const teleOnlyCustomers = (unifiedCustomers.data ?? []).filter((c) => c.source === "televendas");
 
   const banner = useMutation({
     mutationFn: (input: { key: string; url: string | null }) =>
