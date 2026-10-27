@@ -241,6 +241,7 @@ export type Database = {
           state: string
           street: string
           updated_at: string
+          user_id: string | null
           zip: string
         }
         Insert: {
@@ -257,6 +258,7 @@ export type Database = {
           state?: string
           street?: string
           updated_at?: string
+          user_id?: string | null
           zip?: string
         }
         Update: {
@@ -273,6 +275,7 @@ export type Database = {
           state?: string
           street?: string
           updated_at?: string
+          user_id?: string | null
           zip?: string
         }
         Relationships: []

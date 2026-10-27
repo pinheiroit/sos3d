@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { Globe, Headset, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +21,12 @@ import {
   deleteCustomer,
   listCustomers,
   saveCustomer,
+  type UnifiedCustomer,
 } from "@/lib/admin.functions";
 
 type CustomerForm = {
-  id?: string;
+  id?: string | undefined;
+  userId?: string | undefined;
   name: string;
   email: string;
   phone: string;
@@ -77,6 +79,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
   });
 
   const [search, setSearch] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<"todos" | "site" | "televendas">("todos");
   const [form, setForm] = useState<CustomerForm | null>(null);
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
@@ -87,16 +90,44 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
   const [status, setStatus] = useState("pendente");
   const [orderNotes, setOrderNotes] = useState("");
 
-  const rows = customers.data ?? [];
+  const rows: UnifiedCustomer[] = customers.data ?? [];
+  const counts = useMemo(
+    () => ({
+      todos: rows.length,
+      site: rows.filter((c) => c.source === "site").length,
+      televendas: rows.filter((c) => c.source === "televendas").length,
+    }),
+    [rows],
+  );
   const filtered = useMemo(() => {
     const q = normalize(search.trim());
-    if (!q) return rows;
-    return rows.filter((c) =>
-      normalize(`${c.name} ${c.email} ${c.phone} ${c.document} ${c.city}`).includes(q),
+    return rows.filter(
+      (c) =>
+        (sourceFilter === "todos" || c.source === sourceFilter) &&
+        (!q ||
+          normalize(`${c.name} ${c.email} ${c.phone} ${c.document} ${c.city}`).includes(q)),
     );
-  }, [rows, search]);
+  }, [rows, search, sourceFilter]);
 
-  const selectedCustomer = rows.find((c) => c.id === selectedCustomerId) ?? null;
+  const selectedCustomer = rows.find((c) => c.key === selectedCustomerId) ?? null;
+
+  function toForm(c: UnifiedCustomer): CustomerForm {
+    return {
+      id: c.customerId ?? undefined,
+      userId: c.userId ?? undefined,
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      document: c.document,
+      zip: c.zip,
+      street: c.street,
+      number: c.number,
+      complement: c.complement,
+      city: c.city,
+      state: c.state,
+      notes: c.notes,
+    };
+  }
 
   const productMatches = useMemo(() => {
     const q = normalize(productSearch.trim());
@@ -133,6 +164,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
   const createOrderMutation = useMutation({
     mutationFn: (input: unknown) => createSalesOrder({ data: input } as never),
     onSuccess: (result: { reference: string; total: number }) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
       toast.success(`Pedido ${result.reference} criado`, {
         description: `Total ${formatBRL(result.total)}`,
       });
@@ -163,7 +195,8 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
       return;
     }
     createOrderMutation.mutate({
-      customerId: selectedCustomer.id,
+      customerId: selectedCustomer.customerId ?? undefined,
+      userId: selectedCustomer.userId ?? undefined,
       customer: {
         name: selectedCustomer.name,
         email: selectedCustomer.email,
@@ -193,6 +226,29 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
             <UserPlus className="mr-2 h-4 w-4" /> Novo cliente
           </Button>
         </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Inclui quem se cadastrou no site e quem foi cadastrado por aqui.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Origem do cliente">
+          {(
+            [
+              ["todos", "Todos"],
+              ["site", "Cadastro no site"],
+              ["televendas", "Só televendas"],
+            ] as const
+          ).map(([value, label]) => (
+            <Button
+              key={value}
+              size="sm"
+              role="tab"
+              aria-selected={sourceFilter === value}
+              variant={sourceFilter === value ? "cta" : "outline"}
+              onClick={() => setSourceFilter(value)}
+            >
+              {label} ({counts[value]})
+            </Button>
+          ))}
+        </div>
         <Input
           className="mt-3"
           placeholder="Buscar por nome, e-mail, telefone ou documento"
@@ -202,18 +258,34 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
         <div className="mt-3 max-h-[480px] space-y-2 overflow-y-auto">
           {customers.isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
           {!customers.isLoading && filtered.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nenhum cliente cadastrado ainda.</p>
+            <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p>
           )}
           {filtered.map((c) => (
             <div
-              key={c.id}
+              key={c.key}
               className={`rounded-lg border p-3 ${
-                selectedCustomerId === c.id ? "border-primary bg-primary/5" : "border-border"
+                selectedCustomerId === c.key ? "border-primary bg-primary/5" : "border-border"
               }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{c.name}</p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="truncate font-medium">{c.name}</p>
+                    {c.source === "site" ? (
+                      <Badge variant="secondary" className="gap-1 text-[10px]">
+                        <Globe className="h-3 w-3" /> Site
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="gap-1 text-[10px]">
+                        <Headset className="h-3 w-3" /> Televendas
+                      </Badge>
+                    )}
+                    {c.isMember && (
+                      <Badge variant="outline" className="text-[10px]">
+                        Membro
+                      </Badge>
+                    )}
+                  </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {[c.phone, c.email, c.city].filter(Boolean).join(" · ") || "Sem contato"}
                   </p>
@@ -221,29 +293,32 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 <div className="flex gap-1">
                   <Button
                     size="sm"
-                    variant={selectedCustomerId === c.id ? "cta" : "outline"}
-                    onClick={() => setSelectedCustomerId(c.id)}
+                    variant={selectedCustomerId === c.key ? "cta" : "outline"}
+                    onClick={() => setSelectedCustomerId(c.key)}
                   >
-                    {selectedCustomerId === c.id ? "Selecionado" : "Vender"}
+                    {selectedCustomerId === c.key ? "Selecionado" : "Vender"}
                   </Button>
                   <Button
                     size="icon"
                     variant="ghost"
                     aria-label="Editar cliente"
-                    onClick={() => setForm({ ...emptyCustomer, ...c })}
+                    onClick={() => setForm(toForm(c))}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    aria-label="Remover cliente"
-                    onClick={() => {
-                      if (confirm(`Remover ${c.name}?`)) removeCustomerMutation.mutate(c.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {c.source === "televendas" && c.customerId && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label="Remover cliente"
+                      onClick={() => {
+                        if (confirm(`Remover ${c.name}?`))
+                          removeCustomerMutation.mutate(c.customerId!);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -255,7 +330,11 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
         <h3 className="text-lg font-semibold">Pedido de venda (televendas)</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           {selectedCustomer
-            ? `Cliente: ${selectedCustomer.name}`
+            ? `Cliente: ${selectedCustomer.name}${
+                selectedCustomer.source === "site"
+                  ? " · o pedido também aparece em “Meus pedidos” da conta dele"
+                  : ""
+              }`
             : "Selecione um cliente na lista ao lado."}
         </p>
 
@@ -416,7 +495,9 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
       <Dialog open={form !== null} onOpenChange={(open) => !open && setForm(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{form?.id ? "Editar cliente" : "Novo cliente"}</DialogTitle>
+            <DialogTitle>
+              {form?.id || form?.userId ? "Editar cliente" : "Novo cliente"}
+            </DialogTitle>
           </DialogHeader>
           {form && (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -433,8 +514,14 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 <Input
                   className="mt-1"
                   value={form.email}
+                  disabled={Boolean(form.userId)}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
+                {form.userId && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    E-mail de login da conta no site.
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Telefone</Label>
@@ -526,11 +613,6 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
         </DialogContent>
       </Dialog>
 
-      {selectedCustomer && (
-        <Badge className="hidden" aria-hidden>
-          {selectedCustomer.id}
-        </Badge>
-      )}
     </div>
   );
 }

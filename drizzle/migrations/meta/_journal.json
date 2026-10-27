@@ -57,6 +57,13 @@
       "when": 1793024229525,
       "tag": "0007_create_cart_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793127208637,
+      "tag": "0008_link_customers_to_site_accounts",
+      "breakpoints": true
     }
   ]
 }
