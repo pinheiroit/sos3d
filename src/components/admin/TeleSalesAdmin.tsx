@@ -25,8 +25,8 @@ import {
 } from "@/lib/admin.functions";
 
 type CustomerForm = {
-  id?: string;
-  userId?: string;
+  id?: string | undefined;
+  userId?: string | undefined;
   name: string;
   email: string;
   phone: string;

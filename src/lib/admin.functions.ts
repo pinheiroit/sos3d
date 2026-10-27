@@ -813,7 +813,7 @@ export const listCustomers = createServerFn({ method: "GET" })
 /** Grava a ficha do cliente; para contas do site, cria/atualiza a ficha vinculada. */
 async function upsertCustomerRow(
   db: Awaited<ReturnType<typeof import("@/lib/admin-guard.server").adminClient>>,
-  input: { id?: string; userId?: string; notes?: string } & Omit<
+  input: { id?: string | undefined; userId?: string | undefined; notes?: string | undefined } & Omit<
     z.infer<typeof customerSchema>,
     "id" | "userId" | "notes"
   >,
