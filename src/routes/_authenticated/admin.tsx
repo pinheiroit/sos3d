@@ -1287,11 +1287,6 @@ function AdminPage() {
                     <Badge variant="secondary">{paymentLabels[o.payment_method] ?? o.payment_method}</Badge>
                     <Badge variant="outline">{orderChannel(o) === "site" ? "Site" : "Televendas"}</Badge>
                     <Badge variant="outline">{orderDelivery(o) === "coleta" ? "Coleta" : "Envio"}</Badge>
-                    {o.status !== "pendente" && (
-                      <Badge variant={o.status === "cancelado" ? "destructive" : "secondary"}>
-                        {statusLabels[o.status] ?? o.status}
-                      </Badge>
-                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -1320,7 +1315,7 @@ function AdminPage() {
                     <SelectContent>
                       {statusOptions.map((s) => (
                         <SelectItem key={s} value={s}>
-                          {s.replace("_", " ")}
+                          {statusLabels[s] ?? s}
                         </SelectItem>
                       ))}
                     </SelectContent>
