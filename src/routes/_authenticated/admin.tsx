@@ -1317,7 +1317,7 @@ function AdminPage() {
               if (memberView === "admins" && !isAdm) return false;
               const q = memberSearch.trim().toLowerCase();
               if (!q) return true;
-              return `${profile.full_name ?? ""} ${profile.email ?? ""}`.toLowerCase().includes(q);
+              return `${profile.full_name ?? ""} ${profile.email ?? ""} ${profile.phone ?? ""}`.toLowerCase().includes(q);
             })
             .map((profile) => {
             const m = (data?.memberships ?? []).find((x) => x.user_id === profile.id);
