@@ -794,37 +794,55 @@ function AdminPage() {
               </Sheet>
             </div>
 
-            <TabsContent value="overview" className="mt-6 space-y-6">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {[
-                  { icon: CircleDollarSign, t: "Receita registrada", v: formatBRL(totals.revenue) },
-                  { icon: ReceiptText, t: "Pedidos pendentes", v: String(totals.pending) },
-                  { icon: Boxes, t: "Estoque baixo", v: String(totals.lowStock) },
-                  { icon: Users, t: "Membros ativos", v: String(totals.members) },
-                ].map((item) => (
-                  <div key={item.t} className="rounded-lg border border-border bg-card p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm text-muted-foreground">{item.t}</p>
-                      <item.icon className="size-5 shrink-0 text-tech" />
-                    </div>
-                    <p className="mt-3 text-2xl font-bold">{item.v}</p>
-                  </div>
-                ))}
-              </div>
-              <section>
-                <h3 className="text-lg font-semibold">Ações rápidas</h3>
-                <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("televendas")}>
-                    <ShoppingCart className="size-5 text-tech" /> Nova venda
-                  </Button>
-                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={newProduct}>
-                    <Plus className="size-5 text-tech" /> Novo produto
-                  </Button>
-                  <Button variant="outline" className="h-auto justify-start gap-3 p-4" onClick={() => selectSection("entrada-nfe")}>
-                    <Truck className="size-5 text-tech" /> Entrada por NF-e
-                  </Button>
+            <TabsContent value="overview" className="mt-6 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => selectSection("televendas")}>
+                  <ShoppingCart className="size-4 text-tech" /> Nova venda
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={newProduct}>
+                  <Plus className="size-4 text-tech" /> Novo produto
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => selectSection("entrada-nfe")}>
+                  <Truck className="size-4 text-tech" /> Entrada por NF-e
+                </Button>
+                <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSalesFilters({ ...defaultSalesFilters, period: "all", status: "pendente" });
+                      selectSection("pedidos");
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 hover:bg-secondary"
+                  >
+                    <ReceiptText className="size-4 text-tech" /> {totals.pending} pedido(s) pendente(s)
+                  </button>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+                    <Boxes className="size-4 text-tech" /> {totals.lowStock} com estoque baixo
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+                    <Users className="size-4 text-tech" /> {totals.members} membros ativos
+                  </span>
                 </div>
-              </section>
+              </div>
+              <SalesFiltersBar
+                filters={salesFilters}
+                onChange={setSalesFilters}
+                orders={salesOrders}
+                products={salesProducts}
+                lookups={salesLookups}
+              />
+              <SalesOverview
+                orders={salesOrders}
+                products={salesProducts}
+                filters={salesFilters}
+                onChange={setSalesFilters}
+                lookups={salesLookups}
+              />
+              <div className="flex justify-end">
+                <Button variant="tech" onClick={() => selectSection("pedidos")}>
+                  <CircleDollarSign className="size-4" /> Ver {filteredSalesOrders.length} pedido(s) com esses filtros
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="produtos" className="mt-6 space-y-4">
