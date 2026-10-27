@@ -1249,10 +1249,31 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="pedidos" className="mt-6 space-y-3">
-          {(data?.orders ?? []).length === 0 && (
+          <SalesFiltersBar
+            filters={salesFilters}
+            onChange={setSalesFilters}
+            orders={salesOrders}
+            products={salesProducts}
+            lookups={salesLookups}
+          />
+          <OrdersSummary orders={filteredSalesOrders} itemFilter={hasItemFilter(salesFilters)} />
+          {(data?.orders ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum pedido registrado ainda.</p>
+          ) : (
+            filteredSalesOrders.length === 0 && (
+              <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+                Nenhum pedido com esses filtros.{" "}
+                <button
+                  type="button"
+                  className="text-tech underline-offset-4 hover:underline"
+                  onClick={() => setSalesFilters({ ...defaultSalesFilters, period: "all" })}
+                >
+                  Ver todos os pedidos
+                </button>
+              </div>
+            )
           )}
-          {(data?.orders ?? []).map((o) => (
+          {filteredSalesOrders.map((o) => (
             <div key={o.id} className="rounded-xl border border-border bg-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -1262,6 +1283,16 @@ function AdminPage() {
                   <p className="text-xs text-muted-foreground">
                     {o.customer_email} • {new Date(o.created_at).toLocaleString("pt-BR")}
                   </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <Badge variant="secondary">{paymentLabels[o.payment_method] ?? o.payment_method}</Badge>
+                    <Badge variant="outline">{orderChannel(o) === "site" ? "Site" : "Televendas"}</Badge>
+                    <Badge variant="outline">{orderDelivery(o) === "coleta" ? "Coleta" : "Envio"}</Badge>
+                    {o.status !== "pendente" && (
+                      <Badge variant={o.status === "cancelado" ? "destructive" : "secondary"}>
+                        {statusLabels[o.status] ?? o.status}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-bold text-brand">{formatBRL(Number(o.total))}</span>
