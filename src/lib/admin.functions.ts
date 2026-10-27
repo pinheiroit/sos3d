@@ -679,6 +679,7 @@ export const processNfeStockEntry = createServerFn({ method: "POST" })
 
 const customerSchema = z.object({
   id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().max(180).default(""),
   phone: z.string().trim().max(40).default(""),
@@ -692,16 +693,165 @@ const customerSchema = z.object({
   notes: z.string().trim().max(1000).default(""),
 });
 
+/** Cliente unificado: ficha de televendas e/ou conta criada no site. */
+export type UnifiedCustomer = {
+  key: string;
+  customerId: string | null;
+  userId: string | null;
+  source: "site" | "televendas";
+  isMember: boolean;
+  name: string;
+  email: string;
+  phone: string;
+  document: string;
+  zip: string;
+  street: string;
+  number: string;
+  complement: string;
+  city: string;
+  state: string;
+  notes: string;
+  createdAt: string;
+};
+
+const pick = (...values: (string | null | undefined)[]) =>
+  values.find((v) => typeof v === "string" && v.trim() !== "")?.trim() ?? "";
+
 export const listCustomers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<UnifiedCustomer[]> => {
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
-    const { data, error } = await db.from("customers").select("*").order("name", { ascending: true });
-    if (error) throw new Error(error.message);
-    return data ?? [];
+    const [customers, profiles, orders, memberships] = await Promise.all([
+      db.from("customers").select("*"),
+      db.from("profiles").select("id, email, full_name, phone, created_at"),
+      db
+        .from("orders")
+        .select("user_id, customer_name, customer_phone, customer_document, shipping_address, created_at")
+        .not("user_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(2000),
+      db.from("memberships").select("user_id, active").eq("active", true),
+    ]);
+    const err = customers.error ?? profiles.error ?? orders.error ?? memberships.error;
+    if (err) throw new Error(err.message);
+
+    const members = new Set((memberships.data ?? []).map((m) => m.user_id));
+    const lastOrderByUser = new Map<string, NonNullable<typeof orders.data>[number]>();
+    for (const o of orders.data ?? []) {
+      if (o.user_id && !lastOrderByUser.has(o.user_id)) lastOrderByUser.set(o.user_id, o);
+    }
+    const profileIds = new Set((profiles.data ?? []).map((p) => p.id));
+    const profileByEmail = new Map(
+      (profiles.data ?? [])
+        .filter((p) => p.email)
+        .map((p) => [p.email!.trim().toLowerCase(), p.id] as const),
+    );
+
+    // Ficha de televendas ligada a cada conta (por vínculo salvo ou mesmo e-mail).
+    const rowByUser = new Map<string, NonNullable<typeof customers.data>[number]>();
+    const unlinked: NonNullable<typeof customers.data> = [];
+    for (const c of customers.data ?? []) {
+      const linkedId =
+        (c.user_id && profileIds.has(c.user_id) ? c.user_id : null) ??
+        (c.email ? profileByEmail.get(c.email.trim().toLowerCase()) : undefined) ??
+        null;
+      if (linkedId && !rowByUser.has(linkedId)) rowByUser.set(linkedId, c);
+      else unlinked.push(c);
+    }
+
+    const result: UnifiedCustomer[] = [];
+    for (const p of profiles.data ?? []) {
+      const row = rowByUser.get(p.id);
+      const order = lastOrderByUser.get(p.id);
+      const addr = (order?.shipping_address ?? {}) as Record<string, string>;
+      result.push({
+        key: `user:${p.id}`,
+        customerId: row?.id ?? null,
+        userId: p.id,
+        source: "site",
+        isMember: members.has(p.id),
+        name: pick(row?.name, p.full_name, order?.customer_name, p.email?.split("@")[0]) || "Cliente",
+        email: pick(p.email, row?.email),
+        phone: pick(row?.phone, order?.customer_phone, p.phone),
+        document: pick(row?.document, order?.customer_document),
+        zip: pick(row?.zip, addr["zip"]),
+        street: pick(row?.street, addr["street"]),
+        number: pick(row?.number, addr["number"]),
+        complement: pick(row?.complement, addr["complement"]),
+        city: pick(row?.city, addr["city"]),
+        state: pick(row?.state, addr["state"]),
+        notes: row?.notes ?? "",
+        createdAt: p.created_at,
+      });
+    }
+    for (const c of unlinked) {
+      result.push({
+        key: `customer:${c.id}`,
+        customerId: c.id,
+        userId: null,
+        source: "televendas",
+        isMember: false,
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        document: c.document,
+        zip: c.zip,
+        street: c.street,
+        number: c.number,
+        complement: c.complement,
+        city: c.city,
+        state: c.state,
+        notes: c.notes,
+        createdAt: c.created_at,
+      });
+    }
+    return result.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   });
+
+/** Grava a ficha do cliente; para contas do site, cria/atualiza a ficha vinculada. */
+async function upsertCustomerRow(
+  db: Awaited<ReturnType<typeof import("@/lib/admin-guard.server").adminClient>>,
+  input: { id?: string; userId?: string } & Omit<z.infer<typeof customerSchema>, "id" | "userId">,
+) {
+  const { id, userId, ...values } = input;
+  if (userId) {
+    const { data: profile } = await db
+      .from("profiles")
+      .select("id, email")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!profile) throw new Error("Conta do site não encontrada.");
+    // O e-mail da conta é o de login; a ficha sempre acompanha ele.
+    if (profile.email) values.email = profile.email;
+  }
+  const now = new Date().toISOString();
+  let targetId = id;
+  if (!targetId && userId) {
+    const { data: existing } = await db
+      .from("customers")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    targetId = existing?.id;
+  }
+  if (targetId) {
+    const { error } = await db
+      .from("customers")
+      .update({ ...values, ...(userId ? { user_id: userId } : {}), updated_at: now })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+    return targetId;
+  }
+  const { data: row, error } = await db
+    .from("customers")
+    .insert({ ...values, user_id: userId ?? null })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return row.id;
+}
 
 export const saveCustomer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -710,18 +860,8 @@ export const saveCustomer = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
-    const { id, ...values } = data;
-    if (id) {
-      const { error } = await db
-        .from("customers")
-        .update({ ...values, updated_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw new Error(error.message);
-      return { id };
-    }
-    const { data: row, error } = await db.from("customers").insert(values).select("id").single();
-    if (error) throw new Error(error.message);
-    return { id: row.id };
+    const id = await upsertCustomerRow(db, data);
+    return { id };
   });
 
 export const deleteCustomer = createServerFn({ method: "POST" })
@@ -731,6 +871,10 @@ export const deleteCustomer = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
+    const { data: row } = await db.from("customers").select("user_id").eq("id", data.id).maybeSingle();
+    if (row?.user_id) {
+      throw new Error("Este cliente tem conta no site e não pode ser removido por aqui.");
+    }
     const { error } = await db.from("customers").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
