@@ -882,7 +882,8 @@ export const deleteCustomer = createServerFn({ method: "POST" })
 
 const salesOrderSchema = z.object({
   customerId: z.string().uuid().optional(),
-  customer: customerSchema.omit({ id: true, notes: true }),
+  userId: z.string().uuid().optional(),
+  customer: customerSchema.omit({ id: true, userId: true, notes: true }),
   paymentMethod: z.enum(["pix", "boleto", "cartao"]),
   installmentMonths: z.number().int().min(1).max(48).optional(),
   status: z.enum(["pendente", "pago", "em_producao", "enviado", "concluido"]).default("pendente"),
@@ -972,7 +973,8 @@ export const createSalesOrder = createServerFn({ method: "POST" })
     const { data: order, error: orderError } = await db
       .from("orders")
       .insert({
-        user_id: null,
+        // Pedido de cliente com conta no site aparece em "Meus pedidos" dele.
+        user_id: data.userId ?? null,
         customer_name: data.customer.name,
         customer_email: data.customer.email || "televendas@sos3d.com.br",
         customer_phone: data.customer.phone || null,
@@ -1009,11 +1011,13 @@ export const createSalesOrder = createServerFn({ method: "POST" })
         .eq("id", l.product_id);
     }
 
-    if (data.customerId) {
-      await db
-        .from("customers")
-        .update({ ...data.customer, updated_at: new Date().toISOString() })
-        .eq("id", data.customerId);
+    // Mantém a ficha do cliente atualizada (e cria a ficha vinculada para contas do site).
+    if (data.customerId || data.userId) {
+      await upsertCustomerRow(db, {
+        id: data.customerId,
+        userId: data.userId,
+        ...data.customer,
+      });
     }
 
     return {
