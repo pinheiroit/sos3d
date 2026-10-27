@@ -813,7 +813,10 @@ export const listCustomers = createServerFn({ method: "GET" })
 /** Grava a ficha do cliente; para contas do site, cria/atualiza a ficha vinculada. */
 async function upsertCustomerRow(
   db: Awaited<ReturnType<typeof import("@/lib/admin-guard.server").adminClient>>,
-  input: { id?: string; userId?: string } & Omit<z.infer<typeof customerSchema>, "id" | "userId">,
+  input: { id?: string; userId?: string; notes?: string } & Omit<
+    z.infer<typeof customerSchema>,
+    "id" | "userId" | "notes"
+  >,
 ) {
   const { id, userId, ...values } = input;
   if (userId) {
@@ -901,6 +904,15 @@ export const createSalesOrder = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
+    if (data.userId) {
+      const { data: account } = await db
+        .from("profiles")
+        .select("id")
+        .eq("id", data.userId)
+        .maybeSingle();
+      if (!account) throw new Error("Conta do site não encontrada para este cliente.");
+    }
+
 
     const slugs = data.items.map((i) => i.slug);
     const [{ data: rows, error }, settings] = await Promise.all([
