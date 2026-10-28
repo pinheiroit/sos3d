@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,7 +11,9 @@ import {
   LayoutDashboard,
   Wrench,
   Menu,
+  BadgeCheck,
   Package,
+  PackageCheck,
   PackageMinus,
   Palette,
   Pencil,
@@ -76,6 +78,25 @@ import { StockWithdrawalAdmin } from "@/components/admin/StockWithdrawalAdmin";
 import { AbandonedCartsAdmin } from "@/components/admin/AbandonedCartsAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
+import { SellerPickingAdmin, type PickingOrderRow } from "@/components/admin/SellerPickingAdmin";
+import { createSeller, setMemberSeller } from "@/lib/picking.functions";
+import { PICKABLE_ORDER_STATUSES, pickingProgress } from "@/lib/picking";
+
+type SellerForm = { fullName: string; email: string; phone: string; password: string };
+
+function pickingBadge(o: PickingOrderRow) {
+  if (o.picking_status === "separado")
+    return <Badge className="bg-success text-primary-foreground">Separado por {o.picker_name || "vendedor"}</Badge>;
+  if (o.picking_status === "em_separacao") {
+    const p = pickingProgress(o);
+    return (
+      <Badge className="bg-accent text-accent-foreground">
+        Separando: {o.picker_name || "vendedor"} ({p.done}/{p.total})
+      </Badge>
+    );
+  }
+  return null;
+}
 import {
   OrdersSummary,
   SalesFiltersBar,
@@ -146,6 +167,7 @@ type AdminSection =
   | "assistencia"
   | "televendas"
   | "pedidos"
+  | "separacao"
   | "carrinhos"
   | "nfe"
   | "produtos"
@@ -174,6 +196,7 @@ const adminGroups = [
     items: [
       { value: "televendas", label: "Nova venda", icon: ShoppingCart },
       { value: "pedidos", label: "Pedidos", icon: ReceiptText },
+      { value: "separacao", label: "Separação de pedidos", icon: PackageCheck },
       { value: "carrinhos", label: "Carrinhos abandonados", icon: ShoppingBasket },
       { value: "nfe", label: "Emissão de NF-e", icon: ReceiptText },
     ],
@@ -225,6 +248,10 @@ const sectionCopy: Record<AdminSection, { title: string; description: string }> 
   televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
   carrinhos: { title: "Carrinhos abandonados", description: "Veja quem montou carrinho e não finalizou, por onde entrou no site e de onde veio." },
   pedidos: { title: "Pedidos", description: "Acompanhe pedidos e atualize o andamento de cada venda." },
+  separacao: {
+    title: "Separação de pedidos",
+    description: "Pegue um pedido, separe os produtos item por item e conclua. A venda fica no seu nome.",
+  },
   nfe: { title: "Emissão de NF-e", description: "Emita e cancele notas fiscais dos pedidos." },
   produtos: { title: "Produtos", description: "Consulte, cadastre e edite os itens da loja." },
   estoque: { title: "Controle de estoque", description: "Localize produtos e ajuste quantidades rapidamente." },
@@ -339,8 +366,9 @@ function AdminPage() {
   const [memberForm, setMemberForm] = useState<MemberForm | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberView, setMemberView] = useState<
-    "all" | "clients" | "members" | "admins" | "telesales"
+    "all" | "clients" | "members" | "admins" | "sellers" | "telesales"
   >("all");
+  const [sellerForm, setSellerForm] = useState<SellerForm | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [filters, setFilters] = useState({
     text: "",
@@ -437,6 +465,26 @@ function AdminPage() {
       refresh();
     },
     onError: (e: Error) => toast.error("Erro ao alterar administrador", { description: e.message }),
+  });
+
+  const memberSeller = useMutation({
+    mutationFn: (input: { userId: string; isSeller: boolean }) => setMemberSeller({ data: input }),
+    onSuccess: (_r, input) => {
+      toast.success(input.isSeller ? "Agora é vendedor (com acesso ao painel)" : "Removido dos vendedores");
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Erro ao alterar vendedor", { description: e.message }),
+  });
+
+  const newSeller = useMutation({
+    mutationFn: (input: SellerForm) => createSeller({ data: input }),
+    onSuccess: () => {
+      toast.success("Vendedor criado", { description: "Ele já pode entrar com o e-mail e a senha." });
+      setSellerForm(null);
+      setMemberView("sellers");
+      refresh();
+    },
+    onError: (e: Error) => toast.error("Não foi possível criar o vendedor", { description: e.message }),
   });
 
   const memberProfile = useMutation({
@@ -695,6 +743,28 @@ function AdminPage() {
     setMobileMenuOpen(false);
   }
 
+  const isCurrentSeller = Boolean(
+    data?.currentUserId && (data?.sellerIds ?? []).includes(data.currentUserId),
+  );
+  const pickingQueue = useMemo(
+    () =>
+      ((data?.orders ?? []) as unknown as PickingOrderRow[]).filter(
+        (o) =>
+          (PICKABLE_ORDER_STATUSES as readonly string[]).includes(o.status) &&
+          !o.picker_id &&
+          o.picking_status !== "separado",
+      ).length,
+    [data],
+  );
+  // Vendedor abre o painel direto na tela de separação.
+  const [sellerLanded, setSellerLanded] = useState(false);
+  useEffect(() => {
+    if (!sellerLanded && isCurrentSeller) {
+      setSellerLanded(true);
+      setActiveSection("separacao");
+    }
+  }, [isCurrentSeller, sellerLanded]);
+
   function newProduct() {
     setSlugTouched(false);
     setForm({ ...emptyForm });
@@ -723,6 +793,9 @@ function AdminPage() {
                 <span className="truncate">{item.label}</span>
                 {item.value === "pedidos" && totals.pending > 0 && (
                   <Badge variant="secondary" className="ml-auto">{totals.pending}</Badge>
+                )}
+                {item.value === "separacao" && pickingQueue > 0 && (
+                  <Badge variant="secondary" className="ml-auto">{pickingQueue}</Badge>
                 )}
                 {item.value === "estoque" && totals.lowStock > 0 && (
                   <Badge variant="secondary" className="ml-auto">{totals.lowStock}</Badge>
@@ -1248,6 +1321,21 @@ function AdminPage() {
           <NfeEmissao />
         </TabsContent>
 
+        <TabsContent value="separacao" className="mt-6">
+          <SellerPickingAdmin
+            orders={(data?.orders ?? []) as unknown as PickingOrderRow[]}
+            products={allProducts}
+            currentUserId={data?.currentUserId ?? ""}
+            isSeller={isCurrentSeller}
+            isAdmin
+            onChanged={refresh}
+            onOpenMembers={() => {
+              setMemberView("sellers");
+              selectSection("membros");
+            }}
+          />
+        </TabsContent>
+
         <TabsContent value="pedidos" className="mt-6 space-y-3">
           <SalesFiltersBar
             filters={salesFilters}
@@ -1287,6 +1375,7 @@ function AdminPage() {
                     <Badge variant="secondary">{paymentLabels[o.payment_method] ?? o.payment_method}</Badge>
                     <Badge variant="outline">{orderChannel(o) === "site" ? "Site" : "Televendas"}</Badge>
                     <Badge variant="outline">{orderDelivery(o) === "coleta" ? "Coleta" : "Envio"}</Badge>
+                    {pickingBadge(o as unknown as PickingOrderRow)}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -1359,22 +1448,34 @@ function AdminPage() {
               clients: profiles.filter((p) => !activeIds.has(p.id)).length + tele,
               members: profiles.filter((p) => activeIds.has(p.id)).length,
               admins: profiles.filter((p) => adminIds.has(p.id)).length,
+              sellers: profiles.filter((p) => (data?.sellerIds ?? []).includes(p.id)).length,
             };
             const views: { key: typeof memberView; label: string; n: number }[] = [
               { key: "all", label: "Todos", n: counts.all },
               { key: "clients", label: "Clientes", n: counts.clients },
               { key: "members", label: "Membros", n: counts.members },
               { key: "admins", label: "Administradores", n: counts.admins },
+              { key: "sellers", label: "Vendedores", n: counts.sellers },
               { key: "telesales", label: "Só televendas", n: tele },
             ];
             return (
               <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-                <p className="text-sm text-muted-foreground">
-                  Todo cadastro novo entra como <strong className="text-foreground">Cliente</strong>
-                  : faz compras e acompanha pedidos. Só um administrador pode torná-lo{" "}
-                  <strong className="text-foreground">Membro</strong>, liberando os cursos das
-                  impressoras marcadas.
-                </p>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <p className="max-w-3xl text-sm text-muted-foreground">
+                    Todo cadastro novo entra como <strong className="text-foreground">Cliente</strong>
+                    : faz compras e acompanha pedidos. Só um administrador pode torná-lo{" "}
+                    <strong className="text-foreground">Membro</strong>, liberando os cursos das
+                    impressoras marcadas.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="cta"
+                    onClick={() => setSellerForm({ fullName: "", email: "", phone: "", password: "" })}
+                  >
+                    <Plus className="size-4" /> Novo vendedor
+                  </Button>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {views.map((v) => (
                     <Button
@@ -1411,6 +1512,7 @@ function AdminPage() {
               if (memberView === "clients" && isMember) return false;
               if (memberView === "members" && !isMember) return false;
               if (memberView === "admins" && !isAdm) return false;
+              if (memberView === "sellers" && !(data?.sellerIds ?? []).includes(profile.id)) return false;
               const q = memberSearch.trim().toLowerCase();
               if (!q) return true;
               return `${profile.full_name ?? ""} ${profile.email ?? ""} ${profile.phone ?? ""}`.toLowerCase().includes(q);
@@ -1421,6 +1523,7 @@ function AdminPage() {
               .filter((x) => x.user_id === profile.id)
               .map((x) => x.printer_model_id);
             const isAdminUser = (data?.adminIds ?? []).includes(profile.id);
+            const isSellerUser = (data?.sellerIds ?? []).includes(profile.id);
             const isSelf = data?.currentUserId === profile.id;
             const toggleModel = (id: string, checked: boolean) => {
               const next = checked
@@ -1451,6 +1554,11 @@ function AdminPage() {
                   {isAdminUser && (
                     <Badge className="bg-tech text-primary-foreground">
                       <ShieldCheck className="mr-1 h-3 w-3" /> Administrador
+                    </Badge>
+                  )}
+                  {isSellerUser && (
+                    <Badge className="bg-accent text-accent-foreground">
+                      <BadgeCheck className="mr-1 h-3 w-3" /> Vendedor
                     </Badge>
                   )}
                   <div className="max-w-md">
@@ -1523,6 +1631,21 @@ function AdminPage() {
                     <span className="text-xs text-muted-foreground">
                       Administrador{isSelf ? " (você)" : ""}
                     </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={isSellerUser}
+                      disabled={memberSeller.isPending}
+                      onCheckedChange={(next) => {
+                        const name = profile.full_name || profile.email || "este usuário";
+                        const msg = next
+                          ? `Tornar ${name} vendedor? Ele também recebe acesso de administrador ao painel e pode pegar pedidos para separar.`
+                          : `Remover ${name} dos vendedores? O acesso de administrador continua até você desligá-lo.`;
+                        if (!window.confirm(msg)) return;
+                        memberSeller.mutate({ userId: profile.id, isSeller: next });
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">Vendedor</span>
                   </div>
                   <div className="flex flex-col gap-2">
                     <Button
@@ -1602,6 +1725,78 @@ function AdminPage() {
             <p className="text-sm text-muted-foreground">Carregando clientes do televendas…</p>
           )}
 
+
+          <Dialog open={Boolean(sellerForm)} onOpenChange={(open) => !open && setSellerForm(null)}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Novo vendedor</DialogTitle>
+              </DialogHeader>
+              {sellerForm && (
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    newSeller.mutate(sellerForm);
+                  }}
+                >
+                  <p className="text-sm text-muted-foreground">
+                    O vendedor entra no site com este e-mail e senha e tem acesso ao painel
+                    administrativo, incluindo a tela de Separação de pedidos.
+                  </p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="seller-name">Nome</Label>
+                    <Input
+                      id="seller-name"
+                      required
+                      value={sellerForm.fullName}
+                      onChange={(e) => setSellerForm({ ...sellerForm, fullName: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="seller-email">E-mail (login)</Label>
+                      <Input
+                        id="seller-email"
+                        type="email"
+                        required
+                        value={sellerForm.email}
+                        onChange={(e) => setSellerForm({ ...sellerForm, email: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="seller-phone">Telefone</Label>
+                      <Input
+                        id="seller-phone"
+                        value={sellerForm.phone}
+                        onChange={(e) => setSellerForm({ ...sellerForm, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="seller-password">Senha</Label>
+                    <Input
+                      id="seller-password"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                      value={sellerForm.password}
+                      onChange={(e) => setSellerForm({ ...sellerForm, password: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="ghost" onClick={() => setSellerForm(null)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" variant="tech" disabled={newSeller.isPending}>
+                      {newSeller.isPending ? "Criando…" : "Criar vendedor"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </DialogContent>
+          </Dialog>
 
           <Dialog open={Boolean(memberForm)} onOpenChange={(open) => !open && setMemberForm(null)}>
             <DialogContent className="max-w-lg">
