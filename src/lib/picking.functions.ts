@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import {
   assertIsPicker,
   canRelease,
@@ -12,14 +14,14 @@ import {
 
 const orderInput = z.object({ orderId: z.string().uuid() });
 
-async function loadContext(supabase: Parameters<typeof import("@/lib/admin-guard.server").getRoles>[0], userId: string) {
+async function loadContext(supabase: SupabaseClient<Database>, userId: string) {
   const { getRoles, adminClient } = await import("@/lib/admin-guard.server");
   const roles = await getRoles(supabase, userId);
   if (!roles.isAdmin) throw new Error("Acesso restrito ao painel administrativo.");
   return { roles, db: await adminClient() };
 }
 
-async function loadOrder(db: Awaited<ReturnType<typeof loadContext>>["db"], orderId: string) {
+async function loadOrder(db: SupabaseClient<Database>, orderId: string) {
   const { data, error } = await db
     .from("orders")
     .select("id, status, picker_id, picking_status, picked_item_ids, order_items(id)")
