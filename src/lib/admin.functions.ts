@@ -87,7 +87,7 @@ export const adminOverview = createServerFn({ method: "GET" })
           .select("*, lessons(*), course_printer_models(printer_model_id)")
           .order("sort_order", { ascending: true }),
         db.from("membership_printer_models").select("user_id, printer_model_id"),
-        db.from("user_roles").select("user_id").eq("role", "admin"),
+        db.from("user_roles").select("user_id, role").in("role", ["admin", "seller"]),
       ]);
 
     const firstError =
@@ -100,6 +100,7 @@ export const adminOverview = createServerFn({ method: "GET" })
       adminRoles.error;
     if (firstError) throw new Error(firstError.message);
 
+    const roleRows = adminRoles.data ?? [];
     return {
       products: products.data ?? [],
       orders: orders.data ?? [],
@@ -107,7 +108,8 @@ export const adminOverview = createServerFn({ method: "GET" })
       profiles: profiles.data ?? [],
       courses: courses.data ?? [],
       memberModels: memberModels.data ?? [],
-      adminIds: (adminRoles.data ?? []).map((r) => r.user_id),
+      adminIds: roleRows.filter((r) => r.role === "admin").map((r) => r.user_id),
+      sellerIds: roleRows.filter((r) => r.role === "seller").map((r) => r.user_id),
       currentUserId: context.userId,
     };
   });

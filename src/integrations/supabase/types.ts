@@ -669,6 +669,12 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: string
+          picked_at: string | null
+          picked_item_ids: Json
+          picker_id: string | null
+          picker_name: string
+          picking_started_at: string | null
+          picking_status: string
           reference: string
           shipping: number
           shipping_address: Json
@@ -688,6 +694,12 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: string
+          picked_at?: string | null
+          picked_item_ids?: Json
+          picker_id?: string | null
+          picker_name?: string
+          picking_started_at?: string | null
+          picking_status?: string
           reference?: string
           shipping?: number
           shipping_address?: Json
@@ -707,6 +719,12 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: string
+          picked_at?: string | null
+          picked_item_ids?: Json
+          picker_id?: string | null
+          picker_name?: string
+          picking_started_at?: string | null
+          picking_status?: string
           reference?: string
           shipping?: number
           shipping_address?: Json
@@ -1541,7 +1559,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "seller"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1669,7 +1687,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "seller"],
     },
   },
 } as const
