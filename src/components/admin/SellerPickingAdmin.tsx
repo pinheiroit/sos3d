@@ -283,7 +283,7 @@ export function SellerPickingAdmin({
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <Badge
                       className={cn(
-                        coleta ? "bg-cta text-cta-foreground" : "bg-brand text-brand-foreground",
+                        coleta ? "bg-accent text-accent-foreground" : "bg-brand text-brand-foreground",
                       )}
                     >
                       {coleta ? "Coleta no balcão" : "Envio"}
