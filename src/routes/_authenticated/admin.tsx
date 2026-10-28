@@ -196,7 +196,7 @@ const adminGroups = [
     items: [
       { value: "televendas", label: "Nova venda", icon: ShoppingCart },
       { value: "pedidos", label: "Pedidos", icon: ReceiptText },
-      { value: "separacao", label: "Separação de pedidos", icon: PackageCheck },
+      { value: "separacao", label: "Separação", icon: PackageCheck },
       { value: "carrinhos", label: "Carrinhos abandonados", icon: ShoppingBasket },
       { value: "nfe", label: "Emissão de NF-e", icon: ReceiptText },
     ],
