@@ -650,6 +650,28 @@ function AdminPage() {
   }, [allProducts, stockSearch, stockView]);
 
 
+  const isCurrentSeller = Boolean(
+    data?.currentUserId && (data?.sellerIds ?? []).includes(data.currentUserId),
+  );
+  const pickingQueue = useMemo(
+    () =>
+      ((data?.orders ?? []) as unknown as PickingOrderRow[]).filter(
+        (o) =>
+          (PICKABLE_ORDER_STATUSES as readonly string[]).includes(o.status) &&
+          !o.picker_id &&
+          o.picking_status !== "separado",
+      ).length,
+    [data],
+  );
+  // Vendedor abre o painel direto na tela de separação.
+  const [sellerLanded, setSellerLanded] = useState(false);
+  useEffect(() => {
+    if (!sellerLanded && isCurrentSeller) {
+      setSellerLanded(true);
+      setActiveSection("separacao");
+    }
+  }, [isCurrentSeller, sellerLanded]);
+
   if (overview.isError) {
     return (
       <div className="container-page py-24 text-center">
@@ -742,28 +764,6 @@ function AdminPage() {
     setActiveSection(section);
     setMobileMenuOpen(false);
   }
-
-  const isCurrentSeller = Boolean(
-    data?.currentUserId && (data?.sellerIds ?? []).includes(data.currentUserId),
-  );
-  const pickingQueue = useMemo(
-    () =>
-      ((data?.orders ?? []) as unknown as PickingOrderRow[]).filter(
-        (o) =>
-          (PICKABLE_ORDER_STATUSES as readonly string[]).includes(o.status) &&
-          !o.picker_id &&
-          o.picking_status !== "separado",
-      ).length,
-    [data],
-  );
-  // Vendedor abre o painel direto na tela de separação.
-  const [sellerLanded, setSellerLanded] = useState(false);
-  useEffect(() => {
-    if (!sellerLanded && isCurrentSeller) {
-      setSellerLanded(true);
-      setActiveSection("separacao");
-    }
-  }, [isCurrentSeller, sellerLanded]);
 
   function newProduct() {
     setSlugTouched(false);
