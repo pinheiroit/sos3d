@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link2, MessageCircle, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,14 +34,19 @@ export function ShareButton({ path, title, text, variant = "full", className }: 
     }
   };
 
-  const nativeShare = async (e: React.MouseEvent) => {
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      e.preventDefault();
-      try {
-        await navigator.share({ title, text: text ?? title, url });
-      } catch {
-        /* usuário cancelou */
-      }
+  // Celulares com compartilhamento nativo abrem a folha do sistema; no computador, um menu.
+  const [native, setNative] = useState(false);
+  useEffect(() => {
+    setNative(
+      typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches,
+    );
+  }, []);
+
+  const nativeShare = async () => {
+    try {
+      await navigator.share({ title, text: text ?? title, url });
+    } catch {
+      /* usuário cancelou */
     }
   };
 
@@ -52,15 +58,17 @@ export function ShareButton({ path, title, text, variant = "full", className }: 
         size="icon"
         aria-label={`Compartilhar ${title}`}
         className={cn("size-8 rounded-full bg-card/90 shadow-sm backdrop-blur", className)}
-        onClick={nativeShare}
+        onClick={native ? nativeShare : undefined}
       >
         <Share2 className="size-4" />
       </Button>
     ) : (
-      <Button type="button" variant="outline" size="lg" className={className} onClick={nativeShare}>
+      <Button type="button" variant="outline" size="lg" className={className} onClick={native ? nativeShare : undefined}>
         <Share2 /> Compartilhar
       </Button>
     );
+
+  if (native) return trigger;
 
   return (
     <DropdownMenu>
