@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL, type Product } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { ShareButton } from "@/components/site/ShareButton";
 import { maxQuote, usePricing } from "@/lib/pricing";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -16,7 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
   const months = plan ? plan.months : rules.defaultInstallments;
 
   return (
-    <article className="card-lift group flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card sm:rounded-xl">
+    <article className="card-lift group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card sm:rounded-xl">
       <Link
         to="/produto/$slug"
         params={{ slug: product.slug }}
@@ -41,6 +42,14 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
         )}
       </Link>
+      <div className="absolute right-2 top-2 z-10 sm:right-3 sm:top-3">
+        <ShareButton
+          variant="icon"
+          path={`/produto/${product.slug}`}
+          title={product.name}
+          text={`${product.name} — ${formatBRL(product.price)} na SOS.3D`}
+        />
+      </div>
 
       <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-4">
         <span className="truncate text-[10px] font-semibold uppercase text-tech sm:text-xs">{product.brand}</span>

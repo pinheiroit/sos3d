@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductCard } from "@/components/site/ProductCard";
+import { ShareButton } from "@/components/site/ShareButton";
 import { formatBRL, type Product } from "@/lib/catalog";
 import { quotesFor, usePricing } from "@/lib/pricing";
 import { listProducts } from "@/lib/catalog.functions";
@@ -26,18 +27,29 @@ export const Route = createFileRoute("/produto/$slug")({
       };
     }
     const url = `https://sos3d.com.br/produto/${params.slug}`;
-    const image = product.imageUrl?.startsWith("http") ? product.imageUrl : undefined;
+    // Foto do produto em endereço absoluto, para o WhatsApp/redes mostrarem a foto e não um print da home.
+    const image = product.image ? new URL(product.image, "https://sos3d.com.br").href : undefined;
+    const summary =
+      product.subtitle?.trim() ||
+      product.description?.trim().slice(0, 160) ||
+      `${product.name} — ${product.brand}`;
+    const description = `${summary} • ${formatBRL(product.price)} na SOS.3D`;
     return {
       meta: [
         { title: `${product.name} — ${product.brand} | SOS.3D` },
-        { name: "description", content: product.subtitle },
+        { name: "description", content: description },
         { property: "og:title", content: `${product.name} | SOS.3D` },
-        { property: "og:description", content: product.subtitle },
+        { property: "og:description", content: description },
         { property: "og:type", content: "product" },
         { property: "og:url", content: url },
+        { property: "og:site_name", content: "SOS.3D" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: `${product.name} | SOS.3D` },
+        { name: "twitter:description", content: description },
         ...(image
           ? [
               { property: "og:image", content: image },
+              { property: "og:image:alt", content: product.name },
               { name: "twitter:image", content: image },
             ]
           : []),
@@ -217,9 +229,16 @@ function ProductPage() {
               </Button>
             </div>
 
-            <Button asChild variant="outline" size="lg" className="mt-3 w-full">
-              <Link to="/contato">Falar com especialista antes de comprar</Link>
-            </Button>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+              <Button asChild variant="outline" size="lg" className="flex-1">
+                <Link to="/contato">Falar com especialista antes de comprar</Link>
+              </Button>
+              <ShareButton
+                path={`/produto/${product.slug}`}
+                title={product.name}
+                text={`${product.name} — ${formatBRL(product.price)} na SOS.3D`}
+              />
+            </div>
 
             <ul className="mt-6 space-y-2.5 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
