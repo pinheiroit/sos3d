@@ -411,14 +411,21 @@ export function SellerPickingAdmin({
                     >
                       <Undo2 className="size-4" /> Devolver para a fila
                     </Button>
-                    <Button
-                      variant="tech"
-                      disabled={!prog.complete || complete.isPending || toggle.isPending}
-                      onClick={() => complete.mutate(o.id)}
-                    >
-                      <PackageCheck className="size-4" />
-                      {prog.complete ? "Concluir separação" : `Faltam ${prog.total - prog.done} item(ns)`}
-                    </Button>
+                    {prog.complete ? (
+                      <Button
+                        variant="cta"
+                        size="lg"
+                        className="w-full sm:w-auto"
+                        disabled={complete.isPending || toggle.isPending}
+                        onClick={() => complete.mutate(o.id)}
+                      >
+                        <PackageCheck className="size-5" /> Finalizar separação
+                      </Button>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        Faltam {prog.total - prog.done} item(ns) para finalizar
+                      </span>
+                    )}
                   </>
                 )}
                 {view === "others" && isAdmin && (
