@@ -47,7 +47,7 @@ export function ProductCard({ product }: { product: Product }) {
           variant="icon"
           path={`/produto/${product.slug}`}
           title={product.name}
-          text={`${product.name} — ${formatBRL(product.price)} na SOS.3D`}
+          text={`${product.name}\n${formatBRL(product.price)} na SOS.3D`}
         />
       </div>
 

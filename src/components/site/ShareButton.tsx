@@ -27,8 +27,8 @@ export function ShareButton({ path, title, text, variant = "full", className }: 
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copiado");
+      await navigator.clipboard.writeText(message);
+      toast.success("Nome, preço e link copiados");
     } catch {
       toast.error("Não foi possível copiar o link");
     }
@@ -44,7 +44,8 @@ export function ShareButton({ path, title, text, variant = "full", className }: 
 
   const nativeShare = async () => {
     try {
-      await navigator.share({ title, text: text ?? title, url });
+      // Texto e link juntos: alguns apps (ex.: WhatsApp no iPhone) descartam o texto quando o link vai separado.
+      await navigator.share({ title, text: message });
     } catch {
       /* usuário cancelou */
     }
