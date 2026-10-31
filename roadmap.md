@@ -31,5 +31,5 @@
 - [x] Implementar emissão de NF-e com NFeWizard (serviço Node + painel)
 - [x] Implementar cancelamento de NF-e com justificativa
 - [ ] Hospedar o serviço nfe-service e salvar NFE_SERVICE_URL/NFE_SERVICE_TOKEN
-- [ ] Gerar pedido em PDF / imprimir (layout da Venda Conta Azul com logo SOS3D) nas telas de pedidos e separação
+- [x] Gerar pedido em PDF / imprimir (layout da Venda Conta Azul com logo SOS3D) nas telas de pedidos e separação
 - [ ] Integrar Conta Azul: venda ao marcar Pago, estoque oficial da Conta Azul, NF-e emitida lá e puxada ao site, parcelas/baixa/cancelamento/recebimentos
