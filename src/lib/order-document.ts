@@ -47,7 +47,7 @@ const dateBR = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
 
 function addressLines(raw: unknown): { pickup: boolean; text: string } {
   const a = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  const pickup = a.fulfillment === "coleta";
+  const pickup = a["fulfillment"] === "coleta";
   const s = (k: string) => (typeof a[k] === "string" ? (a[k] as string).trim() : "");
   const street = [s("street"), s("number")].filter(Boolean).join(", ");
   const parts = [
