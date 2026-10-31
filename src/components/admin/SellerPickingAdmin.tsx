@@ -42,6 +42,11 @@ export type PickingOrderRow = {
   total: number | string;
   customer_name: string;
   customer_phone: string | null;
+  customer_email?: string | null;
+  customer_document?: string | null;
+  subtotal?: number | string | null;
+  shipping?: number | string | null;
+  discount?: number | string | null;
   notes: string | null;
   shipping_address: unknown;
   picker_id: string | null;
@@ -56,6 +61,7 @@ export type PickingOrderRow = {
     product_slug: string;
     product_name: string;
     qty: number;
+    unit_price?: number | string;
   }[];
 };
 
@@ -390,6 +396,22 @@ export function SellerPickingAdmin({
               )}
 
               <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-border p-4">
+                <div className="mr-auto">
+                  <OrderDocumentActions
+                    order={{
+                      ...o,
+                      items: o.order_items.map((i) => ({
+                        qty: i.qty,
+                        product_name: i.product_name,
+                        unit_price: i.unit_price ?? 0,
+                        detail:
+                          (i.product_id ? productById.get(i.product_id)?.brand : undefined) ??
+                          productBySlug.get(i.product_slug)?.brand ??
+                          "",
+                      })),
+                    }}
+                  />
+                </div>
                 {view === "queue" && (
                   <Button
                     variant="cta"

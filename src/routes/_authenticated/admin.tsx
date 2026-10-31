@@ -1380,6 +1380,17 @@ function AdminPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-bold text-brand">{formatBRL(Number(o.total))}</span>
+                  <OrderDocumentActions
+                    order={{
+                      ...o,
+                      items: o.order_items.map((i) => ({
+                        qty: i.qty,
+                        product_name: i.product_name,
+                        unit_price: i.unit_price,
+                        detail: (data?.products ?? []).find((p) => p.slug === i.product_slug)?.brand ?? "",
+                      })),
+                    }}
+                  />
                   {o.status === "pendente" && (
                     <Button
                       size="sm"
