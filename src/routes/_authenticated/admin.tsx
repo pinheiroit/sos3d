@@ -79,6 +79,7 @@ import { AbandonedCartsAdmin } from "@/components/admin/AbandonedCartsAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import { SellerPickingAdmin, type PickingOrderRow } from "@/components/admin/SellerPickingAdmin";
+import { OrderDocumentActions } from "@/components/admin/OrderDocumentActions";
 import { createSeller, setMemberSeller } from "@/lib/picking.functions";
 import { PICKABLE_ORDER_STATUSES, pickingProgress } from "@/lib/picking";
 

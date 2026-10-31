@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { formatBRL, imageFor } from "@/lib/catalog";
+import { OrderDocumentActions } from "@/components/admin/OrderDocumentActions";
 import { orderDelivery, paymentLabels, statusLabels } from "@/lib/sales-analytics";
 import {
   PICKABLE_ORDER_STATUSES,
