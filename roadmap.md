@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Implantar consignação conforme escopo: credenciamento dos clientes existentes, remessas, estoque por parceiro, vendas, fechamentos, financeiro, devoluções, inventário e integração Conta Azul; operação apenas pela equipe interna
 - [x] Avisos de criação e atualização de O.S. implementados e testados
 - [ ] Verificar envio real dos avisos de O.S. — depende de reativar/verificar notify.sos3d.com.br (verificação expirou)
 - [x] Criar estrutura segura para entradas XML e vínculos de fornecedores
