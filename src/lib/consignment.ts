@@ -11,3 +11,13 @@ export function financialStatus(total: number, paid: number, due: string, cancel
 export const lineTotal = (qty: number, price: number) => Math.round(qty * Math.round(price * 100)) / 100
 export function canOperateConsignment(roles: string[]) { return roles.includes('admin') || roles.includes('seller') }
 export function canAdminConsignment(roles: string[]) { return roles.includes('admin') }
+
+export function supplyPrice(negotiated?: { supply: number }) {
+  return negotiated?.supply ?? 0
+}
+export function shipmentBalance(items: { qty: number; sold_qty: number; returned_qty: number; lost_qty: number }[]) {
+  return items.reduce((sum, item) => sum + availableQty(item), 0)
+}
+export function settlementTotal(sales: { id: string; qty: number; supply_price: number | string; settlement_id: string | null }[], selected: string[]) {
+  return sales.filter(s => !s.settlement_id && selected.includes(s.id)).reduce((sum, s) => sum + lineTotal(s.qty, Number(s.supply_price)), 0)
+}

@@ -22,3 +22,4 @@
 - Service staff access accepts admin or seller roles; direct O.S. creation stores a customer snapshot in reported, links site accounts when supplied, and logs creation/edits without exposing internal records publicly.
 - O.S. mutation handlers send one fixed-recipient notification through service-notifications.server.ts after saving; managed email handles delivery and send failures must not undo the service record.
 - Consignment uses existing customer/profile links, server-only operational tables and service-role-only manage_consignment RPC after authenticated role checks; stock, settlements and payments are atomic and audit events append-only to prevent overselling and duplicate billing.
+- Consignment shipment actions share the same sale, return and settlement dialogs; settlement success navigates to receivables and pending mutations disable operational controls to prevent overlapping actions.

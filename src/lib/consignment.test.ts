@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { availableQty, financialStatus, lineTotal, canOperateConsignment, canAdminConsignment } from './consignment'
+import { availableQty, financialStatus, lineTotal, canOperateConsignment, canAdminConsignment, supplyPrice, shipmentBalance, settlementTotal } from './consignment'
 
 describe('Consignação: regras do escopo', () => {
+  it('sem preço negociado exige fornecimento explícito, sem copiar varejo', () => expect(supplyPrice()).toBe(0))
+  it('fornecimento preserva R$65 negociados em vez do preço de varejo', () => expect(supplyPrice({supply:65})).toBe(65))
+  it('fechamento cobra somente vendas selecionadas pelo fornecimento', () => expect(settlementTotal([{id:'venda',qty:20,supply_price:65,settlement_id:null}], ['venda'])).toBe(1300))
+  it('venda já fechada não compõe uma nova cobrança', () => expect(settlementTotal([{id:'venda',qty:20,supply_price:65,settlement_id:'fechamento'}], ['venda'])).toBe(0))
+  it('20 vendidos e 30 devolvidos zeram saldo da remessa de 50', () => expect(shipmentBalance([{qty:50,sold_qty:20,returned_qty:30,lost_qty:0}])).toBe(0))
   it('50 rolos a R$65 correspondem a R$3250', () => expect(lineTotal(50,65)).toBe(3250))
   it('primeiro fechamento de 20 unidades vale R$1300', () => expect(lineTotal(20,65)).toBe(1300))
   it('20 vendidos deixam 30 consignados', () => expect(availableQty({qty:50,sold_qty:20,returned_qty:0,lost_qty:0})).toBe(30))
