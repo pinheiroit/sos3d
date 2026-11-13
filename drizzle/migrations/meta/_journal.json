@@ -85,6 +85,27 @@
       "when": 1794595918394,
       "tag": "0011_restrict_site_settings_public_read",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794604427713,
+      "tag": "0012_consignment_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794605057008,
+      "tag": "0013_fix_consignment_ambiguous_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794605121276,
+      "tag": "0014_fix_consignment_settlement_join_alias",
+      "breakpoints": true
     }
   ]
 }

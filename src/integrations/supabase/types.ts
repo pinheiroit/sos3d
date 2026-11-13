@@ -140,6 +140,465 @@ export type Database = {
         }
         Relationships: []
       }
+      consignment_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json
+          entity_id: string | null
+          id: string
+          partner_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          id?: string
+          partner_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          id?: string
+          partner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_events_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_inventories: {
+        Row: {
+          created_at: string
+          created_by: string
+          decision: string
+          expected_qty: number
+          id: string
+          item_id: string
+          physical_qty: number
+          reason: string
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          decision?: string
+          expected_qty: number
+          id?: string
+          item_id: string
+          physical_qty: number
+          reason: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          decision?: string
+          expected_qty?: number
+          id?: string
+          item_id?: string
+          physical_qty?: number
+          reason?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_inventories_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_items: {
+        Row: {
+          id: string
+          lost_qty: number
+          lot: string
+          product_id: string
+          product_name: string
+          qty: number
+          returned_qty: number
+          serial: string
+          shipment_id: string
+          sold_qty: number
+          suggested_price: number
+          supply_price: number
+        }
+        Insert: {
+          id?: string
+          lost_qty?: number
+          lot?: string
+          product_id: string
+          product_name: string
+          qty: number
+          returned_qty?: number
+          serial?: string
+          shipment_id: string
+          sold_qty?: number
+          suggested_price?: number
+          supply_price: number
+        }
+        Update: {
+          id?: string
+          lost_qty?: number
+          lot?: string
+          product_id?: string
+          product_name?: string
+          qty?: number
+          returned_qty?: number
+          serial?: string
+          shipment_id?: string
+          sold_qty?: number
+          suggested_price?: number
+          supply_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consignment_items_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_partners: {
+        Row: {
+          blocked: boolean
+          closing_period: string
+          created_at: string
+          customer_id: string | null
+          customer_key: string
+          enabled: boolean
+          id: string
+          limit_qty: number
+          limit_value: number
+          payment_days: number
+          prices: Json
+          terms: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          blocked?: boolean
+          closing_period?: string
+          created_at?: string
+          customer_id?: string | null
+          customer_key: string
+          enabled?: boolean
+          id?: string
+          limit_qty?: number
+          limit_value?: number
+          payment_days?: number
+          prices?: Json
+          terms?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          blocked?: boolean
+          closing_period?: string
+          created_at?: string
+          customer_id?: string | null
+          customer_key?: string
+          enabled?: boolean
+          id?: string
+          limit_qty?: number
+          limit_value?: number
+          payment_days?: number
+          prices?: Json
+          terms?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_partners_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consignment_partners_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          external_id: string | null
+          id: string
+          method: string
+          notes: string
+          paid_on: string
+          settlement_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          external_id?: string | null
+          id?: string
+          method: string
+          notes?: string
+          paid_on?: string
+          settlement_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          external_id?: string | null
+          id?: string
+          method?: string
+          notes?: string
+          paid_on?: string
+          settlement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_payments_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_returns: {
+        Row: {
+          condition: string
+          created_at: string
+          created_by: string
+          id: string
+          item_id: string
+          qty: number
+          reason: string
+          received_at: string | null
+          status: string
+        }
+        Insert: {
+          condition: string
+          created_at?: string
+          created_by: string
+          id?: string
+          item_id: string
+          qty: number
+          reason: string
+          received_at?: string | null
+          status?: string
+        }
+        Update: {
+          condition?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_id?: string
+          qty?: number
+          reason?: string
+          received_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_returns_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_sales: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          item_id: string
+          mode: string
+          notes: string
+          qty: number
+          settlement_id: string | null
+          sold_on: string
+          supply_price: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          item_id: string
+          mode?: string
+          notes?: string
+          qty: number
+          settlement_id?: string | null
+          sold_on?: string
+          supply_price: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_id?: string
+          mode?: string
+          notes?: string
+          qty?: number
+          settlement_id?: string | null
+          sold_on?: string
+          supply_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_sales_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consignment_sales_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_settlements: {
+        Row: {
+          cancellation_reason: string
+          cancelled_at: string | null
+          created_at: string
+          created_by: string
+          due_date: string
+          external_id: string | null
+          id: string
+          mode: string
+          number: number
+          partner_id: string
+          period_end: string | null
+          period_start: string | null
+          sync_error: string
+          sync_status: string
+          total: number
+        }
+        Insert: {
+          cancellation_reason?: string
+          cancelled_at?: string | null
+          created_at?: string
+          created_by: string
+          due_date: string
+          external_id?: string | null
+          id?: string
+          mode: string
+          number?: never
+          partner_id: string
+          period_end?: string | null
+          period_start?: string | null
+          sync_error?: string
+          sync_status?: string
+          total: number
+        }
+        Update: {
+          cancellation_reason?: string
+          cancelled_at?: string | null
+          created_at?: string
+          created_by?: string
+          due_date?: string
+          external_id?: string | null
+          id?: string
+          mode?: string
+          number?: never
+          partner_id?: string
+          period_end?: string | null
+          period_start?: string | null
+          sync_error?: string
+          sync_status?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_settlements_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consignment_shipments: {
+        Row: {
+          created_at: string
+          created_by: string
+          dispatched_at: string | null
+          id: string
+          notes: string
+          number: number
+          partner_id: string
+          received_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          dispatched_at?: string | null
+          id?: string
+          notes?: string
+          number?: never
+          partner_id: string
+          received_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          dispatched_at?: string | null
+          id?: string
+          notes?: string
+          number?: never
+          partner_id?: string
+          received_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_shipments_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "consignment_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_printer_models: {
         Row: {
           course_id: string
@@ -1524,6 +1983,10 @@ export type Database = {
         Returns: boolean
       }
       is_active_member: { Args: { _user_id: string }; Returns: boolean }
+      manage_consignment: {
+        Args: { _action: string; _actor: string; _data: Json }
+        Returns: Json
+      }
       member_can_view_course: {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean

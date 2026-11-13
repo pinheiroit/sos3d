@@ -77,6 +77,7 @@ import { OrderEditDialog, type EditableOrder } from "@/components/admin/OrderEdi
 import { StockWithdrawalAdmin } from "@/components/admin/StockWithdrawalAdmin";
 import { AbandonedCartsAdmin } from "@/components/admin/AbandonedCartsAdmin";
 import { ServiceAdmin } from "@/components/admin/ServiceAdmin";
+import { ConsignmentAdmin } from "@/components/admin/ConsignmentAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import { SellerPickingAdmin, type PickingOrderRow } from "@/components/admin/SellerPickingAdmin";
 import { OrderDocumentActions } from "@/components/admin/OrderDocumentActions";
@@ -165,6 +166,7 @@ const statusOptions = [
 
 type AdminSection =
   | "overview"
+  | "consignacao"
   | "assistencia"
   | "televendas"
   | "pedidos"
@@ -196,6 +198,7 @@ const adminGroups = [
     label: "Vendas",
     items: [
       { value: "televendas", label: "Nova venda", icon: ShoppingCart },
+      { value: "consignacao", label: "Consignação", icon: Boxes },
       { value: "pedidos", label: "Pedidos", icon: ReceiptText },
       { value: "separacao", label: "Separação", icon: PackageCheck },
       { value: "carrinhos", label: "Carrinhos abandonados", icon: ShoppingBasket },
@@ -244,6 +247,7 @@ const adminGroups = [
 ] as const;
 
 const sectionCopy: Record<AdminSection, { title: string; description: string }> = {
+  consignacao: { title: "Consignação", description: "Parceiros, remessas, estoque consignado, fechamentos e financeiro." },
   overview: { title: "Visão geral", description: "Acompanhe os números e acesse as tarefas mais usadas." },
   assistencia: { title: "Ordens de serviço", description: "Pré-atendimentos, recebimento, diagnóstico, garantia, orçamento e encerramento das O.S." },
   televendas: { title: "Nova venda", description: "Cadastre o cliente e monte um pedido pelo atendimento." },
@@ -1304,6 +1308,9 @@ function AdminPage() {
         <TabsContent value="assistencia" className="mt-6">
           <ServiceAdmin />
         </TabsContent>
+        <TabsContent value="consignacao" className="mt-6">
+          <ConsignmentAdmin />
+        </TabsContent>
 
         <TabsContent value="televendas" className="mt-6">
           <TeleSalesAdmin
@@ -1448,6 +1455,7 @@ function AdminPage() {
         </TabsContent>
 
         <TabsContent value="membros" className="mt-6 space-y-3">
+          <div className="flex justify-end"><Button variant="outline" onClick={() => selectSection('consignacao')}><Boxes className="size-4" />Habilitar clientes para consignação</Button></div>
           {(() => {
             const profiles = data?.profiles ?? [];
             const activeIds = new Set(

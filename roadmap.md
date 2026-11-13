@@ -1,5 +1,6 @@
 # Roadmap
-- [ ] Implantar consignação conforme escopo: credenciamento dos clientes existentes, remessas, estoque por parceiro, vendas, fechamentos, financeiro, devoluções, inventário e integração Conta Azul; operação apenas pela equipe interna
+- [x] Implantar controle interno de consignação: habilitação dos clientes existentes, contratos privados, remessas, estoque por parceiro, vendas, fechamentos, pagamentos parciais, devoluções e inventário; validar exemplo de R$2250 e telas móvel/desktop
+- [ ] Integrar consignação com Conta Azul — depende da autorização da conexão recusada e da orientação fiscal da contabilidade
 - [x] Avisos de criação e atualização de O.S. implementados e testados
 - [ ] Verificar envio real dos avisos de O.S. — depende de reativar/verificar notify.sos3d.com.br (verificação expirou)
 - [x] Criar estrutura segura para entradas XML e vínculos de fornecedores
