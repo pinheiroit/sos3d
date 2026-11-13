@@ -37,6 +37,11 @@ async function requireStaff(userId: string) {
   return c;
 }
 
+async function notifyOrder(db: Awaited<ReturnType<typeof ctx>>['db'], id: string, actor: string, action: 'criada' | 'atualizada', summary: string, eventId: string) {
+  const { notifyServiceOrder } = await import('./service-notifications.server');
+  return notifyServiceOrder(db, id, actor, action, summary, eventId);
+}
+
 // ============ CLIENTE ============
 
 export const myService = createServerFn({ method: "GET" })
@@ -466,6 +471,7 @@ export const respondBudget = createServerFn({ method: "POST" })
       visible_to_client: true,
       actor_id: context.userId,
     });
+    await notifyOrder(db, data.id, context.userId, 'atualizada', `Orçamento ${data.approve ? 'aprovado' : 'recusado'} pelo cliente.`, budget.authorized_at);
     return { ok: true };
   });
 
@@ -489,6 +495,7 @@ export const signPrivateTerm = createServerFn({ method: "POST" })
       visible_to_client: true,
       actor_id: context.userId,
     });
+    await notifyOrder(db, data.id, context.userId, 'atualizada', 'Termo de atendimento particular assinado pelo cliente.', signed.signed_at);
     return { ok: true };
   });
 
@@ -623,6 +630,7 @@ export const adminCreateServiceOrder = createServerFn({ method: "POST" })
     }).select("id, number").single();
     if (result.error) throw new Error(result.error.message);
     await s.logEvent(db, { order_id: result.data.id, kind: "criacao", description: "O.S. criada diretamente pelo atendimento.", visible_to_client: true, actor_id: context.userId });
+    await notifyOrder(db, String(result.data.id), context.userId, 'criada', 'O.S. criada diretamente pelo atendimento.', 'created');
     return { id: String(result.data.id), number: Number(result.data.number) };
   });
 
@@ -683,6 +691,7 @@ export const adminConfirmReception = createServerFn({ method: "POST" })
       visible_to_client: true,
       actor_id: context.userId,
     });
+    await notifyOrder(db, String(os.id), context.userId, 'criada', `Equipamento recebido; O.S. criada a partir do ${paNumber(r.data.number)}.`, 'created');
     return { id: os.id as string, number: os.number as number };
   });
 
@@ -796,6 +805,11 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
         actor_id: context.userId,
       });
     }
+    await notifyOrder(db, data.id, context.userId, 'atualizada', [
+      ...changes.map(c => `${c.label}: ${c.map[c.old] ?? c.old} → ${c.map[c.next] ?? c.next}`),
+      data.section ? `${SECTION_LABEL[data.section]} atualizado.` : '',
+      data.note ? 'Observação adicionada ao histórico.' : '',
+    ].filter(Boolean).join(' ') || 'O.S. atualizada pelo atendimento.', String(update.updated_at));
     return { ok: true };
   });
 
@@ -845,6 +859,7 @@ export const adminCreatePrivateTerm = createServerFn({ method: "POST" })
       visible_to_client: true,
       actor_id: context.userId,
     });
+    await notifyOrder(db, data.id, context.userId, 'atualizada', data.signedInPerson ? 'Termo particular gerado e assinado presencialmente.' : 'Termo particular gerado; aguardando assinatura.', now);
     return { ok: true };
   });
 

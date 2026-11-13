@@ -20,3 +20,4 @@
 - Order print/PDF documents are built once as scoped HTML in `src/lib/order-document.ts` (company header data lives there); print opens it in a popup, PDF rasterizes the same HTML with html2canvas-pro + jsPDF loaded on demand — one layout for both outputs.
 - Order item editing uses a viewport-bounded dialog with a scrollable body and fixed totals/actions; responsive grid rows prevent long product names from overflowing.
 - Service staff access accepts admin or seller roles; direct O.S. creation stores a customer snapshot in reported, links site accounts when supplied, and logs creation/edits without exposing internal records publicly.
+- O.S. mutation handlers send one fixed-recipient notification through service-notifications.server.ts after saving; managed email handles delivery and send failures must not undo the service record.

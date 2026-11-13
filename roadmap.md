@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Avisos de criação e atualização de O.S. implementados e testados
+- [ ] Verificar envio real dos avisos de O.S. — depende de reativar/verificar notify.sos3d.com.br (verificação expirou)
 - [x] Criar estrutura segura para entradas XML e vínculos de fornecedores
 - [x] Criar leitura e processamento transacional no servidor
 - [x] Adicionar tela Entrada XML no painel administrativo
