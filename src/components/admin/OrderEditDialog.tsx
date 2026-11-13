@@ -102,13 +102,15 @@ export function OrderEditDialog({
   const originalSubtotal = order ? Number(order.subtotal) : 0;
 
   const save = useMutation({
-    mutationFn: () =>
-      updatePendingOrderItems({
+    mutationFn: () => {
+      if (!order) throw new Error("Selecione um pedido para editar.");
+      return updatePendingOrderItems({
         data: {
-          orderId: order!.id,
+          orderId: order.id,
           items: lines.map((l) => ({ itemId: l.itemId, slug: l.slug, qty: l.qty })),
         },
-      } as never),
+      } as never);
+    },
     onSuccess: (result: { reference: string; total: number }) => {
       toast.success(`Pedido ${result.reference} atualizado`, {
         description: `Novo total ${formatBRL(Number(result.total))}`,
@@ -139,16 +141,16 @@ export function OrderEditDialog({
 
   return (
     <Dialog open={order !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Editar pedido {order?.reference}</DialogTitle>
+      <DialogContent className="flex h-[min(90dvh,850px)] w-[calc(100%-1rem)] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <DialogHeader className="min-w-0 shrink-0 border-b border-border px-4 py-4 pr-10 text-left sm:px-6">
+          <DialogTitle className="break-words leading-snug">Editar pedido {order?.reference}</DialogTitle>
           <DialogDescription>
-            {order?.customer_name} · altere quantidades, inclua ou remova produtos. O estoque é
-            ajustado automaticamente ao salvar.
+            {order?.customer_name}
           </DialogDescription>
         </DialogHeader>
 
-        <div>
+        <div className="min-h-0 min-w-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-4 [scrollbar-gutter:stable] sm:px-6" role="region" aria-label="Produtos do pedido" tabIndex={0}>
+        <div className="min-w-0">
           <Label htmlFor="order-edit-search">Adicionar produto</Label>
           <Input
             id="order-edit-search"
@@ -158,27 +160,29 @@ export function OrderEditDialog({
             onChange={(e) => setSearch(e.target.value)}
           />
           {matches.length > 0 && (
-            <div className="mt-2 space-y-1 rounded-lg border border-border p-2">
+            <div className="mt-2 max-h-48 space-y-1 overflow-y-auto overscroll-contain rounded-lg border border-border p-2">
               {matches.map((p) => (
-                <button
+                <Button
                   key={p.slug}
                   type="button"
-                  className="flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-left text-sm hover:bg-muted"
+                  variant="ghost"
+                  className="grid h-auto w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded px-2 py-2 text-left text-sm"
                   onClick={() => addProduct(p)}
                 >
-                  <span className="min-w-0 truncate">
+                  <span className="min-w-0 whitespace-normal break-words">
                     {p.name} <span className="text-muted-foreground">· {p.brand}</span>
                   </span>
-                  <span className="shrink-0 text-muted-foreground">
-                    {formatBRL(p.price)} · {p.stock} un
+                  <span className="shrink-0 text-right text-muted-foreground">
+                    {formatBRL(p.price)}<span className="block text-xs">{p.stock} un</span>
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
+          <p className="text-sm font-medium">Itens do pedido <span className="text-muted-foreground">({lines.length})</span></p>
           {lines.length === 0 && (
             <p className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
               O pedido precisa de ao menos um produto.
@@ -187,13 +191,13 @@ export function OrderEditDialog({
           {lines.map((l) => (
             <div
               key={l.key}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-2"
+              className="grid min-w-0 grid-cols-1 items-center gap-3 rounded-lg border border-border p-3 sm:grid-cols-[minmax(0,1fr)_auto]"
             >
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium">{l.name}</p>
+                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                  <p className="min-w-0 break-words text-sm font-medium">{l.name}</p>
                   {l.isNew && (
-                    <Badge variant="secondary" className="text-[10px]">
+                    <Badge variant="secondary" className="shrink-0 text-[10px]">
                       Novo
                     </Badge>
                   )}
@@ -202,7 +206,7 @@ export function OrderEditDialog({
                   {formatBRL(l.unitPrice)} cada · {formatBRL(l.unitPrice * l.qty)}
                 </p>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center justify-end gap-1">
                 <Button
                   size="icon"
                   variant="outline"
@@ -243,23 +247,21 @@ export function OrderEditDialog({
             </div>
           ))}
         </div>
+        </div>
 
-        <div className="rounded-lg bg-muted/50 p-3 text-sm">
-          <div className="flex justify-between">
+        <div className="shrink-0 space-y-3 border-t border-border bg-background px-4 py-4 sm:px-6">
+        <div className="space-y-1 text-sm">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <span className="text-muted-foreground">Subtotal anterior</span>
             <span>{formatBRL(originalSubtotal)}</span>
           </div>
-          <div className="flex justify-between font-semibold">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 font-semibold">
             <span>Novo subtotal (estimado)</span>
             <span>{formatBRL(subtotal)}</span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Itens que já estavam no pedido mantêm o preço combinado. Frete e desconto são
-            recalculados ao salvar, mantendo o mesmo percentual de desconto.
-          </p>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="grid grid-cols-2 gap-2 sm:flex sm:space-x-0">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
@@ -271,6 +273,7 @@ export function OrderEditDialog({
             {save.isPending ? "Salvando…" : "Salvar alterações"}
           </Button>
         </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
