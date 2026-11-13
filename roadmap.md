@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Revisar e testar consignação ponta a ponta: remessa de 3 unidades, reserva/devolução de 1, venda de 2 a R$65, fechamento integral de R$130, pagamentos de R$50 + R$80, leitura após reabertura e encerramento; orientar teste operacional
 - [x] Simplificar ciclo de consignação por remessa: devoluções, fechamento de vendas a preço de fornecimento e geração do financeiro; fluxo autenticado validado com venda, devolução, pagamento parcial e encerramento
 - [x] Implantar controle interno de consignação: habilitação dos clientes existentes, contratos privados, remessas, estoque por parceiro, vendas, fechamentos, pagamentos parciais, devoluções e inventário; validar exemplo de R$2250 e telas móvel/desktop
 - [ ] Integrar consignação com Conta Azul — depende da autorização da conexão recusada e da orientação fiscal da contabilidade

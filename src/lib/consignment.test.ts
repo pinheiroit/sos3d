@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { availableQty, financialStatus, lineTotal, canOperateConsignment, canAdminConsignment, supplyPrice, shipmentBalance, settlementTotal } from './consignment'
+import { availableQty, financialStatus, lineTotal, canOperateConsignment, canAdminConsignment, supplyPrice, shipmentBalance, settlementTotal, unreservedQty, validQuantity, paymentAllowed, dueDateFor } from './consignment'
 
 describe('Consignação: regras do escopo', () => {
+  it('devolução em trânsito reserva 3 das 10 unidades disponíveis', () => expect(unreservedQty({id:'item',qty:10,sold_qty:0,returned_qty:0,lost_qty:0},[{item_id:'item',qty:3,status:'em_transito'}])).toBe(7))
+  it('devolução recebida não desconta reserva novamente', () => expect(unreservedQty({id:'item',qty:10,sold_qty:0,returned_qty:3,lost_qty:0},[{item_id:'item',qty:3,status:'recebida'}])).toBe(7))
+  it('venda não excede o saldo disponível nem aceita fração de unidade', () => {
+    expect(validQuantity(8,7)).toBe(false)
+    expect(validQuantity(1.5,7)).toBe(false)
+    expect(validQuantity(7,7)).toBe(true)
+  })
+  it('pagamento não excede saldo de R$45', () => {
+    expect(paymentAllowed(46,45)).toBe(false)
+    expect(paymentAllowed(45,45)).toBe(true)
+    expect(paymentAllowed(0,45)).toBe(false)
+  })
+  it('7 dias a partir de 13/11 vencem em 20/11 sem variar com horário UTC', () => expect(dueDateFor('2026-11-13',7)).toBe('2026-11-20'))
   it('sem preço negociado exige fornecimento explícito, sem copiar varejo', () => expect(supplyPrice()).toBe(0))
   it('fornecimento preserva R$65 negociados em vez do preço de varejo', () => expect(supplyPrice({supply:65})).toBe(65))
   it('fechamento cobra somente vendas selecionadas pelo fornecimento', () => expect(settlementTotal([{id:'venda',qty:20,supply_price:65,settlement_id:null}], ['venda'])).toBe(1300))

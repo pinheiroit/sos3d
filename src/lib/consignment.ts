@@ -21,3 +21,18 @@ export function shipmentBalance(items: { qty: number; sold_qty: number; returned
 export function settlementTotal(sales: { id: string; qty: number; supply_price: number | string; settlement_id: string | null }[], selected: string[]) {
   return sales.filter(s => !s.settlement_id && selected.includes(s.id)).reduce((sum, s) => sum + lineTotal(s.qty, Number(s.supply_price)), 0)
 }
+
+export function unreservedQty(item: { id: string; qty: number; sold_qty: number; returned_qty: number; lost_qty: number }, returns: { item_id: string; qty: number; status: string }[]) {
+  return Math.max(0, availableQty(item) - returns.filter(r => r.item_id === item.id && ['solicitada','autorizada','em_transito'].includes(r.status)).reduce((sum,r) => sum + r.qty, 0))
+}
+export function validQuantity(qty: number, available: number) {
+  return Number.isInteger(qty) && qty > 0 && qty <= available
+}
+export function paymentAllowed(amount: number, balance: number) {
+  return Number.isFinite(amount) && amount > 0 && Math.round(amount * 100) <= Math.round(balance * 100)
+}
+export function dueDateFor(date: string, days: number) {
+  const d = new Date(`${date}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0,10)
+}
