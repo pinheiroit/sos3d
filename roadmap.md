@@ -34,4 +34,5 @@
 - [x] Gerar pedido em PDF / imprimir (layout da Venda Conta Azul com logo SOS3D) nas telas de pedidos e separação
 - [ ] Integrar Conta Azul: venda ao marcar Pago, estoque oficial da Conta Azul, NF-e emitida lá e puxada ao site, parcelas/baixa/cancelamento/recebimentos
 - [ ] O.S.: permitir criar nova Ordem de serviço e editar O.S. existente
+- [x] Corrigir criação e edição direta de O.S. no admin com acesso para administradores e vendedores; validar criação, edição, leitura e cancelamento de teste
 - [x] Melhorar edição dos pedidos com rolagem, campos sem transbordamento e ações sempre visíveis; verificar com vários produtos no computador e celular

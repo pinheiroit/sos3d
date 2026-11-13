@@ -41,6 +41,7 @@ import {
 import { printFinal, printReceipt, printTerm } from "@/lib/service-pdf";
 import { EventTimeline, FileDrop, FileGrid, OrderProgress, type ServiceEvent, type ServiceFile } from "@/components/service/ServiceShared";
 import { EquipmentHistoryDialog, TransferDialog } from "@/components/service/MemberService";
+import { CreateServiceOrderDialog } from "./CreateServiceOrderDialog";
 
 type Any = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 type Mini = { id: string; brand: string; model: string; serial: string } | null;
@@ -59,6 +60,7 @@ type Board = {
     user_id: string | null;
     request_id: string | null;
     equipment: Mini;
+    reported?: { customer?: { name: string; email: string; phone: string; document: string } };
   }[];
   customers: Record<string, { name: string; email: string; phone: string; document: string }>;
 };
@@ -70,6 +72,7 @@ export function ServiceAdmin() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: BOARD, queryFn: () => adminServiceBoard() as unknown as Promise<Board> });
   const [search, setSearch] = useState("");
+  const [creating, setCreating] = useState(false);
   const [statusFilter, setStatusFilter] = useState("abertas");
   const [dateFrom, setDateFrom] = useState("");
   const [open, setOpen] = useState<{ kind: "request" | "order"; id: string } | null>(null);
@@ -120,6 +123,8 @@ export function ServiceAdmin() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end"><Button variant="tech" onClick={() => setCreating(true)}><Plus /> Nova O.S.</Button></div>
+      {q.isError && <p role="alert" className="text-sm text-destructive">{q.error.message}</p>}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-9">
         {counts.map((c) => (
           <button
@@ -174,7 +179,7 @@ export function ServiceAdmin() {
             {q.isLoading && <p className="p-6 text-sm text-muted-foreground">Carregando…</p>}
             {!q.isLoading && orders.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Nenhuma O.S. com esses filtros.</p>}
             {orders.map((o) => {
-              const c = o.user_id ? d?.customers[o.user_id] : undefined;
+              const c = o.reported?.customer ?? (o.user_id ? d?.customers[o.user_id] : undefined);
               return (
                 <button key={o.id} type="button" onClick={() => setOpen({ kind: "order", id: o.id })} className="grid w-full gap-2 border-b border-border p-4 text-left last:border-b-0 hover:bg-secondary/40 md:grid-cols-[110px_1fr_1fr_190px_110px] md:items-center">
                   <span className="font-bold">{osNumber(o.number)}</span>
@@ -184,7 +189,7 @@ export function ServiceAdmin() {
                     <Badge variant={statusTone(o.status)}>{ORDER_STATUS[o.status]}</Badge>
                     {isOverdue(o) && <Badge variant="destructive" className="gap-1"><AlertTriangle className="size-3" /> Atrasada</Badge>}
                   </span>
-                  <span className="text-xs text-muted-foreground">{fmtDate(o.received_at)}</span>
+                  <span className="text-xs text-muted-foreground">{fmtDate(o.received_at)}<span className="mt-1 block font-medium text-primary">{o.closed_at ? "Ver O.S." : "Editar O.S."}</span></span>
                 </button>
               );
             })}
@@ -216,6 +221,7 @@ export function ServiceAdmin() {
 
       {open?.kind === "request" && <RequestDialog id={open.id} onClose={() => setOpen(null)} onChanged={refresh} onConverted={(id) => setOpen({ kind: "order", id })} />}
       {open?.kind === "order" && <OrderDialog id={open.id} onClose={() => setOpen(null)} onChanged={refresh} />}
+      {creating && <CreateServiceOrderDialog onClose={() => setCreating(false)} onCreated={(id) => { setCreating(false); setStatusFilter("abertas"); setSearch(""); setDateFrom(""); refresh(); setOpen({ kind: "order", id }); }} />}
     </div>
   );
 }
@@ -413,7 +419,7 @@ function SectionForm({
             {f.type === "area" ? (
               <Textarea rows={3} disabled={disabled} value={v[f.key] ?? ""} onChange={(e) => setV({ ...v, [f.key]: e.target.value })} />
             ) : f.type === "select" ? (
-              <Sel label={f.label} value={v[f.key] ?? ""} onChange={(x) => setV({ ...v, [f.key]: x })} options={{ "": "—", ...f.options! }} />
+              <Sel label={f.label} value={v[f.key] ?? ""} onChange={(x) => setV({ ...v, [f.key]: x })} options={{ "": "—", ...f.options }} />
             ) : f.type === "bool" ? (
               <div className="flex h-10 items-center"><Switch disabled={disabled} checked={Boolean(v[f.key])} onCheckedChange={(x) => setV({ ...v, [f.key]: x })} /></div>
             ) : (
@@ -493,15 +499,15 @@ function OrderDialog({ id, onClose, onChanged }: { id: string; onClose: () => vo
     );
   }
   const closed = Boolean(o.closed_at);
-  const owner = q.data!.owner;
+  const owner = q.data?.owner;
   const r = o.reported ?? {};
   const t = o.private_term as Any | null;
   const key = o.updated_at; // remonta formulários após salvar
 
   return (
     <Dialog open onOpenChange={(x) => !x && onClose()}>
-      <DialogContent className="max-h-[94dvh] overflow-y-auto sm:max-w-5xl">
-        <div className="space-y-5">
+      <DialogContent className="block max-h-[94dvh] w-[calc(100%-1rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-w-5xl">
+        <div className="min-w-0 space-y-5">
           <DialogHeader>
             <div className="flex flex-wrap items-center gap-2">
               <DialogTitle className="text-2xl">{osNumber(o.number)}</DialogTitle>
@@ -519,7 +525,7 @@ function OrderDialog({ id, onClose, onChanged }: { id: string; onClose: () => vo
 
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => printReceipt(o, owner)}><Download /> Comprovante de recebimento</Button>
-            <Button size="sm" variant="outline" onClick={() => printFinal(o, owner, q.data!.events.filter((e) => e.visible_to_client))}><Download /> PDF da O.S.</Button>
+            <Button size="sm" variant="outline" onClick={() => printFinal(o, owner, (q.data?.events ?? []).filter((e) => e.visible_to_client))}><Download /> PDF da O.S.</Button>
             {t && <Button size="sm" variant="outline" onClick={() => printTerm(o)}><Download /> Termo particular</Button>}
             <Button size="sm" variant="ghost" onClick={() => setHistory(o.equipment_id)}><History /> Histórico do equipamento</Button>
           </div>
@@ -544,19 +550,27 @@ function OrderDialog({ id, onClose, onChanged }: { id: string; onClose: () => vo
           <Tabs defaultValue="relato">
             <TabsList className="flex h-auto flex-wrap justify-start">
               {[["relato", "Relato e recebimento"], ["diagnostico", "Diagnóstico"], ["garantia", "Garantia"], ["orcamento", "Orçamento"], ["execucao", "Execução"], ["validacao", "Validação final"], ["encerramento", "Encerramento"], ["arquivos", "Arquivos"], ["historico", "Histórico"]].map(([v, l]) => (
-                <TabsTrigger key={v} value={v!}>{l}</TabsTrigger>
+                <TabsTrigger key={v} value={v ?? ""}>{l}</TabsTrigger>
               ))}
             </TabsList>
 
             <TabsContent value="relato" className="mt-4 space-y-5">
               <div>
-                <p className="mb-2 text-sm font-semibold">Informado pelo cliente (preservado)</p>
+                <p className="mb-2 text-sm font-semibold">Relato do cliente</p>
+                {!closed && <SectionForm key={`reported-${key}`} orderId={id} section="reported" values={r} onSaved={reload} fields={[
+                  { key: "problem", label: "Defeito relatado", type: "area" },
+                  { key: "error_code", label: "Código de erro" },
+                  { key: "started_when", label: "Quando começou" },
+                  { key: "frequency", label: "Frequência" },
+                  { key: "steps_tried", label: "Procedimentos realizados", type: "area" },
+                ]} />}
+                {closed &&
                 <div className="grid gap-3 text-sm md:grid-cols-2">
                   <Info label="Defeito relatado" value={r.problem} className="md:col-span-2" />
                   <Info label="Código de erro" value={r.error_code} />
                   <Info label="Frequência / início" value={[r.frequency, r.started_when].filter(Boolean).join(" · ")} />
                   <Info label="Procedimentos realizados" value={r.steps_tried} className="md:col-span-2" />
-                </div>
+                </div>}
               </div>
               <div>
                 <p className="mb-2 text-sm font-semibold">Constatações da assistência no recebimento</p>
@@ -762,11 +776,11 @@ function OrderDialog({ id, onClose, onChanged }: { id: string; onClose: () => vo
 
             <TabsContent value="arquivos" className="mt-4 space-y-4">
               {!closed && <FileDrop scope="order" id={id} stage="diagnostico" staff onDone={reload} />}
-              <FileGrid files={q.data!.files} staff />
+              <FileGrid files={q.data?.files ?? []} staff />
             </TabsContent>
 
             <TabsContent value="historico" className="mt-4">
-              <EventTimeline events={q.data!.events} staff />
+              <EventTimeline events={q.data?.events ?? []} staff />
             </TabsContent>
           </Tabs>
         </div>

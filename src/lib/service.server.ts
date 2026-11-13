@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { canManageService } from "./service-access";
 
 export const SERVICE_BUCKET = "service-files";
 
@@ -25,8 +26,9 @@ export async function actorName(db: Db, userId: string) {
 }
 
 export async function isStaff(db: Db, userId: string) {
-  const { data } = await db.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-  return Boolean(data);
+  const { data, error } = await db.from("user_roles").select("role").eq("user_id", userId);
+  if (error) throw new Error("Não foi possível verificar o acesso ao atendimento.");
+  return canManageService((data ?? []).map((r) => String(r.role)));
 }
 
 export async function logEvent(

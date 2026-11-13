@@ -336,7 +336,7 @@ export const getServiceDetail = createServerFn({ method: "GET" })
       reqId ? db.from("service_requests").select("*").eq("id", reqId).maybeSingle() : Promise.resolve({ data: null }),
     ]);
 
-    const owner = await s.customerInfo(db, row.data.user_id);
+    const owner = row.data.reported?.customer ?? await s.customerInfo(db, row.data.user_id);
     const signed = await s.signFiles(db, [...(reqFl.data ?? []), ...(fl.data ?? [])] as { path: string }[]);
     const allEvents = [...(reqEv.data ?? []), ...(ev.data ?? [])].sort((a, b) =>
       String(a.created_at).localeCompare(String(b.created_at)),
@@ -506,7 +506,7 @@ export const adminServiceBoard = createServerFn({ method: "GET" })
         .limit(500),
       db
         .from("service_orders")
-        .select("id, number, status, warranty_status, budget_status, received_at, due_at, closed_at, updated_at, user_id, request_id, equipment:equipment_id(id, brand, model, serial)")
+        .select("id, number, status, warranty_status, budget_status, received_at, due_at, closed_at, updated_at, user_id, request_id, reported, equipment:equipment_id(id, brand, model, serial)")
         .order("received_at", { ascending: false })
         .limit(500),
     ]);
@@ -578,6 +578,54 @@ const receptionSchema = z.object({
   notes: z.string().trim().max(3000).default(""),
 });
 
+export const adminCreateServiceOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({
+    userId: uuid.nullable().default(null),
+    customerId: uuid.nullable().default(null),
+    customer: z.object({ name: z.string().trim().min(2).max(180), email: z.string().trim().max(180).default(""), phone: z.string().trim().max(40).default(""), document: z.string().trim().max(30).default("") }),
+    equipment: equipmentSchema,
+    problem: z.string().trim().min(3).max(4000),
+    dueDays: z.number().int().min(1).max(180).default(15),
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { db, s } = await requireStaff(context.userId);
+    let userId = data.userId;
+    let customer = data.customer;
+    if (data.customerId) {
+      const c = await db.from("customers").select("name, email, phone, document, user_id").eq("id", data.customerId).single();
+      if (c.error) throw new Error("Cliente não encontrado.");
+      userId = c.data.user_id ?? userId;
+      customer = { name: c.data.name, email: c.data.email, phone: c.data.phone, document: c.data.document };
+    }
+    if (userId) {
+      const profile = await db.from("profiles").select("id").eq("id", userId).single();
+      if (profile.error) throw new Error("Conta do cliente não encontrada.");
+      if (!data.customerId) customer = await s.customerInfo(db, userId);
+    }
+    const existing = await db.from("equipment").select("*").ilike("serial", data.equipment.serial).maybeSingle();
+    if (existing.error) throw new Error(existing.error.message);
+    if (existing.data && existing.data.owner_id !== userId) throw new Error("Este número de série pertence a outro cliente. Faça a transferência do equipamento antes de abrir a O.S.");
+    let equipment = existing.data;
+    if (!equipment) {
+      const { id: _id, ...values } = data.equipment;
+      const result = await db.from("equipment").insert({ ...values, owner_id: userId }).select("*").single();
+      if (result.error) throw new Error(result.error.message);
+      equipment = result.data;
+    }
+    const now = new Date();
+    const result = await db.from("service_orders").insert({
+      user_id: userId, equipment_id: equipment.id, received_by: context.userId,
+      due_at: new Date(now.getTime() + data.dueDays * 86400000).toISOString(),
+      reported: { customer, customer_id: data.customerId, equipment: `${equipment.brand} ${equipment.model}`, model: equipment.model, serial: equipment.serial, problem: data.problem, failure_type: "outro" },
+      reception: { received_by_name: await s.actorName(db, context.userId) },
+      diagnosis: { informed_symptom: data.problem },
+    }).select("id, number").single();
+    if (result.error) throw new Error(result.error.message);
+    await s.logEvent(db, { order_id: result.data.id, kind: "criacao", description: "O.S. criada diretamente pelo atendimento.", visible_to_client: true, actor_id: context.userId });
+    return { id: String(result.data.id), number: Number(result.data.number) };
+  });
+
 /** Confirmar recebimento: converte o P.A. em O.S. sequencial. */
 export const adminConfirmReception = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -643,13 +691,14 @@ const orderPatch = z.object({
   status: z.string().max(40).optional(),
   warranty_status: z.string().max(40).optional(),
   budget_status: z.string().max(40).optional(),
-  section: z.enum(["reception", "diagnosis", "warranty", "budget", "execution", "validation", "closing"]).optional(),
+  section: z.enum(["reported", "reception", "diagnosis", "warranty", "budget", "execution", "validation", "closing"]).optional(),
   values: z.record(z.string(), z.unknown()).optional(),
   note: z.string().trim().max(3000).optional(),
   visible_to_client: z.boolean().default(true),
 });
 
 const SECTION_LABEL: Record<string, string> = {
+  reported: "Relato do cliente",
   reception: "Recebimento",
   diagnosis: "Diagnóstico técnico",
   warranty: "Garantia",
@@ -699,7 +748,8 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
       const before = (cur[data.section] ?? {}) as Record<string, unknown>;
       const merged = { ...before, ...data.values, updated_by: await s.actorName(db, context.userId), updated_at: new Date().toISOString() };
       update[data.section] = merged;
-      const changed = Object.keys(data.values).filter((k) => JSON.stringify(before[k] ?? "") !== JSON.stringify(data.values![k] ?? ""));
+      const values = data.values;
+      const changed = Object.keys(values).filter((k) => JSON.stringify(before[k] ?? "") !== JSON.stringify(values[k] ?? ""));
       if (changed.length) {
         await s.logEvent(db, {
           order_id: data.id,
@@ -707,7 +757,7 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
           field: changed.join(", "),
           description: `${SECTION_LABEL[data.section]} atualizado (${changed.length} campo${changed.length > 1 ? "s" : ""}).`,
           old_value: JSON.stringify(Object.fromEntries(changed.map((k) => [k, before[k] ?? null]))).slice(0, 4000),
-          new_value: JSON.stringify(Object.fromEntries(changed.map((k) => [k, data.values![k] ?? null]))).slice(0, 4000),
+          new_value: JSON.stringify(Object.fromEntries(changed.map((k) => [k, values[k] ?? null]))).slice(0, 4000),
           visible_to_client: false,
           actor_id: context.userId,
         });
