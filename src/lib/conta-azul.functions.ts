@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
+import { z } from 'zod'
 
 export const contaAzulConnection = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { assertAdmin, adminClient } = await import('./admin-guard.server')
@@ -9,6 +10,24 @@ export const contaAzulConnection = createServerFn({ method: 'GET' }).middleware(
   if (error) throw new Error('Não foi possível consultar a conexão.')
   return { connected: Boolean(data), expiresAt: data?.expires_at ?? null, updatedAt: data?.updated_at ?? null }
 })
+
+export const contaAzulComparison = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { assertAdmin, adminClient } = await import('./admin-guard.server')
+  await assertAdmin(context.supabase, context.userId)
+  const { integrationPanel } = await import('./conta-azul-panel.server')
+  return integrationPanel(await adminClient())
+})
+
+export const forceContaAzulIntegration = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ kind: z.enum(['products', 'customers', 'sales', 'services']), id: z.string().min(1).max(100), situation: z.enum(['EM_ANDAMENTO', 'APROVADO']).default('EM_ANDAMENTO') }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import('./admin-guard.server')
+    await assertAdmin(context.supabase, context.userId)
+    const { forceIntegration } = await import('./conta-azul-panel.server')
+    const { ContaAzulApiError } = await import('./conta-azul-api.server')
+    try { return await forceIntegration(await adminClient(), data.kind, data.id, data.situation) }
+    catch (e) { return { ok: false as const, error: e instanceof ContaAzulApiError ? e.message : 'Não foi possível integrar este registro.' } }
+  })
 
 export const beginContaAzulConnection = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { assertAdmin } = await import('./admin-guard.server')

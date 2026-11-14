@@ -46,7 +46,7 @@ function providerMessage(body: unknown): string {
   return (pick(b['mensagem']) || pick(b['message']) || pick(b['erros']) || pick(b['errors']) || pick(b['error_description']) || pick(b['error'])).slice(0, 300)
 }
 
-async function api<T>(db: Db, path: string, init?: { method?: string; body?: unknown }): Promise<T> {
+export async function api<T>(db: Db, path: string, init?: { method?: string; body?: unknown }): Promise<T> {
   const token = await accessToken(db)
   let response: Response
   try {
@@ -72,12 +72,13 @@ async function link(db: Db, kind: 'customer' | 'product', key: string) {
   return data?.external_id ?? null
 }
 async function saveLink(db: Db, kind: 'customer' | 'product', key: string, externalId: string) {
-  await db.from('conta_azul_links').upsert({ kind, local_key: key, external_id: externalId, updated_at: new Date().toISOString() })
+  const { error } = await db.from('conta_azul_links').upsert({ kind, local_key: key, external_id: externalId, updated_at: new Date().toISOString() })
+  if (error) throw new ContaAzulApiError('Cadastro enviado, mas o vínculo não pôde ser salvo. Atualize a comparação antes de tentar novamente.')
 }
 
-type Order = Database['public']['Tables']['orders']['Row']
+type Order = Pick<Database['public']['Tables']['orders']['Row'], 'id' | 'customer_name' | 'customer_document' | 'customer_email' | 'customer_phone'>
 
-async function ensureCustomer(db: Db, order: Order) {
+export async function ensureCustomer(db: Db, order: Order) {
   const key = customerKey(order)
   const known = await link(db, 'customer', key)
   if (known) return known
@@ -103,7 +104,7 @@ async function ensureCustomer(db: Db, order: Order) {
   return found
 }
 
-async function ensureProduct(db: Db, item: { product_id: string | null; product_slug: string; product_name: string; unit_price: number; orderQty: number }) {
+export async function ensureProduct(db: Db, item: { product_id: string | null; product_slug: string; product_name: string; unit_price: number; orderQty: number }) {
   const key = item.product_id ?? `slug:${item.product_slug}`
   const known = await link(db, 'product', key)
   if (known) return known

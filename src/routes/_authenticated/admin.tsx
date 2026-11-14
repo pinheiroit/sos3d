@@ -811,6 +811,7 @@ function AdminPage() {
           </div>
         </div>
       ))}
+      <Button asChild variant="ghost" className="h-10 w-full justify-start gap-3 px-3"><Link to="/integracoes"><Settings className="size-4 shrink-0" />Integrações · Conta Azul</Link></Button>
     </nav>
   );
 

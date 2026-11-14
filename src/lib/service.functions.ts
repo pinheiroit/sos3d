@@ -14,6 +14,17 @@ import {
 const uuid = z.string().uuid();
 const optDate = z.string().max(20).nullable().optional();
 
+/** Only operational identifiers are exposed to the admin-authorized integration panel. */
+export async function serviceIntegrationOrders(db: Awaited<ReturnType<typeof import('./service.server').serviceDb>>) {
+  const rows: { id: string; number: number; status: string }[] = [];
+  for (let from = 0; ; from += 500) {
+    const { data, error } = await db.from('service_orders').select('id,number,status').order('id').range(from, from + 499);
+    if (error) throw new Error('Não foi possível comparar as O.S.');
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < 500) return rows;
+  }
+}
+
 const equipmentSchema = z.object({
   id: uuid.nullable().optional(),
   brand: z.string().trim().min(1).max(80),
