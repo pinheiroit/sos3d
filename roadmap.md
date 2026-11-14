@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Criar armazenamento privado de tokens e endpoint POST conta-azul-auth com autorização administrativa; seis testes e POST autenticado/sem sessão validados
+- [ ] Validar autorização real da Conta Azul — depende de code vigente e redirect_uri idêntica à cadastrada; troca/persistência testadas com respostas simuladas
 - [x] Configurar CONTA_AZUL_CLIENT_ID e CONTA_AZUL_CLIENT_SECRET pelo formulário seguro solicitado pelo usuário
 - [x] Revisar e testar consignação ponta a ponta: remessa de 3 unidades, reserva/devolução de 1, venda de 2 a R$65, fechamento integral de R$130, pagamentos de R$50 + R$80, leitura após reabertura e encerramento; orientar teste operacional
 - [x] Simplificar ciclo de consignação por remessa: devoluções, fechamento de vendas a preço de fornecimento e geração do financeiro; fluxo autenticado validado com venda, devolução, pagamento parcial e encerramento

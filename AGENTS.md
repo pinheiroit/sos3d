@@ -24,3 +24,4 @@
 - Consignment uses existing customer/profile links, server-only operational tables and service-role-only manage_consignment RPC after authenticated role checks; stock, settlements and payments are atomic and audit events append-only to prevent overselling and duplicate billing.
 - Consignment shipment actions share the same sale, return and settlement dialogs; settlement success navigates to receivables and pending mutations disable operational controls to prevent overlapping actions.
 - Consignment form availability subtracts pending return reservations, shipment-context dialogs ignore unrelated listing filters, and changing shipment partner clears lines to prevent carrying another customer's negotiated prices.
+- Conta Azul OAuth uses a POST server route with bearer-session and admin checks, a single server-only token row, and no token responses or raw OAuth error logs; this protects the workspace-owned financial account.

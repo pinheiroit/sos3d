@@ -27,6 +27,7 @@ import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
+import { Route as ApiPublicContaAzulAuthRouteImport } from './routes/api/public/conta-azul-auth'
 import { Route as ApiPublicImgSplatRouteImport } from './routes/api/public/img.$'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -121,6 +122,11 @@ const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
   path: '/produto/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicContaAzulAuthRoute = ApiPublicContaAzulAuthRouteImport.update({
+  id: '/api/public/conta-azul-auth',
+  path: '/api/public/conta-azul-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicImgSplatRoute = ApiPublicImgSplatRouteImport.update({
   id: '/api/public/img/$',
   path: '/api/public/img/$',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/api/public/conta-azul-auth': typeof ApiPublicContaAzulAuthRoute
   '/api/public/img/$': typeof ApiPublicImgSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/api/public/conta-azul-auth': typeof ApiPublicContaAzulAuthRoute
   '/api/public/img/$': typeof ApiPublicImgSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/api/public/conta-azul-auth': typeof ApiPublicContaAzulAuthRoute
   '/api/public/img/$': typeof ApiPublicImgSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -234,6 +243,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/portal'
     | '/produto/$slug'
+    | '/api/public/conta-azul-auth'
     | '/api/public/img/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/portal'
     | '/produto/$slug'
+    | '/api/public/conta-azul-auth'
     | '/api/public/img/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/portal'
     | '/produto/$slug'
+    | '/api/public/conta-azul-auth'
     | '/api/public/img/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -304,6 +316,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuporteRoute: typeof SuporteRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
+  ApiPublicContaAzulAuthRoute: typeof ApiPublicContaAzulAuthRoute
   ApiPublicImgSplatRoute: typeof ApiPublicImgSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdutoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/conta-azul-auth': {
+      id: '/api/public/conta-azul-auth'
+      path: '/api/public/conta-azul-auth'
+      fullPath: '/api/public/conta-azul-auth'
+      preLoaderRoute: typeof ApiPublicContaAzulAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/img/$': {
       id: '/api/public/img/$'
       path: '/api/public/img/$'
@@ -499,6 +519,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuporteRoute: SuporteRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
+  ApiPublicContaAzulAuthRoute: ApiPublicContaAzulAuthRoute,
   ApiPublicImgSplatRoute: ApiPublicImgSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
