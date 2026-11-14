@@ -599,6 +599,27 @@ export type Database = {
           },
         ]
       }
+      conta_azul_oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          state_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          state_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          state_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conta_azul_tokens: {
         Row: {
           access_token: string

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { contaAzulCodeSchema, exchangeContaAzulCode, handleContaAzulAuth } from './conta-azul-auth.server'
-import { authorizationUrl, validOAuthState } from './conta-azul-oauth'
+import { authorizationUrl, hashOAuthState, validStateFormat } from './conta-azul-oauth'
 
 const input = { code: 'test-authorization-code', redirect_uri: 'https://sos3d.com.br/callback' }
 const dependencies = () => ({ clientId: 'test-id', clientSecret: 'test-secret', fetcher: vi.fn<typeof fetch>().mockResolvedValue(Response.json({ access_token: 'test-access', refresh_token: 'test-refresh', expires_in: 3600 })), save: vi.fn().mockResolvedValue(undefined), now: () => Date.parse('2026-11-14T00:00:00Z') })
@@ -14,14 +14,15 @@ describe('Conta Azul authorization', () => {
     expect(params.get('scope')).toBe('openid profile aws.cognito.signin.user.admin')
     expect(params.get('state')).toBe('random-state')
   })
-  it('requires a matching, unexpired state bound to the administrator', () => {
-    const state = 'a'.repeat(64)
-    const cookie = JSON.stringify({ state, userId: 'admin', expires: 2000 })
-    expect(validOAuthState(state, cookie, 'admin', 1000)).toBe(true)
-    expect(validOAuthState('123', cookie, 'admin', 1000)).toBe(false)
-    expect(validOAuthState(state, cookie, 'other', 1000)).toBe(false)
-    expect(validOAuthState(state, cookie, 'admin', 2000)).toBe(false)
-    expect(validOAuthState(state, undefined, 'admin', 1000)).toBe(false)
+  it('accepts only long random states and stores them as a stable hash', async () => {
+    const state = crypto.randomUUID() + crypto.randomUUID()
+    expect(validStateFormat(state)).toBe(true)
+    expect(validStateFormat('123')).toBe(false)
+    expect(validStateFormat('a'.repeat(31))).toBe(false)
+    const hash = await hashOAuthState(state)
+    expect(hash).toMatch(/^[0-9a-f]{64}$/)
+    expect(hash).not.toContain(state)
+    expect(await hashOAuthState(state)).toBe(hash)
   })
   it('exchanges with Basic Auth, form body and the official token endpoint, storing both tokens', async () => {
     const deps = dependencies()

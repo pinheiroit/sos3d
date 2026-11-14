@@ -15,9 +15,12 @@ export const beginContaAzulConnection = createServerFn({ method: 'POST' }).middl
   await assertAdmin(context.supabase, context.userId)
   const clientId = process.env['CONTA_AZUL_CLIENT_ID']
   if (!clientId || !process.env['CONTA_AZUL_CLIENT_SECRET']) throw new Error('Configure as credenciais da Conta Azul.')
-  const { setCookie, getRequest } = await import('@tanstack/react-start/server')
-  const { authorizationUrl, contaAzulStateCookie } = await import('./conta-azul-oauth')
+  const { adminClient } = await import('./admin-guard.server')
+  const { authorizationUrl, hashOAuthState, contaAzulStateTtlMs } = await import('./conta-azul-oauth')
   const state = crypto.randomUUID() + crypto.randomUUID()
-  setCookie(contaAzulStateCookie, JSON.stringify({ state, userId: context.userId, expires: Date.now() + 600000 }), { httpOnly: true, secure: new URL(getRequest().url).protocol === 'https:', sameSite: 'lax', path: '/', maxAge: 600 })
+  const db = await adminClient()
+  await db.from('conta_azul_oauth_states').delete().or(`user_id.eq.${context.userId},expires_at.lt.${new Date().toISOString()}`)
+  const { error } = await db.from('conta_azul_oauth_states').insert({ state_hash: await hashOAuthState(state), user_id: context.userId, expires_at: new Date(Date.now() + contaAzulStateTtlMs).toISOString() })
+  if (error) throw new Error('Não foi possível iniciar a conexão.')
   return { url: authorizationUrl(clientId, state) }
 })

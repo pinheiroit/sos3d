@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import type { Database } from '@/integrations/supabase/types'
 import { assertAdmin, adminClient } from './admin-guard.server'
-import { contaAzulStateCookie, contaAzulRedirectUri, validOAuthState } from './conta-azul-oauth'
+import { contaAzulRedirectUri, hashOAuthState, validStateFormat } from './conta-azul-oauth'
 
 export const contaAzulCodeSchema = z.object({
   code: z.string().trim().min(1).max(4096),
@@ -84,10 +84,13 @@ export async function handleContaAzulAuth(request: Request): Promise<Response> {
     const input = contaAzulCodeSchema.safeParse(body)
     if (!input.success) return json({ error: 'Informe code e redirect_uri HTTPS do domínio sos3d.com.br, idêntica à cadastrada na Conta Azul.' }, 400)
     const state = typeof body === 'object' && body !== null && 'state' in body && typeof body.state === 'string' ? body.state : ''
-    const { getCookie, deleteCookie } = await import('@tanstack/react-start/server')
-    if (input.data.redirect_uri !== contaAzulRedirectUri || !validOAuthState(state, getCookie(contaAzulStateCookie), data.user.id, Date.now())) return json({ error: 'Autorização expirada ou inválida. Inicie a conexão novamente em Integrações.' }, 400)
-    deleteCookie(contaAzulStateCookie, { path: '/' })
+    const invalidState = () => json({ error: 'Autorização expirada ou inválida. Inicie a conexão novamente em Integrações.' }, 400)
+    if (input.data.redirect_uri !== contaAzulRedirectUri || !validStateFormat(state)) return invalidState()
     const db = await adminClient()
+    // Single use: the state row is consumed before the code exchange, bound to this administrator.
+    const { data: consumed, error: stateError } = await db.from('conta_azul_oauth_states').delete().eq('state_hash', await hashOAuthState(state)).eq('user_id', data.user.id).gt('expires_at', new Date().toISOString()).select('state_hash')
+    if (stateError) return json({ error: 'Não foi possível validar a autorização.' }, 500)
+    if (!consumed?.length) return invalidState()
     const result = await exchangeContaAzulCode(input.data, {
       clientId, clientSecret, fetcher: fetch, now: Date.now,
       save: async row => {
