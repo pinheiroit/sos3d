@@ -31,11 +31,17 @@ export async function exchangeContaAzulCode(input: z.infer<typeof contaAzulCodeS
     response = await dependencies.fetcher('https://api-v2.contaazul.com/oauth/token', {
       method: 'POST',
       headers: { Authorization: `Basic ${btoa(`${dependencies.clientId}:${dependencies.clientSecret}`)}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'authorization_code', code: parsed.code, redirect_uri: parsed.redirect_uri }),
+      body: new URLSearchParams({ grant_type: 'authorization_code', code: parsed.code, redirect_uri: parsed.redirect_uri }).toString(),
       signal: AbortSignal.timeout(20000),
-      redirect: 'error',
+      // Workers support manual/follow; manual also prevents forwarding Basic credentials.
+      redirect: 'manual',
     })
-  } catch { throw new ContaAzulAuthError(502, 'Não foi possível comunicar com a Conta Azul. Solicite um novo código antes de tentar novamente.') }
+  } catch (error) {
+    // Allowlisted categories only: messages/stacks may contain credentials or codes.
+    const category = error instanceof Error && ['TimeoutError', 'AbortError', 'TypeError'].includes(error.name) ? error.name : 'NetworkError'
+    console.error(`Conta Azul OAuth transport failed [${category}]`)
+    throw new ContaAzulAuthError(502, 'Não foi possível comunicar com a Conta Azul. Solicite um novo código antes de tentar novamente.')
+  }
   if (!response.ok) {
     // OAuth errors can echo codes or credentials; never log or return raw bodies.
     console.error(`Conta Azul OAuth failed [${response.status}]`)

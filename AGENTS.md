@@ -25,4 +25,5 @@
 - Consignment shipment actions share the same sale, return and settlement dialogs; settlement success navigates to receivables and pending mutations disable operational controls to prevent overlapping actions.
 - Consignment form availability subtracts pending return reservations, shipment-context dialogs ignore unrelated listing filters, and changing shipment partner clears lines to prevent carrying another customer's negotiated prices.
 - Conta Azul OAuth uses a POST server route with bearer-session and admin checks, a single server-only token row, and no token responses or raw OAuth error logs; this protects the workspace-owned financial account.
+- OAuth token requests use a serialized form body and manual redirects; this stays Worker-compatible and never forwards credentials to a redirect target, while transport logs contain only allowlisted error categories.
 - Conta Azul authorization starts through an admin-only server function and a short-lived HttpOnly state cookie bound to that administrator; the callback consumes it before exchanging the code to prevent login CSRF.

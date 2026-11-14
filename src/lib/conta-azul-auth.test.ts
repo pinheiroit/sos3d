@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { contaAzulCodeSchema, exchangeContaAzulCode, handleContaAzulAuth } from './conta-azul-auth.server'
 import { authorizationUrl, validOAuthState } from './conta-azul-oauth'
 
-const input = { code: 'test-authorization-code', redirect_uri: 'https://sos3d.com.br/conta-azul/callback' }
+const input = { code: 'test-authorization-code', redirect_uri: 'https://sos3d.com.br/callback' }
 const dependencies = () => ({ clientId: 'test-id', clientSecret: 'test-secret', fetcher: vi.fn<typeof fetch>().mockResolvedValue(Response.json({ access_token: 'test-access', refresh_token: 'test-refresh', expires_in: 3600 })), save: vi.fn().mockResolvedValue(undefined), now: () => Date.parse('2026-11-14T00:00:00Z') })
 
 describe('Conta Azul authorization', () => {
@@ -30,9 +30,12 @@ describe('Conta Azul authorization', () => {
     expect(url).toBe('https://api-v2.contaazul.com/oauth/token')
     expect(options?.method).toBe('POST')
     expect(options?.headers).toEqual({ Authorization: `Basic ${btoa('test-id:test-secret')}`, 'Content-Type': 'application/x-www-form-urlencoded' })
-    expect((options?.body as URLSearchParams).get('code')).toBe(input.code)
-    expect((options?.body as URLSearchParams).get('grant_type')).toBe('authorization_code')
-    expect((options?.body as URLSearchParams).get('redirect_uri')).toBe(input.redirect_uri)
+    expect(typeof options?.body).toBe('string')
+    expect(options?.redirect).toBe('manual')
+    const form = new URLSearchParams(options?.body as string)
+    expect(form.get('code')).toBe(input.code)
+    expect(form.get('grant_type')).toBe('authorization_code')
+    expect(form.get('redirect_uri')).toBe(input.redirect_uri)
     expect(deps.save).toHaveBeenCalledWith({ id: '00000000-0000-4000-8000-000000000001', access_token: 'test-access', refresh_token: 'test-refresh', expires_at: '2026-11-14T01:00:00.000Z', updated_at: '2026-11-14T00:00:00.000Z' })
     expect(result).toEqual({ connected: true, expires_at: '2026-11-14T01:00:00.000Z' })
   })
@@ -50,6 +53,24 @@ describe('Conta Azul authorization', () => {
     deps.fetcher.mockResolvedValue(Response.json({ access_token: 'test-access', expires_in: 3600 }))
     await expect(exchangeContaAzulCode(input, deps)).rejects.toThrow('validade esperados')
     expect(deps.save).not.toHaveBeenCalled()
+  })
+  it('does not follow redirects or forward credentials to another destination', async () => {
+    const deps = dependencies()
+    deps.fetcher.mockResolvedValue(new Response(null, { status: 302, headers: { Location: 'https://example.org/token' } }))
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await expect(exchangeContaAzulCode(input, deps)).rejects.toThrow('HTTP 302')
+    expect(deps.fetcher).toHaveBeenCalledTimes(1)
+    expect(deps.save).not.toHaveBeenCalled()
+    log.mockRestore()
+  })
+  it('logs only an allowlisted transport category, never the error message or credentials', async () => {
+    const deps = dependencies()
+    deps.fetcher.mockRejectedValue(new TypeError('private-code-and-credentials'))
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await expect(exchangeContaAzulCode(input, deps)).rejects.toThrow('Não foi possível comunicar')
+    expect(log.mock.calls).toEqual([['Conta Azul OAuth transport failed [TypeError]']])
+    expect(deps.save).not.toHaveBeenCalled()
+    log.mockRestore()
   })
   it('reports persistence failure without exposing tokens', async () => {
     const deps = dependencies()
