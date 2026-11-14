@@ -599,6 +599,27 @@ export type Database = {
           },
         ]
       }
+      conta_azul_links: {
+        Row: {
+          external_id: string
+          kind: string
+          local_key: string
+          updated_at: string
+        }
+        Insert: {
+          external_id: string
+          kind: string
+          local_key: string
+          updated_at?: string
+        }
+        Update: {
+          external_id?: string
+          kind?: string
+          local_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conta_azul_oauth_states: {
         Row: {
           created_at: string
@@ -617,6 +638,36 @@ export type Database = {
           expires_at?: string
           state_hash?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      conta_azul_order_sync: {
+        Row: {
+          error: string | null
+          external_id: string | null
+          external_number: number | null
+          order_id: string
+          situacao: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          error?: string | null
+          external_id?: string | null
+          external_number?: number | null
+          order_id: string
+          situacao?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          error?: string | null
+          external_id?: string | null
+          external_number?: number | null
+          order_id?: string
+          situacao?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

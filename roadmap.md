@@ -2,7 +2,7 @@
 - [x] Ajustar transporte Conta Azul para formato compatível e redirecionamento manual; 10 testes e fluxo administrativo com resposta real HTTP 400 para código fictício validados sem exposição de tokens
 - [x] Criar /integracoes e /callback com botão de conexão Conta Azul, retorno automático e state aleatório vinculado à sessão administrativa; redirecionamento e rejeição real validados, sucesso visual simulado
 - [x] Criar armazenamento privado de tokens e endpoint POST conta-azul-auth com autorização administrativa; seis testes e POST autenticado/sem sessão validados
-- [ ] Validar autorização real da Conta Azul — depende de code vigente e redirect_uri idêntica à cadastrada; troca/persistência testadas com respostas simuladas
+- [x] Validar autorização real da Conta Azul — conexão salva em 13/11 e renovação automática do acesso
 - [x] Configurar CONTA_AZUL_CLIENT_ID e CONTA_AZUL_CLIENT_SECRET pelo formulário seguro solicitado pelo usuário
 - [x] Revisar e testar consignação ponta a ponta: remessa de 3 unidades, reserva/devolução de 1, venda de 2 a R$65, fechamento integral de R$130, pagamentos de R$50 + R$80, leitura após reabertura e encerramento; orientar teste operacional
 - [x] Simplificar ciclo de consignação por remessa: devoluções, fechamento de vendas a preço de fornecimento e geração do financeiro; fluxo autenticado validado com venda, devolução, pagamento parcial e encerramento
@@ -43,7 +43,7 @@
 - [x] Implementar cancelamento de NF-e com justificativa
 - [ ] Hospedar o serviço nfe-service e salvar NFE_SERVICE_URL/NFE_SERVICE_TOKEN
 - [x] Gerar pedido em PDF / imprimir (layout da Venda Conta Azul com logo SOS3D) nas telas de pedidos e separação
-- [ ] Integrar Conta Azul: venda ao marcar Pago, estoque oficial da Conta Azul, NF-e emitida lá e puxada ao site, parcelas/baixa/cancelamento/recebimentos
+- [ ] Integrar Conta Azul: envio manual de pedidos (teste aprovado, venda nº 1 em andamento) feito; pendente envio automático ao marcar Pago, NF-e, cancelamento e recebimentos
 - [ ] O.S.: permitir criar nova Ordem de serviço e editar O.S. existente
 - [x] Corrigir criação e edição direta de O.S. no admin com acesso para administradores e vendedores; validar criação, edição, leitura e cancelamento de teste
 - [x] Melhorar edição dos pedidos com rolagem, campos sem transbordamento e ações sempre visíveis; verificar com vários produtos no computador e celular

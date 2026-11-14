@@ -81,6 +81,7 @@ import { ConsignmentAdmin } from "@/components/admin/ConsignmentAdmin";
 import { CoursesAdmin } from "@/components/admin/CoursesAdmin";
 import { SellerPickingAdmin, type PickingOrderRow } from "@/components/admin/SellerPickingAdmin";
 import { OrderDocumentActions } from "@/components/admin/OrderDocumentActions";
+import { ContaAzulOrderButton } from "@/components/admin/ContaAzulOrderButton";
 import { createSeller, setMemberSeller } from "@/lib/picking.functions";
 import { PICKABLE_ORDER_STATUSES, pickingProgress } from "@/lib/picking";
 
@@ -1399,6 +1400,7 @@ function AdminPage() {
                       })),
                     }}
                   />
+                  <ContaAzulOrderButton orderId={o.id} reference={o.reference} cancelled={o.status === "cancelado"} />
                   {o.status === "pendente" && (
                     <Button
                       size="sm"

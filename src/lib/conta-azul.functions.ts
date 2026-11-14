@@ -24,3 +24,27 @@ export const beginContaAzulConnection = createServerFn({ method: 'POST' }).middl
   if (error) throw new Error('Não foi possível iniciar a conexão.')
   return { url: authorizationUrl(clientId, state) }
 })
+export const contaAzulOrderSyncs = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { assertAdmin, adminClient } = await import('./admin-guard.server')
+  await assertAdmin(context.supabase, context.userId)
+  const db = await adminClient()
+  const { data } = await db.from('conta_azul_order_sync').select('order_id,status,external_number,situacao,error,updated_at').order('updated_at', { ascending: false }).limit(1000)
+  return data ?? []
+})
+
+export const sendOrderToContaAzul = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((input: { orderId: string; situacao: 'EM_ANDAMENTO' | 'APROVADO' }) => {
+    if (!/^[0-9a-f-]{36}$/i.test(input?.orderId ?? '') || !['EM_ANDAMENTO', 'APROVADO'].includes(input?.situacao)) throw new Error('Dados inválidos.')
+    return input
+  })
+  .handler(async ({ data, context }) => {
+    const { assertAdmin, adminClient } = await import('./admin-guard.server')
+    await assertAdmin(context.supabase, context.userId)
+    const { syncOrderToContaAzul, ContaAzulApiError } = await import('./conta-azul-api.server')
+    try {
+      const row = await syncOrderToContaAzul(await adminClient(), data.orderId, data.situacao)
+      return { ok: true as const, number: row.external_number ?? null }
+    } catch (e) {
+      return { ok: false as const, error: e instanceof ContaAzulApiError ? e.message : 'Falha ao enviar à Conta Azul.' }
+    }
+  })
