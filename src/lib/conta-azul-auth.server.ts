@@ -92,7 +92,7 @@ export async function handleContaAzulAuth(request: Request): Promise<Response> {
     if (stateError) return json({ error: 'Não foi possível validar a autorização.' }, 500)
     if (!consumed?.length) return invalidState()
     const result = await exchangeContaAzulCode(input.data, {
-      clientId, clientSecret, fetcher: fetch, now: Date.now,
+      clientId, clientSecret, fetcher: (url, init) => fetch(url, init), now: Date.now,
       save: async row => {
         const { error: saveError } = await db.from('conta_azul_tokens').upsert(row, { onConflict: 'id' })
         if (saveError) throw new Error('Token persistence failed')

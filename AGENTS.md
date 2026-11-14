@@ -27,3 +27,4 @@
 - Conta Azul OAuth uses a POST server route with bearer-session and admin checks, a single server-only token row, and no token responses or raw OAuth error logs; this protects the workspace-owned financial account.
 - OAuth token requests use a serialized form body and manual redirects; this stays Worker-compatible and never forwards credentials to a redirect target, while transport logs contain only allowlisted error categories.
 - Conta Azul authorization starts through an admin-only server function that stores a hashed, short-lived state in a server-only table bound to that administrator; the callback deletes it (single use) before exchanging the code — prevents login CSRF without depending on browser cookies across domains.
+- Never pass the global fetch unbound as a dependency (e.g. fetcher: fetch); wrap it in an arrow function — workerd throws Illegal invocation when fetch is called with another 'this', while Node tolerates it.
