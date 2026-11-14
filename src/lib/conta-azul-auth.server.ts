@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import type { Database } from '@/integrations/supabase/types'
 import { assertAdmin, adminClient } from './admin-guard.server'
+import { contaAzulStateCookie, contaAzulRedirectUri, validOAuthState } from './conta-azul-oauth'
 
 export const contaAzulCodeSchema = z.object({
   code: z.string().trim().min(1).max(4096),
@@ -76,6 +77,10 @@ export async function handleContaAzulAuth(request: Request): Promise<Response> {
     try { body = await request.json() } catch { return json({ error: 'Envie um corpo JSON válido.' }, 400) }
     const input = contaAzulCodeSchema.safeParse(body)
     if (!input.success) return json({ error: 'Informe code e redirect_uri HTTPS do domínio sos3d.com.br, idêntica à cadastrada na Conta Azul.' }, 400)
+    const state = typeof body === 'object' && body !== null && 'state' in body && typeof body.state === 'string' ? body.state : ''
+    const { getCookie, deleteCookie } = await import('@tanstack/react-start/server')
+    if (input.data.redirect_uri !== contaAzulRedirectUri || !validOAuthState(state, getCookie(contaAzulStateCookie), data.user.id, Date.now())) return json({ error: 'Autorização expirada ou inválida. Inicie a conexão novamente em Integrações.' }, 400)
+    deleteCookie(contaAzulStateCookie, { path: '/' })
     const db = await adminClient()
     const result = await exchangeContaAzulCode(input.data, {
       clientId, clientSecret, fetcher: fetch, now: Date.now,

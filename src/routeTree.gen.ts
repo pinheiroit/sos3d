@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AcessoriosRouteImport } from './routes/acessorios'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as CarrinhoRouteImport } from './routes/carrinho'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContatoRouteImport } from './routes/contato'
@@ -20,6 +21,7 @@ import { Route as EmpresaRouteImport } from './routes/empresa'
 import { Route as FilamentosRouteImport } from './routes/filamentos'
 import { Route as Impressao3dRouteImport } from './routes/impressao-3d'
 import { Route as ImpressorasRouteImport } from './routes/impressoras'
+import { Route as IntegracoesRouteImport } from './routes/integracoes'
 import { Route as LojaRouteImport } from './routes/loja'
 import { Route as MakersRouteImport } from './routes/makers'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -50,6 +52,11 @@ const AcessoriosRoute = AcessoriosRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CallbackRoute = CallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CarrinhoRoute = CarrinhoRouteImport.update({
@@ -85,6 +92,11 @@ const Impressao3dRoute = Impressao3dRouteImport.update({
 const ImpressorasRoute = ImpressorasRouteImport.update({
   id: '/impressoras',
   path: '/impressoras',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegracoesRoute = IntegracoesRouteImport.update({
+  id: '/integracoes',
+  path: '/integracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LojaRoute = LojaRouteImport.update({
@@ -153,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/acessorios': typeof AcessoriosRoute
   '/auth': typeof AuthRoute
+  '/callback': typeof CallbackRoute
   '/carrinho': typeof CarrinhoRoute
   '/checkout': typeof CheckoutRoute
   '/contato': typeof ContatoRoute
@@ -160,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/filamentos': typeof FilamentosRoute
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
+  '/integracoes': typeof IntegracoesRoute
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -177,6 +191,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/acessorios': typeof AcessoriosRoute
   '/auth': typeof AuthRoute
+  '/callback': typeof CallbackRoute
   '/carrinho': typeof CarrinhoRoute
   '/checkout': typeof CheckoutRoute
   '/contato': typeof ContatoRoute
@@ -184,6 +199,7 @@ export interface FileRoutesByTo {
   '/filamentos': typeof FilamentosRoute
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
+  '/integracoes': typeof IntegracoesRoute
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -203,6 +219,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/acessorios': typeof AcessoriosRoute
   '/auth': typeof AuthRoute
+  '/callback': typeof CallbackRoute
   '/carrinho': typeof CarrinhoRoute
   '/checkout': typeof CheckoutRoute
   '/contato': typeof ContatoRoute
@@ -210,6 +227,7 @@ export interface FileRoutesById {
   '/filamentos': typeof FilamentosRoute
   '/impressao-3d': typeof Impressao3dRoute
   '/impressoras': typeof ImpressorasRoute
+  '/integracoes': typeof IntegracoesRoute
   '/loja': typeof LojaRoute
   '/makers': typeof MakersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -229,6 +247,7 @@ export interface FileRouteTypes {
     | '/'
     | '/acessorios'
     | '/auth'
+    | '/callback'
     | '/carrinho'
     | '/checkout'
     | '/contato'
@@ -236,6 +255,7 @@ export interface FileRouteTypes {
     | '/filamentos'
     | '/impressao-3d'
     | '/impressoras'
+    | '/integracoes'
     | '/loja'
     | '/makers'
     | '/sitemap.xml'
@@ -253,6 +273,7 @@ export interface FileRouteTypes {
     | '/'
     | '/acessorios'
     | '/auth'
+    | '/callback'
     | '/carrinho'
     | '/checkout'
     | '/contato'
@@ -260,6 +281,7 @@ export interface FileRouteTypes {
     | '/filamentos'
     | '/impressao-3d'
     | '/impressoras'
+    | '/integracoes'
     | '/loja'
     | '/makers'
     | '/sitemap.xml'
@@ -278,6 +300,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/acessorios'
     | '/auth'
+    | '/callback'
     | '/carrinho'
     | '/checkout'
     | '/contato'
@@ -285,6 +308,7 @@ export interface FileRouteTypes {
     | '/filamentos'
     | '/impressao-3d'
     | '/impressoras'
+    | '/integracoes'
     | '/loja'
     | '/makers'
     | '/sitemap.xml'
@@ -304,6 +328,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AcessoriosRoute: typeof AcessoriosRoute
   AuthRoute: typeof AuthRoute
+  CallbackRoute: typeof CallbackRoute
   CarrinhoRoute: typeof CarrinhoRoute
   CheckoutRoute: typeof CheckoutRoute
   ContatoRoute: typeof ContatoRoute
@@ -311,6 +336,7 @@ export interface RootRouteChildren {
   FilamentosRoute: typeof FilamentosRoute
   Impressao3dRoute: typeof Impressao3dRoute
   ImpressorasRoute: typeof ImpressorasRoute
+  IntegracoesRoute: typeof IntegracoesRoute
   LojaRoute: typeof LojaRoute
   MakersRoute: typeof MakersRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -351,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/callback': {
+      id: '/callback'
+      path: '/callback'
+      fullPath: '/callback'
+      preLoaderRoute: typeof CallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/carrinho': {
@@ -400,6 +433,13 @@ declare module '@tanstack/react-router' {
       path: '/impressoras'
       fullPath: '/impressoras'
       preLoaderRoute: typeof ImpressorasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integracoes': {
+      id: '/integracoes'
+      path: '/integracoes'
+      fullPath: '/integracoes'
+      preLoaderRoute: typeof IntegracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/loja': {
@@ -507,6 +547,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AcessoriosRoute: AcessoriosRoute,
   AuthRoute: AuthRoute,
+  CallbackRoute: CallbackRoute,
   CarrinhoRoute: CarrinhoRoute,
   CheckoutRoute: CheckoutRoute,
   ContatoRoute: ContatoRoute,
@@ -514,6 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
   FilamentosRoute: FilamentosRoute,
   Impressao3dRoute: Impressao3dRoute,
   ImpressorasRoute: ImpressorasRoute,
+  IntegracoesRoute: IntegracoesRoute,
   LojaRoute: LojaRoute,
   MakersRoute: MakersRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Criar /integracoes e /callback com botão de conexão Conta Azul, retorno automático e state aleatório vinculado à sessão administrativa; redirecionamento e rejeição real validados, sucesso visual simulado
 - [x] Criar armazenamento privado de tokens e endpoint POST conta-azul-auth com autorização administrativa; seis testes e POST autenticado/sem sessão validados
 - [ ] Validar autorização real da Conta Azul — depende de code vigente e redirect_uri idêntica à cadastrada; troca/persistência testadas com respostas simuladas
 - [x] Configurar CONTA_AZUL_CLIENT_ID e CONTA_AZUL_CLIENT_SECRET pelo formulário seguro solicitado pelo usuário
