@@ -1,8 +1,9 @@
 # Roadmap
+- [ ] Configurar CONTA_AZUL_CLIENT_ID e CONTA_AZUL_CLIENT_SECRET pelo formulário seguro solicitado pelo usuário
 - [x] Revisar e testar consignação ponta a ponta: remessa de 3 unidades, reserva/devolução de 1, venda de 2 a R$65, fechamento integral de R$130, pagamentos de R$50 + R$80, leitura após reabertura e encerramento; orientar teste operacional
 - [x] Simplificar ciclo de consignação por remessa: devoluções, fechamento de vendas a preço de fornecimento e geração do financeiro; fluxo autenticado validado com venda, devolução, pagamento parcial e encerramento
 - [x] Implantar controle interno de consignação: habilitação dos clientes existentes, contratos privados, remessas, estoque por parceiro, vendas, fechamentos, pagamentos parciais, devoluções e inventário; validar exemplo de R$2250 e telas móvel/desktop
-- [ ] Integrar consignação com Conta Azul — depende da autorização da conexão recusada e da orientação fiscal da contabilidade
+- [ ] Integrar consignação com Conta Azul — retomada solicitada; depende das credenciais, autorização da conta e orientação fiscal da contabilidade
 - [x] Avisos de criação e atualização de O.S. implementados e testados
 - [ ] Verificar envio real dos avisos de O.S. — depende de reativar/verificar notify.sos3d.com.br (verificação expirou)
 - [x] Criar estrutura segura para entradas XML e vínculos de fornecedores
