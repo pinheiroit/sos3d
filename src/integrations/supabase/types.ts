@@ -790,6 +790,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          neighborhood: string
           notes: string
           number: string
           phone: string
@@ -807,6 +808,7 @@ export type Database = {
           email?: string
           id?: string
           name: string
+          neighborhood?: string
           notes?: string
           number?: string
           phone?: string
@@ -824,6 +826,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          neighborhood?: string
           notes?: string
           number?: string
           phone?: string

@@ -29,6 +29,8 @@ export const Route = createFileRoute("/checkout")({
       { property: "og:title", content: "Finalizar pedido | SOS.3D" },
       { property: "og:description", content: "Conclua seu pedido com entrega e suporte técnico SOS.3D." },
       { name: "robots", content: "noindex" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CheckoutPage,
@@ -77,6 +79,7 @@ function CheckoutPage() {
     tel: "",
     cep: "",
     rua: "",
+    bairro: "",
     num: "",
     cidade: "",
     uf: "",
@@ -105,6 +108,7 @@ function CheckoutPage() {
           tel: prev.tel || d.phone,
           cep: prev.cep || d.address.zip,
           rua: prev.rua || d.address.street,
+          bairro: prev.bairro || d.address.neighborhood,
           num: prev.num || d.address.number,
           cidade: prev.cidade || d.address.city,
           uf: prev.uf || d.address.state,
@@ -211,6 +215,7 @@ function CheckoutPage() {
                 address: {
                   zip: f.cep,
                   street: f.rua,
+                  neighborhood: f.bairro,
                   number: f.num,
                   complement: "",
                   city: f.cidade,
@@ -241,6 +246,7 @@ function CheckoutPage() {
             {prefilled ? (
               <p className="mb-4 rounded-lg border border-tech/40 bg-tech/5 px-3 py-2 text-xs text-muted-foreground">
                 Dados preenchidos automaticamente com o seu cadastro. Confira e ajuste se precisar.
+                <Link to="/cadastro" className="ml-2 font-semibold text-tech underline">Atualizar cadastro</Link>
               </p>
             ) : (
               !session && (
@@ -296,7 +302,7 @@ function CheckoutPage() {
                 </label>
               ))}
             </RadioGroup>
-            {entrega === "entrega" ? (
+            {( 
               <>
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="sm:col-span-1">
@@ -312,6 +318,10 @@ function CheckoutPage() {
                 <Input id="num" required className="mt-2"  value={f.num} onChange={set("num")} />
               </div>
               <div>
+                <Label htmlFor="bairro">Bairro</Label>
+                <Input id="bairro" required className="mt-2" value={f.bairro} onChange={set("bairro")} />
+              </div>
+              <div>
                 <Label htmlFor="cidade">Cidade</Label>
                 <Input id="cidade" required className="mt-2"  value={f.cidade} onChange={set("cidade")} />
               </div>
@@ -324,7 +334,8 @@ function CheckoutPage() {
               <Truck className="size-4 text-tech" /> Frete grátis para pedidos acima de {formatBRL(rules.freeShippingFrom)}.
             </p>
               </>
-            ) : (
+            )}
+            {entrega === "coleta" && (
               <p className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-4 text-xs text-muted-foreground">
                 <Store className="mt-0.5 size-4 shrink-0 text-tech" />
                 <span>

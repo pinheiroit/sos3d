@@ -9,6 +9,8 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
+- Customer fiscal checks share customer-fiscal.ts and resolve stored customer records server-side before sales or provider writes; authenticated self-edits accept no customer IDs to prevent bypassing completeness or ownership.
+
 - Service orders (P.A./O.S.) tables are server-only (service_role grants, no client policies); all access goes through `src/lib/service.functions.ts`, which checks ownership or admin role — keeps previous-owner and internal bench data private.
 - Service files live in the private `service-files` bucket, uploaded via signed upload URLs and read via signed URLs; history (`service_events`) is append-only.
 - Stock write-offs (consumo/avaria) go through `register_stock_withdrawal` (service_role-only SQL function called from `src/lib/admin.functions.ts` after `assertAdmin`) — decrements stock and logs reason atomically, never below zero.

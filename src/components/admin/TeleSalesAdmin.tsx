@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { missingFiscalFields } from "@/lib/customer-fiscal";
 import { formatBRL } from "@/lib/catalog";
 import {
   createSalesOrder,
@@ -33,6 +34,7 @@ type CustomerForm = {
   document: string;
   zip: string;
   street: string;
+  neighborhood: string;
   number: string;
   complement: string;
   city: string;
@@ -47,6 +49,7 @@ const emptyCustomer: CustomerForm = {
   document: "",
   zip: "",
   street: "",
+  neighborhood: "",
   number: "",
   complement: "",
   city: "",
@@ -121,6 +124,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
       document: c.document,
       zip: c.zip,
       street: c.street,
+      neighborhood: c.neighborhood,
       number: c.number,
       complement: c.complement,
       city: c.city,
@@ -190,6 +194,12 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
       toast.error("Selecione um cliente");
       return;
     }
+    const missing = missingFiscalFields(selectedCustomer);
+    if (missing.length) {
+      toast.error("Atualize o cadastro do cliente antes de vender", { description: missing.join(", ") });
+      setForm(toForm(selectedCustomer));
+      return;
+    }
     if (items.length === 0) {
       toast.error("Adicione ao menos um produto");
       return;
@@ -204,6 +214,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
         document: selectedCustomer.document,
         zip: selectedCustomer.zip,
         street: selectedCustomer.street,
+        neighborhood: selectedCustomer.neighborhood,
         number: selectedCustomer.number,
         complement: selectedCustomer.complement,
         city: selectedCustomer.city,
@@ -294,7 +305,14 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                   <Button
                     size="sm"
                     variant={selectedCustomerId === c.key ? "cta" : "outline"}
-                    onClick={() => setSelectedCustomerId(c.key)}
+                    onClick={() => {
+                      if (missingFiscalFields(c).length) {
+                        toast.error("Vá ao cadastro do cliente e atualize os dados fiscais", { description: missingFiscalFields(c).join(", ") });
+                        setForm(toForm(c));
+                        return;
+                      }
+                      setSelectedCustomerId(c.key);
+                    }}
                   >
                     {selectedCustomerId === c.key ? "Selecionado" : "Vender"}
                   </Button>
@@ -312,8 +330,8 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                       variant="ghost"
                       aria-label="Remover cliente"
                       onClick={() => {
-                        if (confirm(`Remover ${c.name}?`))
-                          removeCustomerMutation.mutate(c.customerId!);
+                        if (c.customerId && confirm(`Remover ${c.name}?`))
+                          removeCustomerMutation.mutate(c.customerId);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -524,7 +542,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 )}
               </div>
               <div>
-                <Label>Telefone</Label>
+                <Label>Telefone*</Label>
                 <Input
                   className="mt-1"
                   value={form.phone}
@@ -532,7 +550,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 />
               </div>
               <div>
-                <Label>CPF / CNPJ</Label>
+                <Label>CPF / CNPJ*</Label>
                 <Input
                   className="mt-1"
                   value={form.document}
@@ -540,7 +558,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 />
               </div>
               <div>
-                <Label>CEP</Label>
+                <Label>CEP*</Label>
                 <Input
                   className="mt-1"
                   value={form.zip}
@@ -548,7 +566,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 />
               </div>
               <div className="sm:col-span-2">
-                <Label>Endereço</Label>
+                <Label>Endereço*</Label>
                 <Input
                   className="mt-1"
                   value={form.street}
@@ -556,12 +574,16 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 />
               </div>
               <div>
-                <Label>Número</Label>
+                <Label>Número*</Label>
                 <Input
                   className="mt-1"
                   value={form.number}
                   onChange={(e) => setForm({ ...form, number: e.target.value })}
                 />
+              </div>
+              <div>
+                <Label>Bairro*</Label>
+                <Input className="mt-1" required value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} />
               </div>
               <div>
                 <Label>Complemento</Label>
@@ -572,7 +594,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 />
               </div>
               <div>
-                <Label>Cidade</Label>
+                <Label>Cidade*</Label>
                 <Input
                   className="mt-1"
                   value={form.city}
@@ -580,7 +602,7 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 />
               </div>
               <div>
-                <Label>Estado</Label>
+                <Label>Estado*</Label>
                 <Input
                   className="mt-1"
                   value={form.state}
@@ -603,7 +625,11 @@ export function TeleSalesAdmin({ products }: { products: ProductOption[] }) {
                 <Button
                   variant="cta"
                   disabled={saveCustomerMutation.isPending}
-                  onClick={() => saveCustomerMutation.mutate(form)}
+                  onClick={() => {
+                    const missing = missingFiscalFields(form);
+                    if (missing.length) { toast.error("Dados obrigatórios para nota fiscal", { description: missing.join(", ") }); return; }
+                    saveCustomerMutation.mutate(form);
+                  }}
                 >
                   Salvar
                 </Button>

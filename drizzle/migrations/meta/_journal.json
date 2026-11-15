@@ -127,6 +127,13 @@
       "when": 1794618708018,
       "tag": "0017_conta_azul_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794783101359,
+      "tag": "0018_customer_fiscal_neighborhood",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,9 @@ import { z } from 'zod'
 import type { Database } from '@/integrations/supabase/types'
 import { buildSalePayload, customerEmail, customerKey, digits, initialStock, formatDocument, rioBrancoDate, type SaleSituation } from './conta-azul-sales'
 
+import { assertFiscalCustomer, type FiscalCustomer } from "./customer-fiscal"
+import { currentFiscalCustomer } from "./customer-fiscal.server"
+
 type Db = SupabaseClient<Database>
 const API = 'https://api-v2.contaazul.com'
 const tokenSchema = z.object({ access_token: z.string().min(1), refresh_token: z.string().min(1).optional(), expires_in: z.number().int().positive().max(31536000) })
@@ -76,9 +79,13 @@ async function saveLink(db: Db, kind: 'customer' | 'product', key: string, exter
   if (error) throw new ContaAzulApiError('Cadastro enviado, mas o vínculo não pôde ser salvo. Atualize a comparação antes de tentar novamente.')
 }
 
-type Order = Pick<Database['public']['Tables']['orders']['Row'], 'id' | 'customer_name' | 'customer_document' | 'customer_email' | 'customer_phone'>
+type Order = Pick<Database['public']['Tables']['orders']['Row'], 'id' | 'customer_name' | 'customer_document' | 'customer_email' | 'customer_phone'> & { shipping_address?: unknown; user_id?: string | null }
 
 export async function ensureCustomer(db: Db, order: Order) {
+  const stored = await currentFiscalCustomer(db, order.user_id ?? null, order.customer_email, order.customer_document)
+  const fiscal = stored ?? { ...(order.shipping_address as FiscalCustomer ?? {}), phone: order.customer_phone, document: order.customer_document }
+  try { assertFiscalCustomer(fiscal) } catch (e) { throw new ContaAzulApiError(e instanceof Error ? e.message : 'Atualize o cadastro fiscal do cliente.') }
+  order = { ...order, customer_phone: fiscal.phone ?? '', customer_document: fiscal.document ?? '' }
   const key = customerKey(order)
   const known = await link(db, 'customer', key)
   if (known) return known
@@ -95,6 +102,7 @@ export async function ensureCustomer(db: Db, order: Order) {
       ...(doc.length === 11 ? { cpf: formatDocument(doc) } : company ? { cnpj: formatDocument(doc) } : {}),
       ...(email ? { email } : {}),
       ...(digits(order.customer_phone) ? { telefone_celular: digits(order.customer_phone) } : {}),
+      enderecos: [{ logradouro: fiscal.street, numero: fiscal.number, bairro: fiscal.neighborhood, cidade: fiscal.city, estado: fiscal.state, cep: digits(fiscal.zip), complemento: fiscal.complement || '', pais: 'Brasil' }],
       perfis: [{ tipo_perfil: 'Cliente' }], ativo: true,
     } })
     found = created.id

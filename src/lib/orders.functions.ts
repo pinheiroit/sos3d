@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+import { assertFiscalCustomer } from "./customer-fiscal";
+
 const checkoutSchema = z.object({
   items: z
     .array(z.object({ slug: z.string().trim().max(120), qty: z.number().int().min(1).max(99) }))
@@ -17,6 +19,7 @@ const checkoutSchema = z.object({
   address: z.object({
     zip: z.string().trim().max(20).optional().default(""),
     street: z.string().trim().max(180).optional().default(""),
+    neighborhood: z.string().trim().max(100).optional().default(""),
     number: z.string().trim().max(20).optional().default(""),
     complement: z.string().trim().max(120).optional().default(""),
     city: z.string().trim().max(120).optional().default(""),
@@ -35,6 +38,12 @@ export const createOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { resolveOptionalUserId } = await import("@/lib/orders.server");
     const userId = await resolveOptionalUserId(getRequestHeader("authorization"));
+
+    const { currentFiscalCustomer } = await import("./customer-fiscal.server");
+    // Existing accounts must correct their customer record, not bypass it with checkout input.
+    const existing = await currentFiscalCustomer(supabaseAdmin, userId, data.customer.email, data.customer.document);
+    if (existing) assertFiscalCustomer(existing);
+    assertFiscalCustomer({ ...data.customer, ...data.address });
 
     const slugs = data.items.map((i) => i.slug);
     const [{ data: rows, error }, settings] = await Promise.all([
@@ -207,15 +216,19 @@ export const getMyCheckoutData = createServerFn({ method: "GET" })
         .maybeSingle(),
     ]);
 
-    const addr = (lastOrder?.shipping_address ?? {}) as Record<string, string>;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { currentFiscalCustomer } = await import("./customer-fiscal.server");
+    const fiscal = await currentFiscalCustomer(supabaseAdmin, context.userId);
+    const addr = (fiscal ?? lastOrder?.shipping_address ?? {}) as Record<string, string>;
     return {
-      name: lastOrder?.customer_name || profile?.full_name || "",
+      name: fiscal?.name || lastOrder?.customer_name || profile?.full_name || "",
       email: lastOrder?.customer_email || profile?.email || "",
-      phone: lastOrder?.customer_phone || profile?.phone || "",
-      document: lastOrder?.customer_document || "",
+      phone: fiscal?.phone || lastOrder?.customer_phone || profile?.phone || "",
+      document: fiscal?.document || lastOrder?.customer_document || "",
       address: {
         zip: addr["zip"] ?? "",
         street: addr["street"] ?? "",
+        neighborhood: addr["neighborhood"] ?? "",
         number: addr["number"] ?? "",
         city: addr["city"] ?? "",
         state: addr["state"] ?? "",

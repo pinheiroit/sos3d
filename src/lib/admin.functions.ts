@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertFiscalCustomer } from "./customer-fiscal";
 import type { Database } from "@/integrations/supabase/types";
 
 const specSchema = z.object({ label: z.string().max(120), value: z.string().max(400) });
@@ -814,6 +815,7 @@ const customerSchema = z.object({
   document: z.string().trim().max(40).default(""),
   zip: z.string().trim().max(20).default(""),
   street: z.string().trim().max(180).default(""),
+  neighborhood: z.string().trim().max(100).default(""),
   number: z.string().trim().max(20).default(""),
   complement: z.string().trim().max(120).default(""),
   city: z.string().trim().max(120).default(""),
@@ -834,6 +836,7 @@ export type UnifiedCustomer = {
   document: string;
   zip: string;
   street: string;
+  neighborhood: string;
   number: string;
   complement: string;
   city: string;
@@ -906,6 +909,7 @@ export const listCustomers = createServerFn({ method: "GET" })
         document: pick(row?.document, order?.customer_document),
         zip: pick(row?.zip, addr["zip"]),
         street: pick(row?.street, addr["street"]),
+        neighborhood: pick(row?.neighborhood, addr["neighborhood"]),
         number: pick(row?.number, addr["number"]),
         complement: pick(row?.complement, addr["complement"]),
         city: pick(row?.city, addr["city"]),
@@ -927,6 +931,7 @@ export const listCustomers = createServerFn({ method: "GET" })
         document: c.document,
         zip: c.zip,
         street: c.street,
+        neighborhood: c.neighborhood,
         number: c.number,
         complement: c.complement,
         city: c.city,
@@ -996,6 +1001,7 @@ export const saveCustomer = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
+    assertFiscalCustomer(data);
     const id = await upsertCustomerRow(db, data);
     return { id };
   });
@@ -1037,6 +1043,17 @@ export const createSalesOrder = createServerFn({ method: "POST" })
     const { assertAdmin, adminClient } = await import("@/lib/admin-guard.server");
     await assertAdmin(context.supabase, context.userId);
     const db = await adminClient();
+    const { currentFiscalCustomer } = await import("./customer-fiscal.server");
+    const stored = data.customerId
+      ? await db.from("customers").select("*").eq("id", data.customerId).single().then(r => { if (r.error) throw new Error("Cliente não encontrado."); return r.data; })
+      : await currentFiscalCustomer(db, data.userId ?? null, data.customer.email, data.customer.document);
+    if (stored) {
+      assertFiscalCustomer(stored);
+      data.customer = { ...data.customer, name: stored.name, email: stored.email, phone: stored.phone, document: stored.document,
+        zip: stored.zip ?? "", street: stored.street ?? "", neighborhood: stored.neighborhood ?? "", number: stored.number ?? "",
+        complement: stored.complement ?? "", city: stored.city ?? "", state: stored.state ?? "" };
+    }
+    assertFiscalCustomer(data.customer);
     if (data.userId) {
       const { data: account } = await db
         .from("profiles")
@@ -1109,6 +1126,7 @@ export const createSalesOrder = createServerFn({ method: "POST" })
     const address = {
       zip: data.customer.zip,
       street: data.customer.street,
+      neighborhood: data.customer.neighborhood,
       number: data.customer.number,
       complement: data.customer.complement,
       city: data.customer.city,

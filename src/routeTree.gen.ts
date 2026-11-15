@@ -27,6 +27,7 @@ import { Route as MakersRouteImport } from './routes/makers'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedCadastroRouteImport } from './routes/_authenticated/cadastro'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 import { Route as ApiPublicContaAzulAuthRouteImport } from './routes/api/public/conta-azul-auth'
@@ -124,6 +125,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCadastroRoute = AuthenticatedCadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/cadastro': typeof AuthenticatedCadastroRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/api/public/conta-azul-auth': typeof ApiPublicContaAzulAuthRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/cadastro': typeof AuthenticatedCadastroRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/api/public/conta-azul-auth': typeof ApiPublicContaAzulAuthRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/cadastro': typeof AuthenticatedCadastroRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/api/public/conta-azul-auth': typeof ApiPublicContaAzulAuthRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/suporte'
     | '/admin'
+    | '/cadastro'
     | '/portal'
     | '/produto/$slug'
     | '/api/public/conta-azul-auth'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/suporte'
     | '/admin'
+    | '/cadastro'
     | '/portal'
     | '/produto/$slug'
     | '/api/public/conta-azul-auth'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/suporte'
     | '/_authenticated/admin'
+    | '/_authenticated/cadastro'
     | '/_authenticated/portal'
     | '/produto/$slug'
     | '/api/public/conta-azul-auth'
@@ -477,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cadastro': {
+      id: '/_authenticated/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof AuthenticatedCadastroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portal': {
       id: '/_authenticated/portal'
       path: '/portal'
@@ -531,11 +550,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedCadastroRoute: typeof AuthenticatedCadastroRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedCadastroRoute: AuthenticatedCadastroRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
 }
 

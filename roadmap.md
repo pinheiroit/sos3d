@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Exigir cadastro fiscal completo, impedir integração e novas vendas com dados incompletos e permitir atualização do cadastro
 - [x] Selecionar pendências de todas as categorias e integrar em lote com confirmação, progresso e resultados individuais; 8 testes e envio real do PETG Roxo Translucido validados
 - [x] Criar painel Conta Azul com comparação real de produtos, clientes, vendas e serviços, filtros e envio manual; 20 testes e envio do SUNLU PLA MATTE LAVENDER PURPLE confirmados com R$125,90 e estoque 9 após reabertura
 - [ ] Habilitar envio de O.S. pela integração — exige correspondência entre o orçamento da assistência e o catálogo/fiscal de serviços; painel exibe o bloqueio explicitamente
