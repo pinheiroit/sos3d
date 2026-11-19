@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSiteContent } from "@/lib/site-content";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,8 @@ export const Route = createFileRoute("/contato")({
         content: "Conte o que você precisa produzir e receba uma recomendação adequada.",
       },
       { property: "og:url", content: "https://sos3d.com.br/contato" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://sos3d.com.br/contato" }],
   }),
@@ -36,6 +39,8 @@ export const Route = createFileRoute("/contato")({
 });
 
 function ContactPage() {
+  const { footer } = useSiteContent();
+
   return (
     <div className="container-page grid gap-12 py-16 lg:grid-cols-[1fr_400px]">
       <div>
@@ -126,7 +131,9 @@ function ContactPage() {
             <Phone className="mt-0.5 size-4 shrink-0 text-tech" />
             <span>
               <span className="block font-medium">Telefone</span>
-              <span className="text-muted-foreground">(00) 0000-0000</span>
+              <a href={`tel:${footer.phone.replace(/\D/g, "")}`} className="text-muted-foreground hover:text-tech">
+                {footer.phone}
+              </a>
             </span>
           </li>
           <li className="flex gap-3">
